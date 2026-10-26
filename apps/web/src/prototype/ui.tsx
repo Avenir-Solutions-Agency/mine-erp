@@ -138,8 +138,9 @@ export function Btn({
       type={type}
       className={cn(
         BTN[kind],
-        "text-control",
-        sm && "h-6 px-2 text-xs",
+        // .btn wraps long labels instead of overflowing narrow screens.
+        "h-auto min-h-8 shrink text-control whitespace-normal",
+        sm && "min-h-6 px-2 text-xs",
         className,
       )}
       {...props}

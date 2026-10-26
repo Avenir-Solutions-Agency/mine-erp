@@ -14,14 +14,14 @@ Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-in
 - [x] T-022 App shell: 232px side rail, final navigation (6 groups, 30 routes, badges), mobile top bar, toast; primitives pill, tabs, table, KPI, bar (DESIGN_SYSTEM §06)
 - [x] T-023 `packages/domain` skeleton (covers T-002) + the demo engine (`src/demo/`): state, seed and every rule of the demo in source order; golden test against the original page state
 - [x] T-024 Web store: one engine instance in the browser (`useSyncExternalStore`), toasts, navigation, nav badge counts
-- [ ] T-025 Áttekintés: dash (incl. 13-week cash flow, charts), today, ai (approvals)
-- [ ] T-026 Értékesítés: inbox (inquiry parsing), quotes, contracts, orders, portal; PDF/XLSX order intake (pdfjs-dist, xlsx)
-- [ ] T-027 Logisztika I: dispatch (suggestion, auto-assign, driving and rest limits), transport and EKÁER, scale (ANPR)
-- [ ] T-028 Logisztika II: driver app (POD, signature), telem (SVG map), dn, tig, billing, integr (outbox)
-- [ ] T-029 Üzem: stock, store, qr (qrcode, jsqr), operapp, mechapp, waste, machines
-- [ ] T-030 Pénzügy and Projekt: reports and pricing (what-if, profitability, plan vs actual), payroll (CSV export), plan
+- [x] T-025 Áttekintés: dash (incl. 13-week cash flow, charts), today, ai (approvals)
+- [x] T-026 Értékesítés: inbox (inquiry parsing), quotes, contracts, orders, portal; PDF/XLSX order intake (pdfjs-dist; XLSX waits for the xlsx dependency decision)
+- [x] T-027 Logisztika I: dispatch (suggestion, auto-assign, driving and rest limits), transport and EKÁER, scale (ANPR)
+- [x] T-028 Logisztika II: driver app (POD, signature), telem (SVG map), dn, tig, billing, integr (outbox)
+- [x] T-029 Üzem: stock, store, qr (qrcode, jsqr), operapp, mechapp, waste, machines
+- [x] T-030 Pénzügy and Projekt: reports and pricing (what-if, profitability, plan vs actual), payroll (CSV export), plan
 - [ ] T-031 AI features ("Kérdezze az ERP-t", inquiry re-parse, "Ma" summary): server-side endpoint, Zod-validated output. Needs approval: Anthropic SDK + `ANTHROPIC_API_KEY`
-- [ ] T-032 E2E smoke over all 30 routes at 1280px and 375px
+- [x] T-032 E2E smoke over all 30 routes at 1280px and 375px
 
 ## Next
 - [ ] T-006 (F7) Master data CRUD API: customer, delivery_address, product (with aliases), vehicle (plate normalization), person
