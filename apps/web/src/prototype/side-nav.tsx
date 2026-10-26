@@ -29,7 +29,7 @@ export function SideNav() {
                 href={`/${id}`}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.75 text-control whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-1",
+                  "flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.75 text-control whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-1 md:w-fit",
                   current && "bg-accent font-semibold text-accent-foreground",
                 )}
               >

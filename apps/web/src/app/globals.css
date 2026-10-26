@@ -184,7 +184,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-sm leading-normal text-foreground;
   }
   html {
     @apply font-sans;
@@ -193,9 +193,9 @@
     @apply font-heading text-h1 font-semibold text-balance;
   }
   h2 {
-    @apply font-heading text-h2 font-semibold;
+    @apply mb-2.5 font-heading text-h2 font-semibold;
   }
   h3 {
-    @apply text-control font-semibold;
+    @apply mb-1.5 text-control font-semibold;
   }
 }

@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "@/components/ui/toast";
+import { downloadFile } from "@/prototype/files";
 import { hu } from "@/i18n/hu";
 
 // One engine per browser tab; like the demo, a reload starts again from the seed.
@@ -34,6 +35,7 @@ const noSubscribe = () => () => {};
 // The engine's route and navigation hooks live outside React state (the demo's `route` and go()).
 function connect(demo: Demo, navigate: (r: string) => void) {
   demo.ui.navigate = navigate;
+  demo.ui.download = downloadFile;
 }
 function setRoute(demo: Demo, route: string) {
   demo.ui.route = route;

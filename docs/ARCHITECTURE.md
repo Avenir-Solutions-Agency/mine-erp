@@ -138,6 +138,7 @@ The agent must not "fix" these.
 - The prototype (`apps/web/src/prototype/`, PRD §05a) imports `packages/domain` directly and keeps seeded state in the browser, with no API. This is the one allowed exception to §05 for web, and only inside that folder. Pages outside it follow §05.
 - The prototype and the demo functions it uses in `packages/domain` (`demo/` folder) compute money and weight with JavaScript numbers (Ft, tonnes), exactly like the demo, so every figure matches it. The integer fillér/kg rule applies to the real backend.
 - All prototype screens go through one route, `apps/web/src/app/(prototype)/[route]/page.tsx`, which renders `src/prototype/screens/<route>.tsx` in the browser. The engine is client-only (random seed, reset on reload), so the server renders no screen content.
+- Prototype screens keep the demo's Hungarian copy inline, as in the demo source, so the port stays diffable against it. i18n keys (AGENTS.md §03) apply to the shell and to production screens.
 
 ## 07 Scalability and future considerations
 
