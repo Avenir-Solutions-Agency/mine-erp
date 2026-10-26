@@ -1589,6 +1589,10 @@ export function createDemo(env: DemoEnv) {
     render();
     toast("Sztornó számla kiállítva.");
   }
+  function selectJob(id: string) {
+    ui.sel.job = id;
+    render();
+  }
   function retryClick(id: string) {
     retryJob(id);
     render();
@@ -5275,6 +5279,8 @@ export function createDemo(env: DemoEnv) {
   function setPayPeriod(v: "szept" | "okt") {
     S.payroll.periodKey = v;
     S.payroll.period = v === "okt" ? "2026. október 1–3." : "2026. szeptember";
+    // V.payroll sets this on every render; the period select is the only thing that changes it.
+    S.payroll.work = v === "okt" ? 16 : 168;
     render();
   }
   function setPayCfgPct(k: string, v: string) {
@@ -7358,6 +7364,7 @@ export function createDemo(env: DemoEnv) {
     setMinMargin,
     cancelTransport,
     stornoInvoice,
+    selectJob,
     retryClick,
     retryAll,
     syncClick,
