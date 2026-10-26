@@ -42,4 +42,5 @@ export const hu = {
     },
   },
   placeholder: "Ez a képernyő még nincs átvéve a demóból.",
+  loading: "Betöltés…",
 } as const;

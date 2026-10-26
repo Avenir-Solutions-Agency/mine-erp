@@ -13,7 +13,7 @@ Derived from docs/PRD.md §05 and the spec's phase 1. Small tasks (at most a day
 Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-inventory/`.
 - [x] T-022 App shell: 232px side rail, final navigation (6 groups, 30 routes, badges), mobile top bar, toast; primitives pill, tabs, table, KPI, bar (DESIGN_SYSTEM §06)
 - [x] T-023 `packages/domain` skeleton (covers T-002) + the demo engine (`src/demo/`): state, seed and every rule of the demo in source order; golden test against the original page state
-- [ ] T-024 Web store: one engine instance in the browser (`useSyncExternalStore`), toasts, navigation, nav badge counts
+- [x] T-024 Web store: one engine instance in the browser (`useSyncExternalStore`), toasts, navigation, nav badge counts
 - [ ] T-025 Áttekintés: dash (incl. 13-week cash flow, charts), today, ai (approvals)
 - [ ] T-026 Értékesítés: inbox (inquiry parsing), quotes, contracts, orders, portal; PDF/XLSX order intake (pdfjs-dist, xlsx)
 - [ ] T-027 Logisztika I: dispatch (suggestion, auto-assign, driving and rest limits), transport and EKÁER, scale (ANPR)
