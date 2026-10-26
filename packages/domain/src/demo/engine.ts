@@ -6207,8 +6207,14 @@ export function createDemo(env: DemoEnv) {
     );
   }
   const empName = (id: string) => S.employees.find((e) => e.id === id)!.name;
+  // V.mechapp backfills these on every render; seeded ML- work orders have neither.
+  function woBackfill(w: State["wos"][number]) {
+    w.mech ??= [];
+    w.used ??= [];
+  }
   function woStart(id: string) {
     const w = S.wos.find((x) => x.id === id)!;
+    woBackfill(w);
     w.start = now();
     w.mech = [MCH.me];
     w.status = "Folyamatban";
@@ -6220,11 +6226,13 @@ export function createDemo(env: DemoEnv) {
   }
   function woJoin(id: string) {
     const w = S.wos.find((x) => x.id === id)!;
+    woBackfill(w);
     w.mech!.push(MCH.me);
     render();
   }
   function woPart(id: string, sid: string, qIn: string) {
     const w = S.wos.find((x) => x.id === id)!;
+    woBackfill(w);
     const p = S.parts.find((x) => x.id === sid)!;
     const q = +qIn;
     if (!(q > 0) || q > p.qty) {
@@ -6262,6 +6270,7 @@ export function createDemo(env: DemoEnv) {
   }
   function woClose(id: string, hours: string, done: string) {
     const w = S.wos.find((x) => x.id === id)!;
+    woBackfill(w);
     const m = S.machines.find((x) => x.id === w.machine)!;
     w.end = now();
     w.hours = +hours || 1;
