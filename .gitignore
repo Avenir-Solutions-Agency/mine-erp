@@ -22,3 +22,7 @@ CLAUDE.local.md
 
 # Graphify knowledge graph: rebuilt locally (code extraction costs zero tokens)
 graphify-out/
+
+# Playwright
+test-results/
+playwright-report/

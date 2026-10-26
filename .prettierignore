@@ -1,2 +1,6 @@
 pnpm-lock.yaml
 docs
+HARNESS_PROMPT.md
+.claude/skills/graphify
+graphify-out
+.claude/agent-memory
