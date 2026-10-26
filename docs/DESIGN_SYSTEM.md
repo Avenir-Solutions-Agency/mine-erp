@@ -27,8 +27,8 @@ Use tokens in components (`bg-primary`, `text-muted-foreground`, `border-border`
 | --border / --input | oklch(0.922 0 0) | Dividers, input borders |
 | --ring | oklch(0.708 0 0) | Focus ring |
 | --destructive | oklch(0.577 0.245 27.325) | Errors, destructive actions, `failed` / `rejected` |
-| --success | oklch(0.627 0.17 149) (assumed — confirm) | `registered`, `ekaer_reported`, confirmations |
-| --warning | oklch(0.666 0.157 58) (assumed — confirm) | `needs_review`, non-blocking warnings |
+| --success / --success-foreground | oklch(0.627 0.17 149) / oklch(0.985 0 0) (assumed — confirm) | `registered`, `ekaer_reported`, confirmations |
+| --warning / --warning-foreground | oklch(0.666 0.157 58) / oklch(0.145 0 0) (assumed — confirm) | `needs_review`, non-blocking warnings |
 | --chart-1 … --chart-5 | neutral ramp | Charts only |
 | --sidebar-* | see globals.css | App sidebar |
 
@@ -89,7 +89,7 @@ Shadows: one level only, for elevated surfaces (dropdowns, modals). Flat cards g
 
 ## 06 Components
 
-Reuse before creating. Primitives live in `apps/web/src/components/ui/` (shadcn/ui on `@base-ui/react`). If a variant is not listed here, ask before adding it.
+Reuse before creating. Primitives live in `apps/web/src/components/ui/` (shadcn/ui on `@base-ui/react`): `button`, `input`, `label`, `card`, `dialog`, `empty-state`. If a variant is not listed here, ask before adding it.
 
 Buttons (`button.tsx`)
 
@@ -115,7 +115,7 @@ Cards
 - `card` background, radius-lg, padding 4, 1px border. No shadow unless interactive.
 
 Modals (Dialog)
-- Max width 480px, radius-lg, dimmed overlay. Close on overlay click and on Escape.
+- Max width 384px (`sm:max-w-sm`), radius-xl, dimmed overlay. Closes on overlay click and on Escape (Base UI default).
 
 Empty states
 - One line saying what belongs here, plus one primary action. Never a blank panel.
