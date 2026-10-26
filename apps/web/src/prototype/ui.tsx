@@ -379,3 +379,34 @@ export function formChecked(
   const el = form?.elements.namedItem(name);
   return !!el && "checked" in el && !!el.checked;
 }
+
+/** .tabs: buttons with aria-selected; `onSelect` calls the engine action that stores the tab. */
+export function TabBar({
+  items,
+  active,
+  onSelect,
+}: {
+  items: [string, string][];
+  active: string;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <div
+      role="tablist"
+      className="mb-3.5 flex flex-wrap gap-1 border-b border-border"
+    >
+      {items.map(([k, l]) => (
+        <button
+          key={k}
+          type="button"
+          role="tab"
+          aria-selected={active === k}
+          onClick={() => onSelect(k)}
+          className="-mb-px cursor-pointer border-b-2 border-transparent px-3 py-2 text-control text-muted-foreground outline-ring focus-visible:outline-2 focus-visible:outline-offset-1 aria-selected:border-primary aria-selected:font-semibold aria-selected:text-foreground"
+        >
+          {l}
+        </button>
+      ))}
+    </div>
+  );
+}
