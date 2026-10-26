@@ -42,5 +42,4 @@ export const hu = {
     },
   },
   placeholder: "Ez a képernyő még nincs átvéve a demóból.",
-  toast: { close: "Bezárás" },
 } as const;

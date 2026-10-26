@@ -136,6 +136,7 @@ The agent must not "fix" these.
 - EKÁER thresholds and the AI model id live in configuration, not code, because law and models change.
 - The bot and the scale agent contain no business logic; they only create a `document` and start the workflow.
 - The prototype (`apps/web/src/prototype/`, PRD §05a) imports `packages/domain` directly and keeps seeded state in the browser, with no API. This is the one allowed exception to §05 for web, and only inside that folder. Pages outside it follow §05.
+- The prototype and the demo functions it uses in `packages/domain` (`demo/` folder) compute money and weight with JavaScript numbers (Ft, tonnes), exactly like the demo, so every figure matches it. The integer fillér/kg rule applies to the real backend.
 
 ## 07 Scalability and future considerations
 

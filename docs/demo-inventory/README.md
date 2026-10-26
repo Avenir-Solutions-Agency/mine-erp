@@ -50,7 +50,7 @@ Active route is kept in `localStorage['mperp-route']`. Badge formulas are in par
 
 Decided 2026-10-26: the demo wins. DESIGN_SYSTEM.md now holds the demo tokens.
 
-## Known quirks in the demo (recorded, not fixed)
+## Known quirks in the demo (recorded, kept in the port on purpose)
 
 - Seeded hibajegy points to `GN-0006`, its log entry is `GN-0005`.
 - October payroll CSV writes 0 into the base-pay column (case-sensitive regex).

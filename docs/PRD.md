@@ -66,7 +66,7 @@ Decided 2026-10-26: the demo page (`docs/reference/demo.html`, inventory in `doc
 - Data: seeded in the browser, no database, reset on reload (as in the demo). Integrations (NAV EKÁER, Billingo, iTrack, ANPR, RFID, bank) stay simulated; the prototype never calls a real external system.
 - Business rules from the demo (cost model, price engine, approvals, dispatch, EKÁER obligation, stock, payroll) go to `packages/domain` as tested pure functions, so the real backend reuses them.
 - The prototype does not replace the phase-1 backend (T-001…T-021). A screen moves from prototype to real when its API exists.
-- Known demo quirks (inventory README) are fixed in the port, not copied.
+- Exactly what the demo page has, nothing more and nothing less (decided 2026-10-26). Known demo quirks (inventory README) are kept as they are, and numbers are computed and rounded exactly as in the demo.
 
 ## 06 Success metrics
 
