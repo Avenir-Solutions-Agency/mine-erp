@@ -2,7 +2,7 @@
 
 Status: Draft · Last updated: 2026-10-26
 
-Source of detail: `docs/Mészkő-Polgár ERP 2.0 – fejlesztői specifikáció.md` (the spec). This PRD covers v1 = spec phase 1 only.
+Source of detail: `docs/Mészkő-Polgár ERP 2.0 – fejlesztői specifikáció.md` (the spec). This PRD covers v1 = spec phase 1, plus the clickable prototype of every phase (§05a).
 
 ## 01 Product overview
 
@@ -59,6 +59,15 @@ Key user flow:
 2. The pipeline ingests, extracts, normalizes, validates, links and registers the shipment, then files EKÁER if required and allowed.
 3. The sender gets a confirmation with the registry and EKÁER numbers; exceptions appear in the web review queue for the EKÁER admin.
 
+## 05a Prototype track
+
+Decided 2026-10-26: the demo page (`docs/reference/demo.html`, inventory in `docs/demo-inventory/`) is ported 1:1 into `apps/web` as a clickable prototype of all phases and the four add-on modules: every screen, control, rule and Hungarian string.
+
+- Data: seeded in the browser, no database, reset on reload (as in the demo). Integrations (NAV EKÁER, Billingo, iTrack, ANPR, RFID, bank) stay simulated; the prototype never calls a real external system.
+- Business rules from the demo (cost model, price engine, approvals, dispatch, EKÁER obligation, stock, payroll) go to `packages/domain` as tested pure functions, so the real backend reuses them.
+- The prototype does not replace the phase-1 backend (T-001…T-021). A screen moves from prototype to real when its API exists.
+- Known demo quirks (inventory README) are fixed in the port, not copied.
+
 ## 06 Success metrics
 
 | Metric | Target | Measured by |
@@ -71,14 +80,14 @@ Key user flow:
 
 ## 07 Out of scope
 
-Do not build these in v1, even if they look easy or obvious.
+Do not build these in v1 as production features (backend, database, real integrations), even if they look easy or obvious. Their prototype screens are in scope (§05a).
 
 - Quotes, orders, contracts, delivery signatures and Billingo invoicing (spec phase 2). Only the Billingo partner import is v1.
 - Trip planning, driver app, iTrack, stock and material balance, QR warehouse, machines (phase 3).
 - Incoming invoices, bank, ledger export, payroll prep, controlling, "Ask the ERP" (phase 4).
 - The four add-on modules (landfill, plate-recognition scale, machine log, mechanic mobile).
-- Data migration from the old Mine ERP, or reuse of its code or the demo v6 code.
-- Maps, native mobile apps.
+- Data migration from the old Mine ERP, or reuse of its code. (The demo page is ported as the prototype, §05a.)
+- Real map tiles or a map provider (the prototype keeps the demo's SVG map), native mobile apps.
 
 ## 08 Open questions
 

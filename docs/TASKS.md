@@ -9,6 +9,20 @@ Derived from docs/PRD.md §05 and the spec's phase 1. Small tasks (at most a day
 - [ ] T-004 `packages/contracts`: Zod schemas for document, shipment, master data
 - [ ] T-005 `apps/api` NestJS skeleton: health, OpenAPI 3.1, Keycloak OIDC guard, event_log writer
 
+## Prototype track (PRD §05a)
+Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-inventory/`.
+- [ ] T-022 App shell: 232px side rail, final navigation (6 groups, 30 routes, badges), mobile top bar, toast; primitives pill, tabs, table, KPI, bar (DESIGN_SYSTEM §06)
+- [ ] T-023 `packages/domain` skeleton (covers T-002) + demo domain functions with tests: ID formats, statuses, cost model, price engine, approvals thresholds
+- [ ] T-024 Prototype store and seed (`apps/web/src/prototype/`): state model `S`, `SEQ`, event log, reset on reload
+- [ ] T-025 Áttekintés: dash (incl. 13-week cash flow, charts), today, ai (approvals)
+- [ ] T-026 Értékesítés: inbox (inquiry parsing), quotes, contracts, orders, portal; PDF/XLSX order intake (pdfjs-dist, xlsx)
+- [ ] T-027 Logisztika I: dispatch (suggestion, auto-assign, driving and rest limits), transport and EKÁER, scale (ANPR)
+- [ ] T-028 Logisztika II: driver app (POD, signature), telem (SVG map), dn, tig, billing, integr (outbox)
+- [ ] T-029 Üzem: stock, store, qr (qrcode, jsqr), operapp, mechapp, waste, machines
+- [ ] T-030 Pénzügy and Projekt: reports and pricing (what-if, profitability, plan vs actual), payroll (CSV export), plan
+- [ ] T-031 AI features ("Kérdezze az ERP-t", inquiry re-parse, "Ma" summary): server-side endpoint, Zod-validated output. Needs approval: Anthropic SDK + `ANTHROPIC_API_KEY`
+- [ ] T-032 E2E smoke over all 30 routes at 1280px and 375px
+
 ## Next
 - [ ] T-006 (F7) Master data CRUD API: customer, delivery_address, product (with aliases), vehicle (plate normalization), person
 - [ ] T-007 (F7) Billingo partner import into `customer`
