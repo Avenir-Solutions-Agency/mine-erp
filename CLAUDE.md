@@ -10,32 +10,36 @@ Maintainer notes (block comments are stripped from Claude's context):
 # Claude Code guide: Mészkő-Polgár ERP 2.0
 
 ## Snapshot
+
 - Mészkő-Polgár ERP 2.0: weigh tickets and delivery notes → registered shipments → automatic EKÁER reports, for a limestone quarry. Stage: idea (greenfield, only apps/web exists).
 - Stack: pnpm + Turborepo · Next.js 16 App Router · TypeScript strict · Tailwind v4 + shadcn/ui · NestJS · Temporal · PostgreSQL 17 + Drizzle · Keycloak · Docker on Hetzner.
 - The truth lives in docs/: PRD (what and why), DESIGN_SYSTEM (how it looks), ARCHITECTURE (where code goes), SECURITY, TASKS. Read them as AGENTS.md §02 says; do not restate them here.
 
 ## Commands
+
 `pnpm dev` · `pnpm lint` · `pnpm typecheck` · `pnpm test` · `pnpm test:e2e` · `pnpm build` · `pnpm format`
 
 ## Harness map: use these instead of improvising
-| When | Use |
-| --- | --- |
-| After a feature, before a PR | `/review-changes` (project rules + subagents) |
-| Hunting correctness bugs in a diff | bundled `/code-review`; security pass: `/security-review` |
-| Fixing a bug or an issue | `/fix-issue <number or description>` |
-| Building a PRD feature | `/new-feature <F#>` |
-| Deploying | `/deploy <test or production>`, only when I ask |
-| Independent review | subagents `code-reviewer`, `security-auditor`, `design-reviewer` |
-| Finding code, broad code search | `graphify query "<question>" --budget 1500`; relationships: `graphify path "<A>" "<B>"`; one concept: `graphify explain "<concept>"`; overview: graphify-out/GRAPH_REPORT.md (or graphify-out/wiki/index.md if it exists). Not Explore, not whole-file reads |
-| The graph is stale | `graphify update .` (AST only, no API cost) |
-| Building or changing the graph itself | the `/graphify` skill (.claude/skills/graphify/SKILL.md); when I type `/graphify`, use it before anything else |
-| Too much code, over-engineering | Ponytail is always on (full); `/ponytail-review` on a diff, `/ponytail-audit` on the codebase |
-| Token savings check | `headroom savings` (the proxy runs outside this session; never start, stop or reroute it) |
-| UI work | the `ui-component` skill loads for UI files |
-| Current library docs (NestJS, Temporal, Drizzle, Next 16) | the `context7` MCP server |
-| Proving a change works in the running app | bundled `/verify` (after `/run-skill-generator` ran once), or the `playwright` MCP server |
+
+| When                                                      | Use                                                                                                                                                                                                                                                          |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| After a feature, before a PR                              | `/review-changes` (project rules + subagents)                                                                                                                                                                                                                |
+| Hunting correctness bugs in a diff                        | bundled `/code-review`; security pass: `/security-review`                                                                                                                                                                                                    |
+| Fixing a bug or an issue                                  | `/fix-issue <number or description>`                                                                                                                                                                                                                         |
+| Building a PRD feature                                    | `/new-feature <F#>`                                                                                                                                                                                                                                          |
+| Deploying                                                 | `/deploy <test or production>`, only when I ask                                                                                                                                                                                                              |
+| Independent review                                        | subagents `code-reviewer`, `security-auditor`, `design-reviewer`                                                                                                                                                                                             |
+| Finding code, broad code search                           | `graphify query "<question>" --budget 1500`; relationships: `graphify path "<A>" "<B>"`; one concept: `graphify explain "<concept>"`; overview: graphify-out/GRAPH_REPORT.md (or graphify-out/wiki/index.md if it exists). Not Explore, not whole-file reads |
+| The graph is stale                                        | `graphify update .` (AST only, no API cost)                                                                                                                                                                                                                  |
+| Building or changing the graph itself                     | the `/graphify` skill (.claude/skills/graphify/SKILL.md); when I type `/graphify`, use it before anything else                                                                                                                                               |
+| Too much code, over-engineering                           | Ponytail is always on (full); `/ponytail-review` on a diff, `/ponytail-audit` on the codebase                                                                                                                                                                |
+| Token savings check                                       | `headroom savings` (the proxy runs outside this session; never start, stop or reroute it)                                                                                                                                                                    |
+| UI work                                                   | the `ui-component` skill loads for UI files                                                                                                                                                                                                                  |
+| Current library docs (NestJS, Temporal, Drizzle, Next 16) | the `context7` MCP server                                                                                                                                                                                                                                    |
+| Proving a change works in the running app                 | bundled `/verify` (after `/run-skill-generator` ran once), or the `playwright` MCP server                                                                                                                                                                    |
 
 ## Working agreements (Claude Code)
+
 - Plan first (plan mode or a written plan) when a task touches more than 5 files or anything in docs/ARCHITECTURE.md §08.
 - Track multi-step work in the task list, one item in progress at a time.
 - Verify before saying done: `pnpm typecheck` and the relevant tests. Say what you ran.
@@ -46,6 +50,7 @@ Maintainer notes (block comments are stripped from Claude's context):
 - A convention I correct twice belongs in AGENTS.md or .claude/rules, not only in auto memory: propose the edit.
 
 ## Gotchas
+
 - Next.js 16 differs from older versions: read `apps/web/AGENTS.md` and `node_modules/next/dist/docs/` before web work. `next dev` re-adds the block in apps/web/AGENTS.md; commit it.
 - `cn` comes from the `cn` package (shadcn), re-exported by `@/lib/utils`; there is no clsx or tailwind-merge.
 - Run package scripts from the root through turbo, or with `pnpm --filter @mine-erp/web <script>`.

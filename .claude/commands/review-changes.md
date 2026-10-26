@@ -11,15 +11,18 @@ allowed-tools:
 # Review changes
 
 ## Context
+
 - Branch: !`git branch --show-current`
 - Working tree: !`git status --short`
 - Changed files vs HEAD: !`git diff --stat HEAD`
 - Recent commits: !`git log --oneline -10`
 
 ## Scope
+
 Review `$ARGUMENTS` if given (a base branch such as `main`, or a range such as `abc123..HEAD`). Otherwise review the uncommitted changes plus the commits on this branch that are not on the default branch.
 
 ## Steps
+
 1. Get the full diff for the range. Group the changed files by area: UI, API/worker/bot, domain, database, config, tests, docs.
 2. Delegate in parallel:
    - `code-reviewer`: the range and the changed files.

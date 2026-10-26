@@ -80,6 +80,7 @@ If a command fails, report the exact output. Do not work around it silently.
 ## 07 Definition of done
 
 A task is done when all of these are true:
+
 - The change does what the task asked, and nothing else.
 - Build, lint, typecheck, and tests pass locally.
 - New UI matches DESIGN_SYSTEM.md and works at 375px wide.
@@ -91,6 +92,7 @@ A task is done when all of these are true:
 ## 08 When to stop and ask
 
 Stop and ask instead of guessing when:
+
 - The task conflicts with the PRD, the design system, or an architectural boundary.
 - Two reasonable readings of the task lead to different work.
 - The change needs a new dependency, table, secret, or service.
