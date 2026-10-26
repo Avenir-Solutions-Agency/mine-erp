@@ -9,6 +9,17 @@
   /* Demo breakpoints: grids collapse at 980px, the side rail at 760px. */
   --breakpoint-md: 47.5rem;
   --breakpoint-lg: 61.25rem;
+  /* Demo type scale (DESIGN_SYSTEM.md §03). */
+  --text-h1: 2.125rem;
+  --text-h1--line-height: 1;
+  --text-h1--letter-spacing: 0.01em;
+  --text-h2: 1.3125rem;
+  --text-h2--line-height: 1.3;
+  --text-h2--letter-spacing: 0.02em;
+  --text-control: 0.8125rem;
+  --text-control--line-height: 1.4;
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.4;
 }
 
 @theme inline {
@@ -177,5 +188,14 @@
   }
   html {
     @apply font-sans;
+  }
+  h1 {
+    @apply font-heading text-h1 font-semibold text-balance;
+  }
+  h2 {
+    @apply font-heading text-h2 font-semibold;
+  }
+  h3 {
+    @apply text-control font-semibold;
   }
 }

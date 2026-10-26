@@ -11,9 +11,9 @@ Derived from docs/PRD.md §05 and the spec's phase 1. Small tasks (at most a day
 
 ## Prototype track (PRD §05a)
 Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-inventory/`.
-- [ ] T-022 App shell: 232px side rail, final navigation (6 groups, 30 routes, badges), mobile top bar, toast; primitives pill, tabs, table, KPI, bar (DESIGN_SYSTEM §06)
+- [x] T-022 App shell: 232px side rail, final navigation (6 groups, 30 routes, badges), mobile top bar, toast; primitives pill, tabs, table, KPI, bar (DESIGN_SYSTEM §06)
 - [ ] T-023 `packages/domain` skeleton (covers T-002) + demo domain functions with tests: ID formats, statuses, cost model, price engine, approvals thresholds
-- [ ] T-024 Prototype store and seed (`apps/web/src/prototype/`): state model `S`, `SEQ`, event log, reset on reload
+- [ ] T-024 Prototype store and seed (`apps/web/src/prototype/`): state model `S`, `SEQ`, event log, reset on reload; nav badge counts
 - [ ] T-025 Áttekintés: dash (incl. 13-week cash flow, charts), today, ai (approvals)
 - [ ] T-026 Értékesítés: inbox (inquiry parsing), quotes, contracts, orders, portal; PDF/XLSX order intake (pdfjs-dist, xlsx)
 - [ ] T-027 Logisztika I: dispatch (suggestion, auto-assign, driving and rest limits), transport and EKÁER, scale (ANPR)

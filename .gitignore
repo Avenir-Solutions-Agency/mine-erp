@@ -26,3 +26,6 @@ graphify-out/
 # Playwright
 test-results/
 playwright-report/
+
+# Playwright MCP screenshots and logs
+.playwright-mcp/

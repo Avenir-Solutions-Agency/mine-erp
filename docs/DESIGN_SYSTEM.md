@@ -60,6 +60,7 @@ Rules:
 - Dense by default: body 14px, controls 13px. Numbers in tables are right-aligned and `tabular-nums`.
 - Plates, registry numbers and EKÁER numbers use the Data role.
 - Only these three families.
+- Tailwind classes: `text-h1`, `text-h2`, `text-control`, `text-label` (globals.css `@theme`, registered with `cn` in `src/lib/utils.ts`); `h1`–`h3` get their role by default.
 
 ## 04 Spacing
 
@@ -92,7 +93,7 @@ Shadows: one level only, for elevated surfaces (dropdowns, modals). Flat cards g
 
 ## 06 Components
 
-Reuse before creating. Primitives live in `apps/web/src/components/ui/` (shadcn/ui on `@base-ui/react`): `button`, `input`, `label`, `card`, `dialog`, `empty-state`. If a variant is not listed here, ask before adding it.
+Reuse before creating. Primitives live in `apps/web/src/components/ui/` (shadcn/ui on `@base-ui/react`): `button`, `input`, `label`, `card`, `dialog`, `empty-state`, `pill`, `tabs`, `table`, `kpi`, `progress-bar`, `toast`. If a variant is not listed here, ask before adding it.
 
 Buttons (`button.tsx`)
 
@@ -123,8 +124,23 @@ Modals (Dialog)
 Empty states
 - One line saying what belongs here, plus one primary action. Never a blank panel.
 
-Data tables
-- TanStack Table (when added). Sticky header, right-aligned numbers, status badge column, row click opens detail.
+Data tables (`table.tsx`)
+- Demo density: 13px cells, padding 2, 11px uppercase muted headers, 1px row dividers, no border on the last row. `numeric` on `TableHead`/`TableCell` right-aligns in mono `tabular-nums`. `data-selected` on a row gives the accent background. Wrapper scrolls horizontally.
+
+Pills (`pill.tsx`)
+- Tones: `neutral`, `success`, `accent`, `ai`, `warning`, `destructive`; `*-soft` background, matching text, radius-full, 11px. Status-to-tone mapping of the demo: `StatusPill` in `src/prototype/status-pill.tsx`.
+
+Tabs (`tabs.tsx`, Base UI)
+- 13px muted tabs on a bottom border; the active tab is foreground, semibold, with a 2px primary underline.
+
+KPI tile (`kpi.tsx`)
+- Card with an 11px uppercase label, a 30px Barlow Condensed value (`tabular-nums`) and an optional 12px muted detail.
+
+Progress bar (`progress-bar.tsx`, Base UI Meter)
+- 6px track in `muted`, fill in `primary`, `warning` or `destructive`. Always pass `aria-label`.
+
+Toast (`toast.tsx`, Base UI)
+- `toast(message)` from any client code. One at a time, bottom right, `foreground` background with `background` text, closes after 3.4 s.
 
 ## 07 Icons
 
