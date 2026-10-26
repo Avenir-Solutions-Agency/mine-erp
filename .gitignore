@@ -9,3 +9,16 @@ coverage
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code: personal files, not shared
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/agent-memory-local/
+
+# Secrets
+.env.*
+!.env.example
+*.pem
+
+# Graphify knowledge graph: rebuilt locally (code extraction costs zero tokens)
+graphify-out/
