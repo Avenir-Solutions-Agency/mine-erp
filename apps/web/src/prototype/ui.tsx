@@ -117,10 +117,13 @@ export function Alert({ lvl, children }: { lvl: Level; children: ReactNode }) {
 
 type BtnKind = "default" | "pri" | "ai" | "bad";
 const BTN: Record<BtnKind, string> = {
-  default: buttonVariants({ variant: "outline" }),
+  default: cn(
+    buttonVariants({ variant: "outline" }),
+    "bg-card hover:border-muted-foreground",
+  ),
   pri: buttonVariants({ variant: "default" }),
   ai: buttonVariants({ variant: "ai" }),
-  bad: cn(buttonVariants({ variant: "outline" }), "text-destructive"),
+  bad: cn(buttonVariants({ variant: "outline" }), "bg-card text-destructive"),
 };
 /** .btn, .btn.pri, .btn.ai, .btn.bad and .sm */
 export function Btn({
