@@ -184,7 +184,10 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-sm leading-normal text-foreground;
+    @apply bg-background text-foreground;
+    /* Demo body: 14px / 1.5 (DESIGN_SYSTEM.md §03). */
+    font-size: var(--text-sm);
+    line-height: 1.5;
   }
   html {
     @apply font-sans;
