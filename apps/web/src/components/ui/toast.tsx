@@ -1,7 +1,6 @@
 "use client";
 
 import { Toast } from "@base-ui/react/toast";
-import { hu } from "@/i18n/hu";
 
 // One global manager so any client code can call toast(), like the demo's toast(m).
 const toastManager = Toast.createToastManager();
@@ -18,14 +17,8 @@ function ToastList() {
       toast={t}
       className="rounded-lg bg-foreground px-3.5 py-2.5 text-control text-background shadow-md"
     >
-      <Toast.Content className="flex items-start gap-3">
-        <Toast.Description className="flex-1" />
-        <Toast.Close
-          aria-label={hu.toast.close}
-          className="cursor-pointer opacity-70 outline-background hover:opacity-100 focus-visible:outline-2"
-        >
-          ×
-        </Toast.Close>
+      <Toast.Content>
+        <Toast.Description />
       </Toast.Content>
     </Toast.Root>
   ));

@@ -4,14 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { hu } from "@/i18n/hu";
 import { cn } from "@/lib/utils";
-import { NAV, type CounterKey } from "@/prototype/nav";
+import { NAV } from "@/prototype/nav";
+import { useDemoCounts } from "@/prototype/store";
 
-export function SideNav({
-  counts,
-}: {
-  counts: Partial<Record<CounterKey, number>>;
-}) {
+export function SideNav() {
   const pathname = usePathname();
+  const counts = useDemoCounts();
   return (
     <nav
       aria-label={hu.nav.label}
@@ -31,7 +29,7 @@ export function SideNav({
                 href={`/${id}`}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.75 text-control whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-1",
+                  "flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.75 text-control whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-1 md:w-fit",
                   current && "bg-accent font-semibold text-accent-foreground",
                 )}
               >

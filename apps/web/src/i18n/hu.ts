@@ -42,5 +42,6 @@ export const hu = {
     },
   },
   placeholder: "Ez a képernyő még nincs átvéve a demóból.",
-  toast: { close: "Bezárás" },
+  loading: "Betöltés…",
+  demo: { badge: "Példaadatok · 2026. 10. 03." },
 } as const;

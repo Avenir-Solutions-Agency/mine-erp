@@ -105,6 +105,7 @@ Buttons (`button.tsx`)
 | ghost | transparent | foreground | Low-emphasis actions, table rows |
 | destructive | destructive/10 | destructive | Destructive actions, always confirm |
 | link | transparent | primary | Inline navigation |
+| ai | ai-soft | ai | Actions that run or accept an AI suggestion |
 
 - Sizes: `default` 32px, `lg` 36px; on touch screens use at least 44px hit areas.
 - States: hover, focus-visible ring (`ring-ring/50`), disabled 50% opacity, `aria-invalid` destructive ring.
