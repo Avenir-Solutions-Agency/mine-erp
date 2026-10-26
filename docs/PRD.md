@@ -78,7 +78,7 @@ Do not build these in v1, even if they look easy or obvious.
 - Incoming invoices, bank, ledger export, payroll prep, controlling, "Ask the ERP" (phase 4).
 - The four add-on modules (landfill, plate-recognition scale, machine log, mechanic mobile).
 - Data migration from the old Mine ERP, or reuse of its code or the demo v6 code.
-- Dark mode, maps, native mobile apps.
+- Maps, native mobile apps.
 
 ## 08 Open questions
 
@@ -95,7 +95,7 @@ Not decided yet. The agent must ask before assuming an answer.
 - Billingo access for the partner import.
 - EKÁER value source: price list or order price?
 - Production hosting: Docker Compose or k3s; self-hosted or managed PostgreSQL and Temporal (ADR).
-- Brand colour: v1 uses the neutral shadcn palette (assumed — confirm).
+- Brand colour: decided 2026-10-26, the demo design wins (quarry green, IBM Plex + Barlow Condensed, dark mode). See DESIGN_SYSTEM.md.
 - Target share of documents without human review (assumed 80% — confirm).
 
 ## 09 Glossary

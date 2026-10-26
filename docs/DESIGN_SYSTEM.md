@@ -1,6 +1,6 @@
 # Design System: Mészkő-Polgár ERP 2.0
 
-Every visual decision lives here so the agent never invents one. The tokens below are the ones already in `apps/web/src/app/globals.css` (shadcn/ui `base-nova`, neutral base). Keep the token names: the code references them.
+Every visual decision lives here so the agent never invents one. The tokens below are the ones in `apps/web/src/app/globals.css`. Values come from the demo page (`docs/reference/demo.html`, inventory in `docs/demo-inventory/`), which is the visual reference for v1; names stay shadcn/ui (`base-nova`). Keep the token names: the code references them.
 
 ## 01 Brand identity
 
@@ -14,48 +14,52 @@ Every visual decision lives here so the agent never invents one. The tokens belo
 
 Use tokens in components (`bg-primary`, `text-muted-foreground`, `border-border`). Never raw hex or oklch values in components.
 
-| Token | Value (light) | Use |
-| --- | --- | --- |
-| --background | oklch(1 0 0) | Page background |
-| --foreground | oklch(0.145 0 0) | Body text |
-| --card / --card-foreground | oklch(1 0 0) / oklch(0.145 0 0) | Cards, panels |
-| --popover / --popover-foreground | oklch(1 0 0) / oklch(0.145 0 0) | Menus, popovers |
-| --muted / --muted-foreground | oklch(0.97 0 0) / oklch(0.556 0 0) | Subtle surfaces / secondary text, captions |
-| --secondary / --secondary-foreground | oklch(0.97 0 0) / oklch(0.205 0 0) | Secondary buttons |
-| --accent / --accent-foreground | oklch(0.97 0 0) / oklch(0.205 0 0) | Hover rows, selected items |
-| --primary / --primary-foreground | oklch(0.205 0 0) / oklch(0.985 0 0) | Main action, links, active states |
-| --border / --input | oklch(0.922 0 0) | Dividers, input borders |
-| --ring | oklch(0.708 0 0) | Focus ring |
-| --destructive | oklch(0.577 0.245 27.325) | Errors, destructive actions, `failed` / `rejected` |
-| --success / --success-foreground | oklch(0.627 0.17 149) / oklch(0.985 0 0) (assumed — confirm) | `registered`, `ekaer_reported`, confirmations |
-| --warning / --warning-foreground | oklch(0.666 0.157 58) / oklch(0.145 0 0) (assumed — confirm) | `needs_review`, non-blocking warnings |
-| --chart-1 … --chart-5 | neutral ramp | Charts only |
-| --sidebar-* | see globals.css | App sidebar |
+| Token | Light | Dark | Use |
+| --- | --- | --- | --- |
+| --background | #EDF0ED | #111715 | Page background (limestone grey) |
+| --foreground | #18211F | #E4EBE8 | Body text |
+| --card / --popover | #FFFFFF | #19211F | Cards, panels, menus (`*-foreground` = foreground) |
+| --muted / --secondary | #F5F7F5 | #1F2826 | Subtle surfaces, secondary buttons |
+| --muted-foreground | #5B6964 | #97A6A1 | Secondary text, captions, table headers |
+| --primary / --primary-foreground | #1E6B58 / #FFFFFF | #5DC1A3 / #0D1A16 | Quarry green: main action, links, active states, focus ring |
+| --accent / --accent-foreground | #DCEBE5 / #1E6B58 | #1D3A32 / #5DC1A3 | Hover, selected rows, active nav item |
+| --ai / --ai-soft | #94580A / #F6E9D3 | #E6A84E / #3A2D18 | AI suggestions, approvals, nav counters |
+| --success / --success-soft | #2B7A4B / #DDF0E3 | #72CF97 / #1C3527 | `registered`, `ekaer_reported`, confirmations |
+| --warning / --warning-soft | #8A4F00 / #FBEBD2 | #F0B45A / #3A2B14 | `needs_review`, non-blocking warnings |
+| --destructive / --destructive-soft | #B0281E / #F7DEDB | #F08A80 / #3D1F1C | Errors, destructive actions, `failed` / `rejected` |
+| --border / --input | #D3DAD6 | #2E3936 | Dividers, input borders |
+| --ring | = primary | = primary | Focus ring |
+| --chart-1 … --chart-7 | see globals.css | see globals.css | Charts only, in this order |
+| --map-water / --map-road | #CFE0EA / #C9B48A | #1F3442 / #6B5B3A | Telematics map only |
+| --sidebar-* | see globals.css | see globals.css | App side rail |
 
 Rules:
-- One primary colour. Accent colours are for state, not decoration. The neutral primary is a placeholder until the brand colour arrives (PRD §08).
+- One primary colour (quarry green). `ai`, `success`, `warning`, `destructive` are for state, not decoration.
+- Status pills: `*-soft` background with the matching text colour, no border (demo `.pill.ok/.warn/.bad/.ai/.acc`; `acc` = accent).
 - Status is never colour-only: every status badge also has its Hungarian label.
 - Text on any background passes WCAG AA (4.5:1 for body text).
-- Dark mode: not supported in v1. The `.dark` values stay in globals.css; never hard-code a colour.
+- Dark mode: supported, follows the OS (`prefers-color-scheme`, the `dark:` variant). Never hard-code a colour.
 
 ## 03 Typography
 
-Geist Sans (UI) and Geist Mono (codes, plates, numbers in tables), loaded with `next/font`.
+IBM Plex Sans (UI, `font-sans`), IBM Plex Mono (codes, plates, numbers in tables, `font-mono`) and Barlow Condensed (headings and KPI values, `font-heading`), loaded with `next/font` (latin + latin-ext).
 
 | Role | Font | Size | Weight | Line height |
 | --- | --- | --- | --- | --- |
-| H1 | Geist | 24px | 600 | 1.25 |
-| H2 | Geist | 20px | 600 | 1.3 |
-| H3 | Geist | 16px | 600 | 1.4 |
-| Body | Geist | 14px | 400 | 1.5 |
-| Small | Geist | 12px | 400 | 1.4 |
-| Label | Geist | 12px | 500 | 1.4 |
-| Data | Geist Mono | 13px | 400 | 1.4, `tabular-nums` |
+| H1 | Barlow Condensed | 34px | 600 | 1, letter-spacing .01em, `text-balance` |
+| H2 | Barlow Condensed | 21px | 600 | 1.3, letter-spacing .02em |
+| H3 | Plex Sans | 13px | 600 | 1.4 |
+| KPI value | Barlow Condensed | 30px | 600 | 1.1, `tabular-nums` |
+| Body | Plex Sans | 14px | 400 | 1.5 |
+| Control | Plex Sans | 13px | 500 | 1.4 (buttons, inputs, nav, tables) |
+| Small | Plex Sans | 12px | 400 | 1.4 |
+| Label / table header | Plex Sans | 11px | 500 | 1.4, uppercase, letter-spacing .07em, muted |
+| Data | Plex Mono | 12px | 400 | 1.4, `tabular-nums` |
 
 Rules:
-- Dense by default: body 14px (assumed — confirm). Numbers in tables are right-aligned and `tabular-nums`.
+- Dense by default: body 14px, controls 13px. Numbers in tables are right-aligned and `tabular-nums`.
 - Plates, registry numbers and EKÁER numbers use the Data role.
-- Never more than two font families on a page.
+- Only these three families.
 
 ## 04 Spacing
 
@@ -71,19 +75,18 @@ Base unit: 4px. Only values from the Tailwind scale (`1` = 4px).
 | 8 | 32px | Between sections |
 
 Layout:
-- Office screens: sidebar + full-width content; tables may use the full width.
+- Office screens: 232px side rail + full-width content; tables may use the full width.
 - 16px side padding on mobile.
 
 ## 05 Border radius and shadows
 
-`--radius` is 0.625rem (10px); the scale is derived in `@theme`.
+`--radius` is 0.375rem (6px, demo `--r`); the scale is derived in `@theme`.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| radius-sm | 6px | Tags, badges, small buttons |
-| radius-md | 8px | Inputs |
-| radius-lg | 10px | Buttons, cards, modals |
-| radius-full | 9999px | Avatars, pills |
+| radius-lg | 6px | Default: buttons, inputs, cards, panels, toasts |
+| radius-xl | 8.4px | Modals |
+| radius-full | 9999px | Pills, badges, nav counters, step chips |
 
 Shadows: one level only, for elevated surfaces (dropdowns, modals). Flat cards get a border, not a shadow.
 
@@ -134,9 +137,11 @@ Data tables
 | Name | Min width | Notes |
 | --- | --- | --- |
 | sm | 640px | Phones in landscape |
-| md | 768px | Tablets |
-| lg | 1024px | Laptops, sidebar appears |
+| md | 760px | Side rail appears (below: horizontal nav bar on top) |
+| lg | 980px | 3- and 4-column grids appear (below: 1 and 2 columns) |
 | xl | 1280px | Desktops |
+
+Layout: 232px side rail, sticky, full height; content padding 28px inline (16px on mobile), grid gap 14px.
 
 Rules:
 - Every screen works at 375px wide; the office screens are designed for 1280px first, mobile views (driver, scale operator) for 375px first.
