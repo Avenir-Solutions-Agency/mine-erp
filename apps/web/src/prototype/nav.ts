@@ -6,7 +6,8 @@ export type GroupId = keyof typeof hu.nav.groups;
 export type CounterKey =
   "ap" | "inq" | "con" | "pend" | "ek" | "tig" | "jobs" | "mlog";
 
-type NavItem = { id: RouteId; counter?: CounterKey };
+// ekaer: the screen shows or drives EKÁER data; the others are greyed out for now.
+type NavItem = { id: RouteId; counter?: CounterKey; ekaer?: true };
 
 // Final navigation of the demo after all its patches (docs/demo-inventory/README.md).
 export const NAV: readonly { group: GroupId; items: readonly NavItem[] }[] = [
@@ -21,21 +22,21 @@ export const NAV: readonly { group: GroupId; items: readonly NavItem[] }[] = [
       { id: "quotes" },
       { id: "contracts", counter: "con" },
       { id: "orders" },
-      { id: "portal" },
+      { id: "portal", ekaer: true },
     ],
   },
   {
     group: "logistics",
     items: [
-      { id: "dispatch", counter: "pend" },
-      { id: "transport", counter: "ek" },
-      { id: "scale" },
-      { id: "driverapp" },
+      { id: "dispatch", ekaer: true, counter: "pend" },
+      { id: "transport", ekaer: true, counter: "ek" },
+      { id: "scale", ekaer: true },
+      { id: "driverapp", ekaer: true },
       { id: "telem" },
-      { id: "dn" },
+      { id: "dn", ekaer: true },
       { id: "tig", counter: "tig" },
       { id: "billing" },
-      { id: "integr", counter: "jobs" },
+      { id: "integr", ekaer: true, counter: "jobs" },
     ],
   },
   {

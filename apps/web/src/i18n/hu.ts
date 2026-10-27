@@ -42,6 +42,7 @@ export const hu = {
     },
   },
   placeholder: "Ez a képernyő még nincs átvéve a demóból.",
+  empty: "Még nincs rögzített adat.",
   loading: "Betöltés…",
   demo: { badge: "Példaadatok · 2026. 10. 03." },
 } as const;

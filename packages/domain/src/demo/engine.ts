@@ -57,6 +57,8 @@ export interface DemoEnv {
   random(): number;
   /** SHA-256 hex digest (crypto.subtle in the browser and Node). */
   sha256(text: string): Promise<string>;
+  /** Start without any records, as on an empty database; settings and catalogs stay. */
+  empty?: boolean;
 }
 
 /** Live Claude capability of the demo (`window.claude.use('sample')`); null when unavailable. */
@@ -1448,22 +1450,25 @@ export function createDemo(env: DemoEnv) {
     const worst = S.products
       .map((p) => ({ p, m: (p.price - cm.unit[p.id]) / p.price }))
       .sort((a, b) => a.m - b.m)[0];
-    out.push(
-      `A legkisebb fedezetű termék a ${worst.p.name} (${pct(worst.m)}); célárrés mellett ${ft(Math.ceil(cm.unit[worst.p.id] / (1 - S.policy.targetMargin) / 10) * 10)}/t lenne az ár.`,
-    );
+    if (worst)
+      out.push(
+        `A legkisebb fedezetű termék a ${worst.p.name} (${pct(worst.m)}); célárrés mellett ${ft(Math.ceil(cm.unit[worst.p.id] / (1 - S.policy.targetMargin) / 10) * 10)}/t lenne az ár.`,
+      );
     const big = [...cm.mach].sort((a, b) => b.total - a.total)[0];
-    out.push(
-      `A legdrágább gép a ${big.name}: ${mft(big.total)} a hónapban, ${ft(big.perH)}/üzemóra.`,
-    );
+    if (big)
+      out.push(
+        `A legdrágább gép a ${big.name}: ${mft(big.total)} a hónapban, ${ft(big.perH)}/üzemóra.`,
+      );
     out.push(
       `Fuvarköltség ${ft(cm.ftPerKm)}/km a saját flottán — az ajánlatok ezzel számolnak.`,
     );
     const minW = cf.reduce((m, w) => (w.bal < m.bal ? w : m), cf[0]);
-    out.push(
-      minW.bal < 15e6
-        ? `Figyelem: ${ds(minW.a)} hetében a pénzállás ${mft(minW.bal)}-ra csökken; javasolt a lejárt vevőszámlák behajtása vagy egy nagy beszerzés halasztása.`
-        : `A pénzállás 13 héten át a biztonsági szint felett marad.`,
-    );
+    if (minW)
+      out.push(
+        minW.bal < 15e6
+          ? `Figyelem: ${ds(minW.a)} hetében a pénzállás ${mft(minW.bal)}-ra csökken; javasolt a lejárt vevőszámlák behajtása vagy egy nagy beszerzés halasztása.`
+          : `A pénzállás 13 héten át a biztonsági szint felett marad.`,
+      );
     return out;
   }
 
@@ -7305,6 +7310,16 @@ export function createDemo(env: DemoEnv) {
   SEEDING = true;
   seed();
   SEEDING = false;
+  if (env.empty) {
+    // Settings and catalogs, not records: an empty database would still have them.
+    const keep = new Set(["policy", "agents", "conn", "sim", "wcodes"]);
+    // Emptied in place: closures above hold references to these arrays.
+    for (const [k, v] of Object.entries(S))
+      if (!keep.has(k) && Array.isArray(v)) v.length = 0;
+    S.vol = {};
+    S.telem = {};
+    S.pnl = { months: [], rev: [], cost: [] };
+  }
 
   // Patched bindings are read through getters so callers always get the final version.
   const q = {
