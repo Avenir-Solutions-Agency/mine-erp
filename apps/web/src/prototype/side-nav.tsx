@@ -20,9 +20,19 @@ export function SideNav() {
           <div className="hidden px-2 pt-3 pb-1 text-label tracking-widest text-muted-foreground uppercase md:block">
             {hu.nav.groups[group]}
           </div>
-          {items.map(({ id, counter }) => {
+          {items.map(({ id, counter, ekaer }) => {
             const count = counter ? counts[counter] : undefined;
             const current = pathname === `/${id}`;
+            if (!ekaer)
+              return (
+                <span
+                  key={id}
+                  aria-disabled="true"
+                  className="cursor-not-allowed rounded-lg px-2.5 py-1.75 text-control whitespace-nowrap opacity-50 md:w-fit"
+                >
+                  {hu.nav.routes[id]}
+                </span>
+              );
             return (
               <Link
                 key={id}

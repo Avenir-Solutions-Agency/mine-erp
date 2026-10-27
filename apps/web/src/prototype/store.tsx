@@ -13,10 +13,11 @@ import { toast } from "@/components/ui/toast";
 import { downloadFile } from "@/prototype/files";
 import { hu } from "@/i18n/hu";
 
-// One engine per browser tab; like the demo, a reload starts again from the seed.
+// One engine per browser tab; a reload starts again from an empty database.
 let instance: Demo | null = null;
 function getDemo(): Demo {
   instance ??= createDemo({
+    empty: true,
     now: () => Date.now(),
     random: () => Math.random(),
     sha256: async (text) => {

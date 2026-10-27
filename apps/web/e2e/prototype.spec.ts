@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { ROUTE_IDS } from "../src/prototype/nav";
+import { NAV, ROUTE_IDS } from "../src/prototype/nav";
 
-// Every demo screen renders in the browser, without errors or horizontal page scroll (desktop and 375px).
+// Every demo screen renders on an empty database in the browser, without errors or horizontal page scroll (desktop and 375px).
 test("every prototype screen renders", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -12,9 +12,8 @@ test("every prototype screen renders", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   for (const route of ROUTE_IDS) {
-    await page.locator(`nav a[href="/${route}"]`).click();
-    await page.waitForURL(`**/${route}`);
-    // Next keeps recent routes mounted but hidden (Activity), so look at the visible heading only.
+    // Greyed-out screens have no nav link, so open every screen by URL.
+    await page.goto(`/${route}`);
     await expect(page.locator("main h1:visible")).toHaveCount(1);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
@@ -25,13 +24,15 @@ test("every prototype screen renders", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test("nav badges match the original demo after bootstrap", async ({ page }) => {
-  await page.goto("/dash");
+test("only EKÁER screens are links; the empty start has no badges", async ({
+  page,
+}) => {
+  await page.goto("/transport");
 
-  const badges = page.locator('nav a[href="/ai"] span').last();
-
-  await expect(badges).toHaveText("7");
-  await expect(page.locator('nav a[href="/dispatch"] span').last()).toHaveText(
-    "43",
+  const ekaer = NAV.flatMap((g) => g.items.filter((i) => i.ekaer));
+  await expect(page.locator("nav a")).toHaveCount(ekaer.length);
+  await expect(page.locator('nav [aria-disabled="true"]')).toHaveCount(
+    ROUTE_IDS.length - ekaer.length,
   );
+  await expect(page.locator("nav a span.font-mono")).toHaveCount(0);
 });

@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { hu } from "@/i18n/hu";
 import { cn } from "@/lib/utils";
 import {
   Btn,
@@ -30,12 +31,14 @@ import {
   Sel,
   Small,
 } from "@/prototype/ui";
+import { Placeholder } from "./placeholder";
 
 // V.portal with the signature box patch (contracts and TIGs waiting for the customer).
 export function PortalScreen() {
   const demo = useDemo();
   const { S, q, actions, ui, TODAY } = demo;
-  const c = q.C(ui.sel.portal ?? "")!;
+  const c = q.C(ui.sel.portal ?? "");
+  if (!c) return <Placeholder route="portal" message={hu.empty} />;
   const qs = S.quotes.filter((x) => x.clientId === c.id);
   const os = S.orders.filter((o) => o.clientId === c.id);
   const fs = S.transports.filter((f) => f.clientId === c.id);

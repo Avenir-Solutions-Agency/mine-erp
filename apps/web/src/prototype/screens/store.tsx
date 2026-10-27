@@ -316,7 +316,7 @@ export function StoreScreen() {
               <Inp
                 name="tk-l"
                 type="number"
-                defaultValue={Math.round(S.parts[0].qty * 0.982)}
+                defaultValue={Math.round((S.parts[0]?.qty ?? 0) * 0.982)}
               />
             </Field>
             <Btn kind="pri" type="submit" className="self-end">

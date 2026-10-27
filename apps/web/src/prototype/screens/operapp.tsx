@@ -17,14 +17,17 @@ import {
   Spread,
   Stack,
 } from "@/prototype/ui";
+import { hu } from "@/i18n/hu";
 import { Phone, PhotoBtn } from "./operapp-parts";
+import { Placeholder } from "./placeholder";
 
 // V.operapp: shift close on the operator's phone.
 export function OperAppScreen() {
   const { S, q, actions, view, consts, TODAY } = useDemo();
   const OPA = view.OPA;
   const ops = S.employees.filter((e) => /Rakodógép|Dózer/.test(e.role));
-  const m = S.machines.find((x) => x.id === OPA.machine)!;
+  const m = S.machines.find((x) => x.id === OPA.machine);
+  if (!m) return <Placeholder route="operapp" message={hu.empty} />;
   const prodM = m.id === "OSZT-01" || m.id === "TOR-01";
   const auto = m.src === "szalagmérleg";
   const h0 = q.lastHours(m.id);

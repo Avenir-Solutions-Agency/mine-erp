@@ -20,12 +20,15 @@ import {
   Spread,
   Stack,
 } from "@/prototype/ui";
+import { hu } from "@/i18n/hu";
 import { PhotoBtn, SigImg } from "./driverapp-parts";
+import { Placeholder } from "./placeholder";
 
 // V.driverapp: the driver's phone/tablet view (PWA).
 export function DriverAppScreen() {
   const { S, q, view, actions, TODAY } = useDemo();
-  const d = q.DR(view.DRV.id)!;
+  const d = q.DR(view.DRV.id);
+  if (!d) return <Placeholder route="driverapp" message={hu.empty} />;
   const ts = S.transports
     .filter(
       (f) =>
