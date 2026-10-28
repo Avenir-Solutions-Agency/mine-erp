@@ -1,0 +1,31 @@
+# Local services for development (T-001). Run from the repo root: docker compose -f infra/docker-compose.yml up -d
+# PostgreSQL, auth and file storage are a hosted Supabase project (EU region), not containers: docs/ARCHITECTURE.md §02.
+name: mine-erp
+
+services:
+  temporal:
+    # Temporal CLI dev server: frontend on 7233, web UI on 8233; state kept in a volume across restarts.
+    image: temporalio/temporal:1.9.1
+    # The image's own user cannot write the root-owned named volume; local dev only.
+    user: root
+    command:
+      - server
+      - start-dev
+      - --ip=0.0.0.0
+      - --db-filename=/data/temporal.db
+    ports:
+      - "127.0.0.1:7233:7233"
+      - "127.0.0.1:8233:8233"
+    volumes:
+      - temporal-data:/data
+    restart: unless-stopped
+
+  gotenberg:
+    # HTML → PDF for delivery notes, quotes and TIGs.
+    image: gotenberg/gotenberg:8.39.0
+    ports:
+      - "127.0.0.1:3001:3000"
+    restart: unless-stopped
+
+volumes:
+  temporal-data:

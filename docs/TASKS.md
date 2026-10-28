@@ -3,11 +3,11 @@
 Derived from docs/PRD.md §05 and the spec's phase 1. Small tasks (at most a day). Tick a box only when AGENTS.md §07 is met. IDs: T-###; feature refs: F#.
 
 ## Now
-- [ ] T-001 Local infra: `infra/docker-compose.yml` with PostgreSQL 17, Temporal dev server, Keycloak, MinIO, Gotenberg
+- [ ] T-001 Local infra: `infra/docker-compose.yml` with Temporal dev server and Gotenberg; hosted Supabase dev project (EU) for PostgreSQL, auth and storage; `.env.example` names
 - [x] T-002 `packages/domain` skeleton with Vitest; shared tsconfig and lint setup for packages (done in T-023)
 - [ ] T-003 `packages/db`: Drizzle setup, migrations, the eleven phase-1 tables with UUIDv7, audit columns and DB rules (unique ticket number + year, unique SHA-256, net = gross − tare check)
 - [ ] T-004 `packages/contracts`: Zod schemas for document, shipment, master data
-- [ ] T-005 `apps/api` NestJS skeleton: health, OpenAPI 3.1, Keycloak OIDC guard, event_log writer
+- [ ] T-005 `apps/api` NestJS skeleton: health, OpenAPI 3.1, Supabase JWT guard (JWKS, `aal2` for office users), event_log writer
 
 ## Prototype track (PRD §05a)
 Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-inventory/`.

@@ -33,11 +33,11 @@ AI agents -----> MCP (inside api) -----+          v                             
 | Web | Next.js 16 App Router, React 19, Tailwind v4, shadcn/ui (base-nova), TanStack Query and Table | Server components for office screens; same code later as PWA |
 | Backend | NestJS, REST + OpenAPI 3.1 | Several clients (web, bot, scale agent, AI agents) need one typed API; Next route handlers would mix UI and domain |
 | Workflows | Temporal (TypeScript SDK) | EKÁER lifecycle, document pipeline, retries and signals need durable state, not a cron |
-| Database | PostgreSQL 17 | Strongly relational data, event log, row-level security, PITR |
+| Database | PostgreSQL 17 on Supabase (hosted, EU region) | Strongly relational data, event log, row-level security, PITR; managed instead of self-run (decided 2026-10-28) |
 | Queries | Drizzle ORM + drizzle-kit migrations | SQL-close, typed, no heavy runtime |
 | Validation | Zod (`packages/contracts`) | Same schemas on API, web and worker |
-| Auth | Keycloak (OIDC), 2FA; PIN or QR card on mobile | Self-hosted in the EU, service accounts for AI agents |
-| Files | S3-compatible store (MinIO locally), SHA-256 on every file | Evidence for EKÁER and documents |
+| Auth | Supabase Auth, TOTP 2FA (MFA); PIN or QR card on mobile | Same project as the database, no separate identity server to run (decided 2026-10-28, replaces Keycloak) |
+| Files | Supabase Storage through its S3-compatible endpoint, SHA-256 on every file | Evidence for EKÁER and documents; S3 API keeps the client portable (decided 2026-10-28, replaces MinIO) |
 | AI | Claude API (vision + tool use), own MCP server | Structured extraction; model id in config, never in code |
 | Telegram | grammY, webhook mode | TypeScript-native, stateless |
 | PDF | HTML template → Gotenberg | Delivery note, quote, TIG |
@@ -101,7 +101,7 @@ State:
 - Optimistic updates: none in v1.
 
 Auth:
-- Keycloak OIDC. Authorization is decided in the API layer, not the UI. Services receive the actor (user or agent service account).
+- Supabase Auth; the API verifies the Supabase JWT against the project's JWKS. Authorization is decided in the API layer, not the UI. Services receive the actor (user or agent service account).
 
 Errors:
 - Validation errors return a code and a Hungarian message.
@@ -159,7 +159,7 @@ If a task needs any of the following, stop, name the conflict, and propose the s
 
 | Environment | URL | Deployed from | Data |
 | --- | --- | --- | --- |
-| Local | http://localhost:3000 (web) | your machine, `docker compose up` + `pnpm dev` | local PostgreSQL, Temporal dev server, Keycloak, MinIO, Gotenberg |
+| Local | http://localhost:3000 (web) | your machine, `docker compose -f infra/docker-compose.yml up -d` + `pnpm dev` | hosted Supabase dev project (EU); local Temporal dev server (UI :8233) and Gotenberg (:3001) |
 | Test | not set yet | `main`, automatically | test database; EKÁER test environment |
 | Production | not set yet | tagged release, manual approval | production database |
 
@@ -169,8 +169,11 @@ Environment variables (names only; values live in the secret store and `.env.loc
 | --- | --- | --- |
 | DATABASE_URL | api, worker | yes |
 | TEMPORAL_ADDRESS | api, worker | yes |
-| KEYCLOAK_ISSUER, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET | api, web | yes |
-| S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY | api, worker | yes |
+| NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | web | no (public by design; access is enforced by RLS and the API) |
+| SUPABASE_URL | api, worker | yes |
+| SUPABASE_SECRET_KEY | api, worker | yes |
+| S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY | api, worker | yes |
+| GOTENBERG_URL | worker | yes |
 | ANTHROPIC_API_KEY | worker | yes |
 | TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET | bot, worker | yes |
 | EKAER_USER, EKAER_PASSWORD, EKAER_SIGNING_KEY, EKAER_TAX_NUMBER | worker | yes |

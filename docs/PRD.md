@@ -103,7 +103,7 @@ Not decided yet. The agent must ask before assuming an answer.
 - Foreign carriers' vehicles: where do the plate and country code come from?
 - Billingo access for the partner import.
 - EKÁER value source: price list or order price?
-- Production hosting: Docker Compose or k3s; self-hosted or managed PostgreSQL and Temporal (ADR).
+- Production hosting: Docker Compose or k3s; self-hosted or managed Temporal (ADR). PostgreSQL, auth and storage: Supabase, EU region (decided 2026-10-28).
 - Brand colour: decided 2026-10-26, the demo design wins (quarry green, IBM Plex + Barlow Condensed, dark mode). See DESIGN_SYSTEM.md.
 - Target share of documents without human review (assumed 80% — confirm).
 
