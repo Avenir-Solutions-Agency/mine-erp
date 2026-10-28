@@ -72,7 +72,7 @@ pnpm test              unit tests (planned until the test setup lands)
 pnpm test:e2e          end-to-end tests (planned until the test setup lands)
 pnpm format            format the codebase
 pnpm --filter @mine-erp/web <script>   run a script in one package
-docker compose up      local PostgreSQL, Temporal, Keycloak, MinIO, Gotenberg (planned)
+docker compose -f infra/docker-compose.yml up -d   local Temporal and Gotenberg (database, auth, storage: hosted Supabase)
 ```
 
 If a command fails, report the exact output. Do not work around it silently.

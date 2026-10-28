@@ -6,7 +6,7 @@ Read before changing auth, EKÁER, Telegram, uploads, secrets, personal data or 
 
 | Data | Examples | Sensitivity | Where stored | Retention |
 | --- | --- | --- | --- | --- |
-| Staff personal data | name, phone, Telegram user id, Keycloak id | personal data (GDPR) | `person` | until erasure request or end of employment |
+| Staff personal data | name, phone, Telegram user id, Supabase Auth user id | personal data (GDPR) | `person` | until erasure request or end of employment |
 | Vehicle data | plate numbers, country codes | personal data when linked to a driver | `vehicle`, `shipment` | accounting retention (configurable) |
 | Document images | weigh ticket and delivery note photos | business + personal data | S3 object store (EU), SHA-256 | accounting retention (configurable) |
 | EKÁER evidence | request/response XML (without credentials) | legal evidence | S3 object store | per legal requirement |
@@ -22,11 +22,11 @@ The client is the data controller; we are the processor (annex 4).
 - Scale agent → API: HTTPS with a per-device token; idempotency key = ticket number.
 - AI output (Claude extraction): untrusted input. Validate against the schema; never auto-link fuzzy matches.
 - EKÁER, Billingo and other third-party responses: untrusted input.
-- AI agents: own Keycloak service account with a narrow role; every write tool call passes the policy engine first.
+- AI agents: own Supabase Auth user with a narrow role (Supabase has no service accounts; open decision: token lifetime and rotation for agent users); every write tool call passes the policy engine first.
 
 ## 03 Authentication and authorization
 
-- Provider: Keycloak OIDC. 2FA is mandatory for office users; mobile uses PIN or QR card with short-lived tokens.
+- Provider: Supabase Auth (project in an EU region). 2FA (TOTP MFA) is mandatory for office users: the API rejects office sessions below `aal2`; mobile uses PIN or QR card with short-lived tokens.
 - Roles (phase 1): system operator, EKÁER admin, office user, scale operator, driver, read-only manager, agent (service account).
 - Every API entry point checks the session and the role; authorization is decided in the API layer, never only in the UI.
 - Always human approval: EKÁER modify/delete/correction, an EKÁER submission that fails the rules, and policy changes.
@@ -35,6 +35,8 @@ The client is the data controller; we are the processor (annex 4).
 
 - Stored in Vaultwarden or OpenBao (production, test) and `.env.local` (development). Never in git, never in `NEXT_PUBLIC_*`, never in logs, error messages or Sentry (redaction filter).
 - Services read secrets at start-up.
+- The Supabase secret key bypasses row-level security: api and worker only, never web, never `NEXT_PUBLIC_*`. The publishable key is public by design.
+- Supabase is a sub-processor of personal data: EU region only, listed in the data processing agreement.
 - EKÁER uses a secondary user with its own signing key; the password is sent only as its SHA-512 hash.
 - Rotation: by the system operator through the secret store (owner to be named).
 
