@@ -2,13 +2,8 @@
 
 import { useDemo } from "@/prototype/store";
 import { Head, TabBar } from "@/prototype/ui";
-import {
-  ArTab,
-  InboundTab,
-  OutTab,
-  QueueTab,
-  SettingsTab,
-} from "./billing-parts";
+import { ArTab, OutTab, QueueTab, SettingsTab } from "./billing-parts";
+import { InboundTab } from "./billing-inbound";
 
 const TABS: [string, string][] = [
   ["out", "Kimenő számlák"],
@@ -18,7 +13,7 @@ const TABS: [string, string][] = [
   ["set", "Beállítások"],
 ];
 
-// Final V.billing: the round-4 tabs, `ar` = the round-2 ageing part, `in` = the round-5 cost-centre table.
+// Final V.billing: the round-4 tabs, `ar` = the round-2 ageing part, `in` = the boss's invoice portal.
 export function BillingScreen() {
   const { actions, view } = useDemo();
   const tab = view.INVF.tab;

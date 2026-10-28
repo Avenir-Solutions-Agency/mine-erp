@@ -20,10 +20,10 @@ export function SideNav() {
           <div className="hidden px-2 pt-3 pb-1 text-label tracking-widest text-muted-foreground uppercase md:block">
             {hu.nav.groups[group]}
           </div>
-          {items.map(({ id, counter, ekaer }) => {
+          {items.map(({ id, counter, enabled }) => {
             const count = counter ? counts[counter] : undefined;
             const current = pathname === `/${id}`;
-            if (!ekaer)
+            if (!enabled)
               return (
                 <span
                   key={id}

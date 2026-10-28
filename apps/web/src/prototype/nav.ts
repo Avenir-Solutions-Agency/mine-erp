@@ -6,8 +6,8 @@ export type GroupId = keyof typeof hu.nav.groups;
 export type CounterKey =
   "ap" | "inq" | "con" | "pend" | "ek" | "tig" | "jobs" | "mlog";
 
-// ekaer: the screen shows or drives EKÁER data; the others are greyed out for now.
-type NavItem = { id: RouteId; counter?: CounterKey; ekaer?: true };
+// enabled: EKÁER screens and the invoice portal; the others are greyed out for now.
+type NavItem = { id: RouteId; counter?: CounterKey; enabled?: true };
 
 // Final navigation of the demo after all its patches (docs/demo-inventory/README.md).
 export const NAV: readonly { group: GroupId; items: readonly NavItem[] }[] = [
@@ -22,21 +22,21 @@ export const NAV: readonly { group: GroupId; items: readonly NavItem[] }[] = [
       { id: "quotes" },
       { id: "contracts", counter: "con" },
       { id: "orders" },
-      { id: "portal", ekaer: true },
+      { id: "portal", enabled: true },
     ],
   },
   {
     group: "logistics",
     items: [
-      { id: "dispatch", ekaer: true, counter: "pend" },
-      { id: "transport", ekaer: true, counter: "ek" },
-      { id: "scale", ekaer: true },
-      { id: "driverapp", ekaer: true },
+      { id: "dispatch", enabled: true, counter: "pend" },
+      { id: "transport", enabled: true, counter: "ek" },
+      { id: "scale", enabled: true },
+      { id: "driverapp", enabled: true },
       { id: "telem" },
-      { id: "dn", ekaer: true },
+      { id: "dn", enabled: true },
       { id: "tig", counter: "tig" },
-      { id: "billing" },
-      { id: "integr", ekaer: true, counter: "jobs" },
+      { id: "billing", enabled: true },
+      { id: "integr", enabled: true, counter: "jobs" },
     ],
   },
   {
