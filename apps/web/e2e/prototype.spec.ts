@@ -24,15 +24,15 @@ test("every prototype screen renders", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test("only EKÁER screens are links; the empty start has no badges", async ({
+test("only enabled screens are links; the empty start has no badges", async ({
   page,
 }) => {
   await page.goto("/transport");
 
-  const ekaer = NAV.flatMap((g) => g.items.filter((i) => i.ekaer));
-  await expect(page.locator("nav a")).toHaveCount(ekaer.length);
+  const enabled = NAV.flatMap((g) => g.items.filter((i) => i.enabled));
+  await expect(page.locator("nav a")).toHaveCount(enabled.length);
   await expect(page.locator('nav [aria-disabled="true"]')).toHaveCount(
-    ROUTE_IDS.length - ekaer.length,
+    ROUTE_IDS.length - enabled.length,
   );
   await expect(page.locator("nav a span.font-mono")).toHaveCount(0);
 });

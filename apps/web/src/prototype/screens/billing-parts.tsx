@@ -4,7 +4,6 @@ import { ds, fmt, ft, mft, type Doc } from "@mine-erp/domain/demo";
 import { useDemo } from "@/prototype/store";
 import { StatusPill } from "@/prototype/status-pill";
 import { Kpi } from "@/components/ui/kpi";
-import { Pill } from "@/components/ui/pill";
 import {
   Table,
   TableBody,
@@ -15,7 +14,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  AiBox,
   Alert,
   Bar,
   Btn,
@@ -395,112 +393,6 @@ export function ArTab() {
         )}
       </Panel>
     </Grid>
-  );
-}
-
-// Round-5 inbound table; the round-4 `inok` approve button is no longer rendered (demo quirk).
-export function InboundTab() {
-  const { S, actions } = useDemo();
-  const opts = [
-    ...S.machines.filter((m) => m.stage !== "fuvar").map((m) => m.id),
-    "KÚT",
-    "—",
-  ];
-  return (
-    <Panel>
-      <h2>Bejövő (szállítói) számlák</h2>
-      <p className="my-3 text-xs text-muted-foreground">
-        Szabály: gépre vonatkozó költség gépazonosító nélkül nem adható fel a
-        könyvelésbe. Az AI kiolvassa a számlát és javasolja a gépet vagy
-        munkalapot; ember fogadja el. Emellett 3-utas egyeztetés: rendelés –
-        QR-bevételezés – számla.
-      </p>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Szállító · számla</TableHead>
-            <TableHead>Tétel</TableHead>
-            <TableHead numeric>Nettó</TableHead>
-            <TableHead>Rendelés / bevételezés</TableHead>
-            <TableHead>AI: költséghely</TableHead>
-            <TableHead>Gép / költséghely</TableHead>
-            <TableHead>Könyvelés</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {S.inbound.map((b) => {
-            const ready = b.mach && b.mach !== "?";
-            return (
-              <TableRow key={b.id}>
-                <TableCell>
-                  {b.sup}
-                  <Small className="font-mono">{b.no}</Small>
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {b.item}
-                </TableCell>
-                <TableCell numeric>{ft(b.net)}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {b.po}
-                  <br />
-                  {b.rec}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {b.ai?.m ? (
-                    <>
-                      <b>{b.ai.m}</b> —{" "}
-                    </>
-                  ) : null}
-                  {b.ai?.why}
-                </TableCell>
-                <TableCell>
-                  <Sel
-                    aria-label="Költséghely"
-                    defaultValue={b.mach ?? ""}
-                    onCommit={(el) => actions.setInboundMachine(b.id, el.value)}
-                  >
-                    <option value="">— válasszon —</option>
-                    {opts.map((m) => (
-                      <option key={m}>{m}</option>
-                    ))}
-                  </Sel>
-                  {b.ai?.m && !b.mach ? (
-                    <Btn
-                      kind="ai"
-                      sm
-                      onClick={() => actions.acceptInboundAi(b.id)}
-                    >
-                      Elfogad
-                    </Btn>
-                  ) : null}
-                </TableCell>
-                <TableCell>
-                  {ready ? (
-                    b.status === "Egyeztetve" ||
-                    b.status === "Fizetésre jóváhagyva" ? (
-                      <Pill tone="success">feladható</Pill>
-                    ) : (
-                      <Pill tone="warning">{b.status}</Pill>
-                    )
-                  ) : (
-                    <Pill tone="destructive">gépazonosító hiányzik</Pill>
-                  )}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-      <AiBox who="Pénzügyi elemző" className="mt-2">
-        <p className="mt-1">
-          A Komatsu-számla rendelés és munkalap nélkül jött: a DOZ-01-hez
-          javaslok utólagos munkalapot (hibajegy a gépkezelő appból), hogy a
-          javítás költsége a gép Ft/üzemórájába kerüljön. A Sandvik-számla
-          rendelés nélkül érkezett: fizetés zárolva, amíg az ütőléc-beszerzést
-          jóvá nem hagyják.
-        </p>
-      </AiBox>
-    </Panel>
   );
 }
 
