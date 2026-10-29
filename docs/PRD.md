@@ -93,7 +93,7 @@ Do not build these in v1 as production features (backend, database, real integra
 
 Not decided yet. The agent must ask before assuming an answer.
 
-- [Blocking] Which weighbridge and scale software is used, who supplies it, and is there an API, database access or export? (scale adapter)
+- [Blocking, partly answered 2026-10-29] Scale software: Netto Scales PORTAL AI with an ERP API 1.2 (Bearer key, read and optional write) and a read-only SQLite file; see `docs/reference/portal-ai.md`. Still open: network path from the hosted ERP to the scale PC (VPN or the local scale agent), who issues the API key, and whether PORTAL or the ERP files EKÁER.
 - [Blocking] EKÁER test environment request to NAV, and a secondary EKÁER user for the ERP under the client's primary user.
 - [Blocking] Which products are EKÁER-required (VTSZ 2517, 2516, 2505), and with what weight or value threshold? Needs the accountant's or tax advisor's opinion.
 - At least 100 real weigh ticket and delivery note photos from the Viber group, with the client's consent.
