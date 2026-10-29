@@ -33,13 +33,13 @@ Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-in
 - [x] T-009 `apps/worker` Temporal skeleton; `ProcessDocumentWorkflow` with ingest → notify steps as stubs
 - [ ] T-010 (F1) Ingest activity: object store upload, SHA-256, `document` record, duplicate detection
 - [ ] T-011 (F2) `packages/extraction`: Claude vision tool-use schema, prompt versioning, evaluation script on the labelled set
-- [ ] T-012 (F4) Normalize, link and register activities; gapless registry number sequence
+- [ ] T-012 (F4) Normalize, link and register activities; gapless registry number sequence. Done for weighings (2026-10-30): `shipment` with gapless SZ-YYYY-NNNNNN, registered when a weighing completes with customer and product, cancelled with it. Open: linking uploaded documents (T-010/T-011)
 - [x] T-013 (F5) `packages/ekaer`: XML builder, SHA-512 request signature, XSD validation (unit-tested against the NAV FAQ example)
 - [ ] T-014 (F5) `EkaerReportWorkflow`: obligation decision, create with query-before-resend, finalize, human-approved modify/delete/correction
 - [ ] T-015 (F1, F6) `apps/bot`: grammY webhook with secret token, allow-listed chats, photo/document/album intake, reply-and-edit confirmations, `/allapot`, `/ma`, `/segitseg`
 - [ ] T-016 (F1) Web upload page
 - [ ] T-017 (F3) Web review queue: zoomable photo next to the extracted form, low-confidence fields highlighted, resume via signal
-- [ ] T-018 (F4) Web shipment register list and detail
+- [x] T-018 (F4) Web shipment register list and detail (Fuvarok és EKÁER: list, search, ticket; detail via the weigh ticket)
 - [ ] T-019 (F1) `apps/scale-agent`: adapter interface, SQLite buffer, heartbeat, `POST /scale/tickets` (first adapter after the scale survey)
 - [ ] T-020 Policy engine minimum: auto-EKÁER switch, agent modes
 - [ ] T-021 E2E: photo upload → review queue → register → EKÁER number (against the EKÁER test environment)

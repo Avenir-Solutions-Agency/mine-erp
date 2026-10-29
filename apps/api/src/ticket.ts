@@ -54,6 +54,7 @@ ${w.status === "void" ? `<div class="void">SZTORNÓ</div>` : ""}
   <div class="no">${esc(w.ticketNumber)}</div>
 </header>
 <table>
+  ${w.shipment ? row("Szállítás", esc(w.shipment.registryNumber) + (w.shipment.status === "cancelled" ? " (sztornó)" : "")) : ""}
   ${row("Rendszám", esc(w.plate))}
   ${row("Pótkocsi", text(w.trailerPlate))}
   ${row("Vevő", text(w.customer))}

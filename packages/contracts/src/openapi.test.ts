@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
-import { buildOpenApi } from "./openapi.ts";
+import { buildOpenApi, ROUTES } from "./openapi.ts";
 
 test("the committed openapi.json matches the contract (run: pnpm --filter @mine-erp/contracts openapi)", () => {
   const committed = JSON.parse(
@@ -19,6 +19,6 @@ test("every operation documents a body schema for JSON input and an error shape"
     responses: Record<string, unknown>;
   }[];
 
-  expect(ops.length).toBe(24);
+  expect(ops.length).toBe(ROUTES.length);
   expect(ops.every((o) => "default" in o.responses)).toBe(true);
 });

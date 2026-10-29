@@ -6,6 +6,7 @@ import {
   eq,
   eventLog,
   nextWeighingTicketSeq,
+  type Tx,
   vehicle,
   weighing,
 } from "@mine-erp/db";
@@ -61,6 +62,8 @@ export class WeighingsRepository {
     year: number,
     ticketNumber: (seq: number) => string,
     actor: Actor,
+    /** Runs in the same transaction after the row is written (e.g. registering a shipment). */
+    also?: (tx: Tx, w: WeighingRow) => Promise<unknown>,
   ): Promise<WeighingRow> {
     return this.db.transaction(async (tx) => {
       const seq = await nextWeighingTicketSeq(tx, year);
@@ -87,6 +90,7 @@ export class WeighingsRepository {
           firstKg: w!.firstKg,
         },
       });
+      await also?.(tx, w!);
       return w!;
     });
   }
@@ -98,6 +102,7 @@ export class WeighingsRepository {
     change: Change,
     action: string,
     actor: Actor,
+    also?: (tx: Tx, w: WeighingRow) => Promise<unknown>,
   ): Promise<WeighingRow | null> {
     return this.db.transaction(async (tx) => {
       const [w] = await tx
@@ -114,6 +119,7 @@ export class WeighingsRepository {
         action,
         payload: change,
       });
+      await also?.(tx, w);
       return w;
     });
   }

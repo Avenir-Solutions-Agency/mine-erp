@@ -144,6 +144,13 @@ export const WeighingDto = z.object({
   netKg: z.number().int().nullable(),
   savedTare: z.boolean(),
   voidReason: z.string().nullable(),
+  /** The shipment this weighing became (register, PRD F4), if any. */
+  shipment: z
+    .object({
+      registryNumber: z.string(),
+      status: z.enum(["registered", "cancelled"]),
+    })
+    .nullable(),
   /** The latest EKÁER report for this weighing, if any. */
   ekaer: z
     .object({
@@ -256,3 +263,17 @@ export const FinalizeEkaerInput = z.object({
       "A lerakodás ideje nem lehet a jövőben.",
     ),
 });
+
+export const ShipmentDto = z.object({
+  id: z.uuid(),
+  registryNumber: z.string(),
+  status: z.enum(["registered", "cancelled"]),
+  weighingId: z.uuid(),
+  plate: z.string(),
+  customer: z.string(),
+  product: z.string(),
+  netKg: z.number().int(),
+  shippedAt: z.string(),
+  ekaerTcn: z.string().nullable(),
+});
+export type ShipmentDto = z.infer<typeof ShipmentDto>;

@@ -18,6 +18,7 @@ import {
   ProductInput,
   ProductPatch,
   ScaleLiveDto,
+  ShipmentDto,
   ScaleReadingInput,
   VoidWeighingInput,
   WeighingDto,
@@ -194,6 +195,23 @@ export const ROUTES: Route[] = [
     reply: Ok,
   },
 
+  {
+    method: "get",
+    path: "/shipments",
+    summary: "Shipment register, newest first (500), with the EKÁER number",
+    auth: "user",
+    body: null,
+    reply: z.array(ShipmentDto),
+  },
+  {
+    method: "post",
+    path: "/weighings/:id/register",
+    summary:
+      "Register a completed weighing as a shipment (when it was not registered automatically)",
+    auth: "user",
+    body: null,
+    reply: Ok,
+  },
   {
     method: "get",
     path: "/customers",

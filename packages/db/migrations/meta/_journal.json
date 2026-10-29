@@ -50,6 +50,13 @@
       "when": 1793311922473,
       "tag": "0006_ekaer_modify_finalize",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793314971843,
+      "tag": "0007_shipment",
+      "breakpoints": true
     }
   ]
 }

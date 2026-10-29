@@ -8,7 +8,8 @@
     "./demo": "./src/demo/index.ts",
     "./invoices": "./src/invoices.ts",
     "./weighing": "./src/weighing.ts",
-    "./ekaer": "./src/ekaer.ts"
+    "./ekaer": "./src/ekaer.ts",
+    "./shipment": "./src/shipment.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
