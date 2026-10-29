@@ -5,6 +5,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  StreamableFile,
   UseGuards,
 } from "@nestjs/common";
 import { FirstWeighingInput, VoidWeighingInput } from "@mine-erp/contracts";
@@ -32,6 +33,15 @@ export class WeighingsController {
         "Hibás adatok (rendszám kötelező).",
       );
     return { data: await this.weighings.first(input.data, actor) };
+  }
+
+  @Get(":id/ticket")
+  async ticket(@Param("id", new ParseUUIDPipe()) id: string) {
+    const { number, pdf } = await this.weighings.ticket(id);
+    return new StreamableFile(pdf, {
+      type: "application/pdf",
+      disposition: `inline; filename="${number}.pdf"`,
+    });
   }
 
   @Post(":id/second")
