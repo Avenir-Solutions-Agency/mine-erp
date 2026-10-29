@@ -38,7 +38,7 @@ export function renderTicketHtml(w: WeighingDto): string {
   body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11pt; color: #111; }
   header { display: flex; justify-content: space-between; border-bottom: 2px solid #111; padding-bottom: 8px; }
   h1 { font-size: 20pt; margin: 0; }
-  .no { font-size: 14pt; font-weight: bold; text-align: right; }
+  .no { font-size: 14pt; font-weight: bold; text-align: right; white-space: nowrap; padding-left: 16px; }
   table { width: 100%; border-collapse: collapse; margin-top: 14px; }
   th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid #ccc; vertical-align: top; }
   th { width: 38%; font-weight: normal; color: #444; }
