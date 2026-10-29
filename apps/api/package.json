@@ -1,0 +1,32 @@
+{
+  "name": "@mine-erp/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json && (tsc -p tsconfig.json --watch --preserveWatchOutput & node --env-file-if-exists=../../.env.local --watch dist/main.js)",
+    "start": "node --env-file-if-exists=../../.env.local dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mine-erp/contracts": "workspace:*",
+    "@mine-erp/db": "workspace:*",
+    "@mine-erp/domain": "workspace:*",
+    "@nestjs/common": "12.1.3",
+    "@nestjs/core": "12.1.3",
+    "@nestjs/platform-express": "12.1.3",
+    "openai": "7.34.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/multer": "2.3.0",
+    "@types/node": "^22",
+    "typescript": "^5",
+    "vitest": "^5.0.5"
+  }
+}

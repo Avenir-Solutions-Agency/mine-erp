@@ -10,7 +10,7 @@ Read before changing auth, EKÁER, Telegram, uploads, secrets, personal data or 
 | Vehicle data | plate numbers, country codes | personal data when linked to a driver | `vehicle`, `shipment` | accounting retention (configurable) |
 | Document images | weigh ticket and delivery note photos | business + personal data | S3 object store (EU), SHA-256 | accounting retention (configurable) |
 | EKÁER evidence | request/response XML (without credentials) | legal evidence | S3 object store | per legal requirement |
-| Credentials | EKÁER password and signing key, Telegram token, Claude, Billingo keys, scale agent tokens | secret | secret store only | rotated |
+| Credentials | EKÁER password and signing key, Telegram token, OpenAI key, Billingo keys, scale agent tokens | secret | secret store only | rotated |
 | Audit trail | `event_log`, login and permission changes | integrity-critical | PostgreSQL (append-only) | permanent |
 
 The client is the data controller; we are the processor (annex 4).
@@ -20,7 +20,7 @@ The client is the data controller; we are the processor (annex 4).
 - Browser → API: untrusted. Validate with Zod at the controller.
 - Telegram webhook: verify `X-Telegram-Bot-Api-Secret-Token` before parsing; accept only allow-listed `chat_id`s and registered senders (`from.id` → `person.telegram_user_id`). Unknown senders are not processed; the admin is notified.
 - Scale agent → API: HTTPS with a per-device token; idempotency key = ticket number.
-- AI output (Claude extraction): untrusted input. Validate against the schema; never auto-link fuzzy matches.
+- AI output (OpenAI extraction): untrusted input. Validate against the schema; never auto-link fuzzy matches.
 - EKÁER, Billingo and other third-party responses: untrusted input.
 - AI agents: own Supabase Auth user with a narrow role (Supabase has no service accounts; open decision: token lifetime and rotation for agent users); every write tool call passes the policy engine first.
 
@@ -37,6 +37,8 @@ The client is the data controller; we are the processor (annex 4).
 - Services read secrets at start-up.
 - The Supabase secret key bypasses row-level security: api and worker only, never web, never `NEXT_PUBLIC_*`. The publishable key is public by design.
 - Supabase is a sub-processor of personal data: EU region only, listed in the data processing agreement.
+- OpenAI is a sub-processor for invoice extraction (invoices carry names and addresses): API data is not used for training; the project must use EU data residency and be listed in the data processing agreement before real invoices are processed in production.
+- Supabase Auth: public sign-up is off; office users are created by an admin. Invoice files live in the private `invoices` bucket, reachable only through 5-minute signed links from the API.
 - EKÁER uses a secondary user with its own signing key; the password is sent only as its SHA-512 hash.
 - Rotation: by the system operator through the secret store (owner to be named).
 

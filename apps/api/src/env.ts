@@ -1,0 +1,27 @@
+import { z } from "zod";
+
+const Env = z.object({
+  DATABASE_URL: z.string().min(1),
+  SUPABASE_URL: z.url(),
+  SUPABASE_SECRET_KEY: z.string().min(1),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
+  OPENAI_API_KEY: z.string().min(1),
+  // ARCHITECTURE §06: the AI model id is configuration, not code.
+  OPENAI_MODEL: z.string().min(1),
+  API_PORT: z.coerce.number().int().default(4000),
+  WEB_ORIGIN: z.url().default("http://localhost:3000"),
+  INVOICE_BUCKET: z.string().default("invoices"),
+});
+export type Env = z.infer<typeof Env>;
+
+/** Fails fast at boot with the names of the missing variables, never their values. */
+export function loadEnv(): Env {
+  const parsed = Env.safeParse(process.env);
+  if (!parsed.success)
+    throw new Error(
+      `Invalid environment: ${parsed.error.issues.map((i) => i.path.join(".")).join(", ")}`,
+    );
+  return parsed.data;
+}
+
+export const ENV = Symbol("ENV");
