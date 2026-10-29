@@ -20,21 +20,21 @@ Every message has a `header` and a `user` block.
 
 ### header
 
-| Field | Rule |
-| --- | --- |
-| `requestId` | Max 50 chars. Unique per user; a reused id is rejected. |
-| `timestamp` | `xs:dateTime`. Not older than 24 h, not in the future; 5 min tolerance against server time. Always send a time zone. |
-| `requestVersion` | Required since 2.0 (enum `1.0` … `2.2`). |
-| `headerVersion` | Optional, default `1.0`. |
+| Field            | Rule                                                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `requestId`      | Max 50 chars. Unique per user; a reused id is rejected.                                                                             |
+| `timestamp`      | `xs:dateTime`. Not older than 24 h, not in the future; 5 min tolerance against server time. Always send a time zone.                |
+| `requestVersion` | Required since 2.0. The 2.2 XSD's enum ends at `2.1`, so 2.2 clients send `2.1` (checked against `packages/ekaer/xsd`, 2026-10-29). |
+| `headerVersion`  | Optional, default `1.0`.                                                                                                            |
 
 ### user
 
-| Field | Rule |
-| --- | --- |
-| `user` | Login name, max 30 chars. |
-| `passwordHash` | SHA-512 of the password, never the plain password. |
-| `VATNumber` | First 8 digits of the taxpayer's Hungarian tax number. |
-| `requestSignature` | See below. |
+| Field              | Rule                                                   |
+| ------------------ | ------------------------------------------------------ |
+| `user`             | Login name, max 30 chars.                              |
+| `passwordHash`     | SHA-512 of the password, never the plain password.     |
+| `VATNumber`        | First 8 digits of the taxpayer's Hungarian tax number. |
+| `requestSignature` | See below.                                             |
 
 ### requestSignature
 
@@ -50,13 +50,13 @@ SHA-512( requestId + timestamp as UTC "yyyyMMddHHmmss" + XML signing key )
 
 A request carries a list of `tradeCardOperation` items, each with an `index` and an `operation`.
 
-| Operation | Carries | Notes |
-| --- | --- | --- |
-| `create` | `tradeCard` | No `tcn`, no item or delivery plan `id`. |
-| `modify` | `tradeCard` | Active reports only. Since 1.9 every item needs `itemOperation` (`create`/`modify`/`delete`); unchanged items are `modify`; deleted items must still be listed; adding or deleting an item needs a reason. |
-| `delete` | `tcn` + `statusChangeModReasonText` | Active reports only (`S` → `I`). |
-| `finalize` | `tcn` + `arrivalDate`/`arrivalDateOnly` | Since 2.0 the unloading date is given only here. |
-| `correction` | `tradeCard` | Since 2.0, after closing, not for export. Plate number, item weight, item value only. Each correction incurs a surcharge (`allowance`) the taxpayer must pay; allowed within a legal number of working days and times. |
+| Operation    | Carries                                 | Notes                                                                                                                                                                                                                  |
+| ------------ | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create`     | `tradeCard`                             | No `tcn`, no item or delivery plan `id`.                                                                                                                                                                               |
+| `modify`     | `tradeCard`                             | Active reports only. Since 1.9 every item needs `itemOperation` (`create`/`modify`/`delete`); unchanged items are `modify`; deleted items must still be listed; adding or deleting an item needs a reason.             |
+| `delete`     | `tcn` + `statusChangeModReasonText`     | Active reports only (`S` → `I`).                                                                                                                                                                                       |
+| `finalize`   | `tcn` + `arrivalDate`/`arrivalDateOnly` | Since 2.0 the unloading date is given only here.                                                                                                                                                                       |
+| `correction` | `tradeCard`                             | Since 2.0, after closing, not for export. Plate number, item weight, item value only. Each correction incurs a surcharge (`allowance`) the taxpayer must pay; allowed within a legal number of working days and times. |
 
 Modifiable on an active report:
 
@@ -88,13 +88,13 @@ Each operation gets an `operationResult`:
 
 Statuses:
 
-| Code | Meaning |
-| --- | --- |
-| `P` | Planning; only for reports created on the web. |
-| `S` | Active, has an eKÁER number, deposit calculated. |
-| `F` | Finalized: unloading reported, or the 15-day life ended. |
-| `I` | Inactive: an `S` report deleted; its deposit is released. |
-| `D` | Deleted: a `P` report deleted. |
+| Code | Meaning                                                   |
+| ---- | --------------------------------------------------------- |
+| `P`  | Planning; only for reports created on the web.            |
+| `S`  | Active, has an eKÁER number, deposit calculated.          |
+| `F`  | Finalized: unloading reported, or the 15-day life ended.  |
+| `I`  | Inactive: an `S` report deleted; its deposit is released. |
+| `D`  | Deleted: a `P` report deleted.                            |
 
 Security deposit: calculated for risky products in `I` and `D` transports over a 45-day sliding window. A new item or a value increase without enough deposit cover is rejected.
 

@@ -34,7 +34,7 @@ Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-in
 - [ ] T-010 (F1) Ingest activity: object store upload, SHA-256, `document` record, duplicate detection
 - [ ] T-011 (F2) `packages/extraction`: Claude vision tool-use schema, prompt versioning, evaluation script on the labelled set
 - [ ] T-012 (F4) Normalize, link and register activities; gapless registry number sequence
-- [ ] T-013 (F5) `packages/ekaer`: XML builder, SHA-512 request signature, XSD validation (unit-tested against the NAV FAQ example)
+- [x] T-013 (F5) `packages/ekaer`: XML builder, SHA-512 request signature, XSD validation (unit-tested against the NAV FAQ example)
 - [ ] T-014 (F5) `EkaerReportWorkflow`: obligation decision, create with query-before-resend, finalize, human-approved modify/delete/correction
 - [ ] T-015 (F1, F6) `apps/bot`: grammY webhook with secret token, allow-listed chats, photo/document/album intake, reply-and-edit confirmations, `/allapot`, `/ma`, `/segitseg`
 - [ ] T-016 (F1) Web upload page
