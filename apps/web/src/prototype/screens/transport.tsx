@@ -25,7 +25,9 @@ import {
   Mono,
   Panel,
   Small,
+  TabBar,
 } from "@/prototype/ui";
+import { TransportSummary } from "@/prototype/screens/transport-summary";
 
 // Fuvarok és EKÁER: the real shipment register (PRD F4, T-018). Every completed weighing with a
 // customer and product is registered with a gapless SZ number; the demo transport screen is gone.
@@ -43,6 +45,7 @@ export function TransportScreen() {
   const [rows, setRows] = useState<ShipmentDto[] | null>(null);
   const [state, setState] = useState<"ok" | "login" | string>("ok");
   const [query, setQuery] = useState("");
+  const [view, setView] = useState("list");
 
   const load = () =>
     api<ShipmentDto[]>("shipments")
@@ -99,95 +102,109 @@ export function TransportScreen() {
         <Small>Betöltés…</Small>
       ) : (
         <>
-          <Grid cols={3} className="mb-3.5">
-            <Kpi label="Ma szállítva" value={today.length} />
-            <Kpi
-              label="Ma nettó"
-              value={formatKg(today.reduce((a, s) => a + s.netKg, 0))}
-            />
-            <Kpi
-              label="EKÁER-szám nélkül"
-              value={live.filter((s) => !s.ekaerTcn).length}
-            />
-          </Grid>
-          <Inp
-            aria-label="Keresés"
-            placeholder="Keresés: SZ-szám, rendszám, vevő, termék, EKÁER-szám…"
-            value={query}
-            onChange={(e) => setQuery(e.currentTarget.value)}
-            className="mb-3 w-full"
+          <TabBar
+            items={[
+              ["list", "Szállítások"],
+              ["summary", "Összesítő és Excel"],
+            ]}
+            active={view}
+            onSelect={setView}
           />
-          <Panel className="p-0">
-            {rows.length === 0 ? (
-              <EmptyState message="Még nincs nyilvántartott szállítás. Egy lezárt mérlegelés vevővel és termékkel automatikusan ide kerül." />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Szám</TableHead>
-                    <TableHead>Időpont</TableHead>
-                    <TableHead>Rendszám</TableHead>
-                    <TableHead>Vevő</TableHead>
-                    <TableHead>Termék</TableHead>
-                    <TableHead numeric>Nettó</TableHead>
-                    <TableHead>EKÁER</TableHead>
-                    <TableHead>Állapot</TableHead>
-                    <TableHead />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {shown.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell>
-                        <Mono>{s.registryNumber}</Mono>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {when(s.shippedAt)}
-                      </TableCell>
-                      <TableCell>{s.plate}</TableCell>
-                      <TableCell>{s.customer}</TableCell>
-                      <TableCell>{s.product}</TableCell>
-                      <TableCell numeric className="font-semibold">
-                        {formatKg(s.netKg)}
-                      </TableCell>
-                      <TableCell>
-                        {s.ekaerTcn ? (
-                          <Mono>{s.ekaerTcn}</Mono>
-                        ) : (
-                          <Small>—</Small>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {s.status === "registered" ? (
-                          <Pill tone="success">Nyilvántartva</Pill>
-                        ) : (
-                          <Pill tone="destructive">Sztornó</Pill>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <a
-                          href={`/api/erp/weighings/${s.weighingId}/ticket`}
-                          target="_blank"
-                          rel="noopener"
-                          className="rounded-lg border border-border px-2 py-1 text-xs whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2"
-                        >
-                          Mérlegjegy
-                        </a>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </Panel>
-          <Small className="mt-1.5">
-            {shown.length} szállítás · nettó{" "}
-            {formatKg(
-              shown
-                .filter((s) => s.status === "registered")
-                .reduce((a, s) => a + s.netKg, 0),
-            )}
-          </Small>
+          {view === "summary" ? (
+            <TransportSummary />
+          ) : (
+            <>
+              <Grid cols={3} className="mb-3.5">
+                <Kpi label="Ma szállítva" value={today.length} />
+                <Kpi
+                  label="Ma nettó"
+                  value={formatKg(today.reduce((a, s) => a + s.netKg, 0))}
+                />
+                <Kpi
+                  label="EKÁER-szám nélkül"
+                  value={live.filter((s) => !s.ekaerTcn).length}
+                />
+              </Grid>
+              <Inp
+                aria-label="Keresés"
+                placeholder="Keresés: SZ-szám, rendszám, vevő, termék, EKÁER-szám…"
+                value={query}
+                onChange={(e) => setQuery(e.currentTarget.value)}
+                className="mb-3 w-full"
+              />
+              <Panel className="p-0">
+                {rows.length === 0 ? (
+                  <EmptyState message="Még nincs nyilvántartott szállítás. Egy lezárt mérlegelés vevővel és termékkel automatikusan ide kerül." />
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Szám</TableHead>
+                        <TableHead>Időpont</TableHead>
+                        <TableHead>Rendszám</TableHead>
+                        <TableHead>Vevő</TableHead>
+                        <TableHead>Termék</TableHead>
+                        <TableHead numeric>Nettó</TableHead>
+                        <TableHead>EKÁER</TableHead>
+                        <TableHead>Állapot</TableHead>
+                        <TableHead />
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {shown.map((s) => (
+                        <TableRow key={s.id}>
+                          <TableCell>
+                            <Mono>{s.registryNumber}</Mono>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {when(s.shippedAt)}
+                          </TableCell>
+                          <TableCell>{s.plate}</TableCell>
+                          <TableCell>{s.customer}</TableCell>
+                          <TableCell>{s.product}</TableCell>
+                          <TableCell numeric className="font-semibold">
+                            {formatKg(s.netKg)}
+                          </TableCell>
+                          <TableCell>
+                            {s.ekaerTcn ? (
+                              <Mono>{s.ekaerTcn}</Mono>
+                            ) : (
+                              <Small>—</Small>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {s.status === "registered" ? (
+                              <Pill tone="success">Nyilvántartva</Pill>
+                            ) : (
+                              <Pill tone="destructive">Sztornó</Pill>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <a
+                              href={`/api/erp/weighings/${s.weighingId}/ticket`}
+                              target="_blank"
+                              rel="noopener"
+                              className="rounded-lg border border-border px-2 py-1 text-xs whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2"
+                            >
+                              Mérlegjegy
+                            </a>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </Panel>
+              <Small className="mt-1.5">
+                {shown.length} szállítás · nettó{" "}
+                {formatKg(
+                  shown
+                    .filter((s) => s.status === "registered")
+                    .reduce((a, s) => a + s.netKg, 0),
+                )}
+              </Small>
+            </>
+          )}
         </>
       )}
     </>

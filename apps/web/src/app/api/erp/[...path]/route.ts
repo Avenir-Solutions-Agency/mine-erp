@@ -5,7 +5,7 @@ import { accessToken } from "@/lib/session";
 // httpOnly cookie and forwards to the NestJS API. Only the API's own routes pass through.
 const SAFE_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
 const ALLOWED =
-  /^(invoices(\/[0-9a-f-]{36}(\/(file|carrier))?)?|carriers|shipments|(customers|products)(\/[0-9a-f-]{36})?|scale\/live|weighings(\/[0-9a-f-]{36}\/(second|void|ticket|register|ekaer|ekaer\/(delete|modify|finalize|retry)))?)$/;
+  /^(invoices(\/[0-9a-f-]{36}(\/(file|carrier))?)?|carriers|shipments|reports\/shipments(\.xlsx)?|(customers|products)(\/[0-9a-f-]{36})?|scale\/live|weighings(\/[0-9a-f-]{36}\/(second|void|ticket|register|ekaer|ekaer\/(delete|modify|finalize|retry)))?)$/;
 
 async function forward(
   request: Request,
@@ -37,7 +37,12 @@ async function forward(
   const type = request.headers.get("content-type");
   if (type) headers.set("content-type", type);
   try {
-    const res = await fetch(new URL(path, `${env.API_BASE_URL}/`), {
+    const target = new URL(path, `${env.API_BASE_URL}/`);
+    // Forward the query (report date ranges), except the BFF's own "raw" switch.
+    new URL(request.url).searchParams.forEach((v, k) => {
+      if (k !== "raw") target.searchParams.append(k, v);
+    });
+    const res = await fetch(target, {
       method: request.method,
       headers,
       body: request.method === "GET" ? undefined : await request.arrayBuffer(),
@@ -73,6 +78,10 @@ async function forward(
       status: res.status,
       headers: {
         "content-type": res.headers.get("content-type") ?? "application/json",
+        // Keeps the file name of downloads (Excel report).
+        ...(res.headers.get("content-disposition")
+          ? { "content-disposition": res.headers.get("content-disposition")! }
+          : {}),
       },
     });
   } catch {

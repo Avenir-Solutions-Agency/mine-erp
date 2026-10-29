@@ -16,6 +16,8 @@ import {
   ekaerReport,
   eq,
   eventLog,
+  gte,
+  lt,
   inArray,
   nextShipmentRegistrySeq,
   shipment,
@@ -163,13 +165,21 @@ export class Shipments {
     );
   }
 
-  /** Newest first, with the EKÁER number of a live report. */
-  async list(): Promise<ShipmentDto[]> {
+  /** Newest first (500, or all in an instant range), with the EKÁER number of a live report. */
+  async list(range?: { from: Date; to: Date }): Promise<ShipmentDto[]> {
     const rows = await this.db
       .select()
       .from(shipment)
+      .where(
+        range
+          ? and(
+              gte(shipment.shippedAt, range.from),
+              lt(shipment.shippedAt, range.to),
+            )
+          : undefined,
+      )
       .orderBy(desc(shipment.shippedAt))
-      .limit(500);
+      .limit(range ? 100_000 : 500);
     const reports = rows.length
       ? await this.db
           .select({

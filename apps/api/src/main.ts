@@ -18,6 +18,7 @@ import {
   EkaerReportsController,
   TEMPORAL,
 } from "./ekaer-reports.ts";
+import { Reports, ReportsController } from "./reports.ts";
 import { Shipments, ShipmentsController } from "./shipments.ts";
 import { Storage } from "./storage.ts";
 import { TicketPdf } from "./ticket.ts";
@@ -37,6 +38,7 @@ const { db } = createDb(env.DATABASE_URL);
     MasterDataController,
     EkaerReportsController,
     ShipmentsController,
+    ReportsController,
   ],
   providers: [
     { provide: ENV, useValue: env },
@@ -54,6 +56,7 @@ const { db } = createDb(env.DATABASE_URL);
     MasterData,
     EkaerReports,
     Shipments,
+    Reports,
     {
       provide: TEMPORAL,
       // Lazy: the API starts without Temporal; only starting a workflow needs it.
