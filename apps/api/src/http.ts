@@ -27,7 +27,11 @@ export class ErrorFilter implements ExceptionFilter {
     if (err instanceof HttpException) {
       const status = err.getStatus();
       const message =
-        status === 413 ? "A fájl túl nagy (legfeljebb 10 MB)." : "Hibás kérés.";
+        status === 413
+          ? "A fájl túl nagy (legfeljebb 10 MB)."
+          : status === 404
+            ? "Nincs ilyen végpont."
+            : "Hibás kérés.";
       return res
         .status(status)
         .json({ error: { code: `http_${status}`, message } });

@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import type { InvoiceDto } from "@mine-erp/contracts";
 import {
-  assignByHandwriting,
   fillerToString,
   invoiceStoragePath,
+  missingFieldsWarning,
   toFiller,
 } from "@mine-erp/domain/invoices";
 import type { Actor } from "./auth.ts";
@@ -43,7 +43,6 @@ export function toDto(i: InvoiceRow): InvoiceDto {
     net: fillerToString(i.net),
     vat: fillerToString(i.vat),
     gross: fillerToString(i.gross),
-    handwriting: i.handwriting,
     warning: i.warning,
     status: i.status,
     costCarrier: i.costCarrier,
@@ -98,19 +97,9 @@ export class InvoicesService {
           "A számla kiolvasása nem sikerült, próbálja újra.",
         );
       });
-    const carriers = (await this.repo.carriers()).map((c) => c.name);
-    const decision = x
-      ? assignByHandwriting({
-          handwriting: x.handwriting,
-          issueDate: x.issueDate,
-          gross: x.gross,
-          carriers,
-        })
-      : {
-          status: "needs_review" as const,
-          costCarrier: null,
-          warning: "Az AI nem tudta kiolvasni a számlát.",
-        };
+    const warning = x
+      ? missingFieldsWarning({ issueDate: x.issueDate, gross: x.gross })
+      : "Az AI nem tudta kiolvasni a számlát.";
 
     const filePath = invoiceStoragePath(x?.issueDate ?? null, sha256, type.ext);
     await this.storage.upload(filePath, file.buffer, type.mime);
@@ -127,10 +116,9 @@ export class InvoicesService {
         net: toFiller(x?.net ?? null),
         vat: toFiller(x?.vat ?? null),
         gross: toFiller(x?.gross ?? null),
-        handwriting: x?.handwriting ?? null,
-        warning: decision.warning,
-        status: decision.status,
-        costCarrier: decision.costCarrier,
+        warning,
+        status: "needs_review",
+        costCarrier: null,
         fileSha256: sha256,
         filePath,
         fileName: file.originalname.slice(0, 200),

@@ -348,14 +348,9 @@ function InvoiceDetail() {
       </Table>
       {i.warning ? <Alert lvl="bad">{i.warning}</Alert> : null}
       <div className="mt-4 rounded-lg border border-dashed border-border bg-muted p-3.5">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <div className="text-label tracking-wider text-muted-foreground uppercase">
-              Kézzel írt jelölés a számlán
-            </div>
-            <p className="mt-1 text-lg italic">
-              {i.handwriting ? `„${i.handwriting}”` : "Nincs kézírás."}
-            </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-label tracking-wider text-muted-foreground uppercase">
+            Költségviselő
           </div>
           <Btn sm onClick={() => setImageOpen(true)}>
             Számlakép megtekintése
@@ -384,7 +379,7 @@ function InvoiceDetail() {
               Jelenleg: <b>{i.costCarrier}</b>.
             </>
           ) : (
-            "Nincs hozzárendelve: csak akkor sorolódik be magától, ha a kézírás pontosan egy rendszámra vagy gépre illik."
+            "Nincs hozzárendelve: válassza ki, melyik járműhöz vagy géphez tartozik a számla."
           )}
         </Small>
       </div>

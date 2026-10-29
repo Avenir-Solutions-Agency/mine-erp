@@ -29,12 +29,6 @@ export const InvoiceExtraction = z.object({
   net: z.number().nullable(),
   vat: z.number().nullable(),
   gross: z.number().nullable(),
-  handwriting: z
-    .string()
-    .nullable()
-    .describe(
-      "A számlára kézzel írt jelölés szó szerint, pl. rendszám vagy név",
-    ),
   lines: z.array(
     z.object({
       name: z.string(),
@@ -77,7 +71,6 @@ export const InvoiceDto = z.object({
   net: Money,
   vat: Money,
   gross: Money,
-  handwriting: z.string().nullable(),
   warning: z.string().nullable(),
   status: InvoiceStatus,
   costCarrier: z.string().nullable(),

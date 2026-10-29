@@ -1,4 +1,4 @@
-// Real incoming invoices (T-034): money conversion, storage path and the auto-assign rule.
+// Real incoming invoices (T-034): money conversion, storage path and the review warning.
 // No relative imports: apps/api loads this file directly under Node type stripping.
 
 /** Forint amount as read from the document → integer fillér. */
@@ -28,52 +28,17 @@ export function invoiceStoragePath(
   return `${month}/${sha256}.${ext}`;
 }
 
-/** Uppercase, letters and digits only, so "uzt 243" and "UZT-243" compare equal. */
-export const normalizeCarrier = (s: string) =>
-  s.toUpperCase().replace(/[^0-9A-ZÁÉÍÓÖŐÚÜŰ]/g, "");
-
-export interface AssignInput {
-  handwriting: string | null;
+/**
+ * Every new invoice waits for a person to pick its cost carrier (handwritten notes are ignored,
+ * decided 2026-10-29). The warning names the key fields the AI could not read.
+ */
+export function missingFieldsWarning(input: {
   issueDate: string | null;
   gross: number | null;
-  /** Plates and machine names. */
-  carriers: string[];
-}
-
-export interface AssignResult {
-  status: "needs_review" | "assigned";
-  costCarrier: string | null;
-  warning: string | null;
-}
-
-/**
- * Assign only when exactly one carrier's normalised name occurs in the normalised handwriting; anything else
- * is a human's call (fuzzy matches are suggestions only, ARCHITECTURE §06).
- */
-export function assignByHandwriting(input: AssignInput): AssignResult {
+}): string | null {
   const missing = [
     input.issueDate == null && "kelte",
     input.gross == null && "bruttó összeg",
   ].filter(Boolean);
-  const warning = missing.length
-    ? `Nem olvasható: ${missing.join(", ")}.`
-    : null;
-  const note = input.handwriting ? normalizeCarrier(input.handwriting) : "";
-  const hits = note
-    ? input.carriers.filter((c) => {
-        const n = normalizeCarrier(c);
-        return n.length >= 3 && note.includes(n);
-      })
-    : [];
-  if (hits.length === 1 && !warning)
-    return { status: "assigned", costCarrier: hits[0]!, warning: null };
-  return {
-    status: "needs_review",
-    costCarrier: null,
-    warning:
-      warning ??
-      (hits.length > 1
-        ? `Több költségviselő illik a jelölésre: ${hits.join(", ")}.`
-        : null),
-  };
+  return missing.length ? `Nem olvasható: ${missing.join(", ")}.` : null;
 }

@@ -4,12 +4,12 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { ENV, type Env } from "./env.ts";
 
-export const PROMPT_VERSION = "invoice-v1";
+export const PROMPT_VERSION = "invoice-v2";
 
 const INSTRUCTIONS = `Magyar bejövő számlát kapsz (PDF vagy fotó). Olvasd ki az adatokat pontosan úgy, ahogy a dokumentumon állnak.
 - Ha egy mező nincs rajta vagy nem olvasható, adj null-t. Ne találgass.
 - Dátumok YYYY-MM-DD formában. Összegek számként, a számla pénznemében, ezres elválasztó nélkül.
-- A "handwriting" mezőbe csak a kézzel írt jelölés kerüljön (pl. rendszám, gép neve, személy neve), nyomtatott szöveg nem.
+- Csak a nyomtatott számlaadatokat olvasd ki. A kézzel írt jegyzeteket, aláírásokat és bélyegzőket hagyd figyelmen kívül.
 - A tételek sorrendje egyezzen a számláéval.`;
 
 /**

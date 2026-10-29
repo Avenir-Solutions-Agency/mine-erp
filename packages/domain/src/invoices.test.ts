@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
-  assignByHandwriting,
   fillerToString,
   invoiceStoragePath,
+  missingFieldsWarning,
   toFiller,
 } from "./invoices";
 
@@ -34,43 +34,13 @@ test("invoiceStoragePath files by issue month and parks unknown dates", () => {
   expect(unknown).toBe(`datum-nelkul/${sha}.jpg`);
 });
 
-describe("assignByHandwriting", () => {
-  const base = {
-    issueDate: "2026-10-22",
-    gross: 1000,
-    carriers: ["UZT243", "ICW897", "ABC12", "ABC123"],
-  };
+test("missingFieldsWarning names the unreadable key fields", () => {
+  const readable = { issueDate: "2026-10-24", gross: 70277 };
+  const unreadable = { issueDate: null, gross: null };
 
-  test("assigns when exactly one carrier is in the note, ignoring case and spaces", () => {
-    const input = { ...base, handwriting: "uzt 243 Misi" };
+  const ok = missingFieldsWarning(readable);
+  const bad = missingFieldsWarning(unreadable);
 
-    const result = assignByHandwriting(input);
-
-    expect(result).toEqual({
-      status: "assigned",
-      costCarrier: "UZT243",
-      warning: null,
-    });
-  });
-
-  test("sends ambiguous notes to review with the candidates", () => {
-    const input = { ...base, handwriting: "ABC-123" };
-
-    const result = assignByHandwriting(input);
-
-    expect(result.status).toBe("needs_review");
-    expect(result.warning).toContain("ABC12, ABC123");
-  });
-
-  test("sends unreadable invoices to review even when the note matches", () => {
-    const input = { ...base, handwriting: "ICW897", gross: null };
-
-    const result = assignByHandwriting(input);
-
-    expect(result).toEqual({
-      status: "needs_review",
-      costCarrier: null,
-      warning: "Nem olvasható: bruttó összeg.",
-    });
-  });
+  expect(ok).toBeNull();
+  expect(bad).toBe("Nem olvasható: kelte, bruttó összeg.");
 });
