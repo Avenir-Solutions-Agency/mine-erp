@@ -129,9 +129,27 @@ export function EkaerActions({
           </Btn>
         </>
       ) : (
-        <Btn sm kind="ai" onClick={() => setDialog("file")}>
-          EKÁER bejelentés
-        </Btn>
+        <>
+          {w.ekaer?.status === "failed" ? (
+            <Btn
+              sm
+              kind="pri"
+              disabled={busy}
+              onClick={() =>
+                void submit(
+                  `weighings/${w.id}/ekaer/retry`,
+                  {},
+                  "EKÁER-bejelentés újraindítva",
+                )
+              }
+            >
+              Újrapróbálás
+            </Btn>
+          ) : null}
+          <Btn sm kind="ai" onClick={() => setDialog("file")}>
+            EKÁER bejelentés
+          </Btn>
+        </>
       )}
       <Dialog
         open={dialog === "file"}

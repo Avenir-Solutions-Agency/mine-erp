@@ -234,6 +234,60 @@ export class EkaerReports {
     );
   }
 
+  /**
+   * Files a failed report again with the same planned weight and value, as a new report row (the
+   * failed one stays as evidence). The worker first asks NAV by the ticket number, so a report
+   * that did reach NAV is adopted instead of being filed twice.
+   */
+  async retry(weighingId: string, actor: Actor) {
+    const [last] = await this.db
+      .select()
+      .from(ekaerReport)
+      .where(eq(ekaerReport.weighingId, weighingId))
+      .orderBy(desc(ekaerReport.createdAt))
+      .limit(1);
+    if (last?.status !== "failed")
+      throw new ApiError(
+        409,
+        "not_failed",
+        "Csak sikertelen EKÁER-bejelentés próbálható újra.",
+      );
+    const reportId = await this.db
+      .transaction(async (tx) => {
+        const [r] = await tx
+          .insert(ekaerReport)
+          .values({
+            weighingId,
+            status: "pending",
+            orderNumber: last.orderNumber,
+            plannedKg: last.plannedKg,
+            value: last.value,
+            createdBy: actor.id,
+          })
+          .returning({ id: ekaerReport.id });
+        await tx.insert(eventLog).values({
+          actorId: actor.id,
+          actorType: "person",
+          entity: "ekaer_report",
+          entityId: r!.id,
+          action: "retry_requested",
+          payload: { previousReportId: last.id },
+        });
+        return r!.id;
+      })
+      .catch((e: unknown) => {
+        if (isUniqueViolation(e, "ekaer_report_one_live_per_weighing"))
+          throw new ApiError(
+            409,
+            "already_reported",
+            "Ehhez a mérlegeléshez már van folyamatban lévő bejelentés.",
+          );
+        throw e;
+      });
+    await this.start("ekaerReport", `ekaer-${reportId}`, reportId);
+    return reportId;
+  }
+
   private async start(workflow: string, workflowId: string, reportId: string) {
     try {
       await this.temporal.workflow.start(workflow, {
@@ -331,5 +385,13 @@ export class EkaerReportsController {
       );
     await this.reports.finalize(id, new Date(input.data.arrivalAt), actor);
     return { data: { ok: true } };
+  }
+
+  @Post(":id/ekaer/retry")
+  async retry(
+    @Param("id", new ParseUUIDPipe()) id: string,
+    @CurrentActor() actor: Actor,
+  ) {
+    return { data: { reportId: await this.reports.retry(id, actor) } };
   }
 }

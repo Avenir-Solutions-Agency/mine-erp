@@ -57,6 +57,13 @@ export function simulatedNav() {
     const kind = String(op.operation);
     if (kind === "create") {
       const card = op.tradeCard as Node;
+      // Lets a person try the failure path by hand: NAV refuses a report for a "HIBA…" plate.
+      if (
+        String(
+          (card.vehicle as Node | undefined)?.plateNumber ?? "",
+        ).startsWith("HIBA")
+      )
+        return "TC_PLATE_NUMBER_INVALID";
       const c: Card = {
         tcn: `E${String(randomInt(1e12)).padStart(12, "0")}SI`,
         orderNumber: String(card.orderNumber ?? ""),
