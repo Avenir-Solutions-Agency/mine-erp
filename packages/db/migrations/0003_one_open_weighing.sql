@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "weighing_one_open_per_plate" ON "weighing" USING btree ("plate") WHERE "weighing"."status" = 'open';

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { api, ApiFailure } from "@/prototype/api";
 import {
   Alert,
   Btn,
@@ -75,30 +76,6 @@ function usePortal() {
     () => state,
     () => state,
   );
-}
-
-class ApiFailure extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
-/** Calls the API through the BFF; errors carry the API's Hungarian message. */
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`/api/erp/${path}`, init);
-  const body = (await res.json().catch(() => null)) as {
-    data?: T;
-    error?: { message: string };
-  } | null;
-  if (!res.ok || !body || body.data === undefined)
-    throw new ApiFailure(
-      res.status,
-      body?.error?.message ?? "Váratlan hiba, próbálja újra.",
-    );
-  return body.data;
 }
 
 async function reload() {

@@ -6,7 +6,9 @@ test("every prototype screen renders", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {
-    if (m.type() === "error") errors.push(m.text());
+    // Real-data screens (Mérleg) get 401 when signed out and 503 when no API is configured (CI); both show a message.
+    if (m.type() === "error" && !/status of (401|503)/.test(m.text()))
+      errors.push(m.text());
   });
   await page.goto("/dash");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

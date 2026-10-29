@@ -1,0 +1,17 @@
+{
+  "name": "@mine-erp/scale-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "simulate": "node --env-file-if-exists=../../.env.local src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@mine-erp/domain": "workspace:*",
+    "@types/node": "^22",
+    "typescript": "^5",
+    "vitest": "^5.0.5"
+  }
+}
