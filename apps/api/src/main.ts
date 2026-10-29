@@ -11,6 +11,7 @@ import { DB, InvoicesRepository } from "./invoices.repository.ts";
 import { InvoicesService } from "./invoices.service.ts";
 import { AgentGuard, ScaleController, ScaleLive } from "./scale.ts";
 import { Storage } from "./storage.ts";
+import { TicketPdf } from "./ticket.ts";
 import { WeighingsController } from "./weighings.controller.ts";
 import { WeighingsRepository } from "./weighings.repository.ts";
 import { WeighingsService } from "./weighings.service.ts";
@@ -45,6 +46,7 @@ class HealthController {
     ScaleLive,
     WeighingsRepository,
     WeighingsService,
+    TicketPdf,
   ],
 })
 class AppModule {}

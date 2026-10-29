@@ -13,6 +13,7 @@ import {
 import type { Actor } from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { ScaleLive } from "./scale.ts";
+import { TicketPdf } from "./ticket.ts";
 import {
   type WeighingRow,
   WeighingsRepository,
@@ -98,6 +99,7 @@ export class WeighingsService {
   constructor(
     private readonly repo: WeighingsRepository,
     private readonly scale: ScaleLive,
+    private readonly tickets: TicketPdf,
   ) {}
 
   async list(): Promise<WeighingDto[]> {
@@ -216,6 +218,21 @@ export class WeighingsService {
         "A mérlegelés közben megváltozott, töltse újra.",
       );
     return toDto(saved);
+  }
+
+  /** PDF of a completed or void weighing; an open one has no ticket yet. */
+  async ticket(id: string): Promise<{ number: string; pdf: Buffer }> {
+    const row = await this.load(id);
+    if (row.status === "open")
+      throw new ApiError(
+        409,
+        "not_completed",
+        "Nyitott mérlegeléshez még nincs mérlegjegy.",
+      );
+    return {
+      number: row.ticketNumber,
+      pdf: await this.tickets.render(toDto(row)),
+    };
   }
 
   private async load(id: string): Promise<WeighingRow> {

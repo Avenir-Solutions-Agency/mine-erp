@@ -416,9 +416,19 @@ function ClosedToday({
                   )}
                 </TableCell>
                 <TableCell>
-                  {w.status === "completed" ? (
-                    <VoidButton weighing={w} onVoid={onVoid} />
-                  ) : null}
+                  <Row className="flex-nowrap">
+                    <a
+                      href={`/api/erp/weighings/${w.id}/ticket`}
+                      target="_blank"
+                      rel="noopener"
+                      className="rounded-lg border border-border px-2 py-1 text-xs whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2"
+                    >
+                      Mérlegjegy
+                    </a>
+                    {w.status === "completed" ? (
+                      <VoidButton weighing={w} onVoid={onVoid} />
+                    ) : null}
+                  </Row>
                 </TableCell>
               </TableRow>
             ))

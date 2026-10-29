@@ -11,6 +11,7 @@ const Env = z.object({
   API_PORT: z.coerce.number().int().default(4000),
   WEB_ORIGIN: z.url().default("http://localhost:3000"),
   INVOICE_BUCKET: z.string().default("invoices"),
+  GOTENBERG_URL: z.url().default("http://localhost:3001"),
   // Development only: enables DELETE /invoices (wipes every invoice). Never set in production.
   ALLOW_DATA_RESET: z.enum(["true", "false"]).default("false"),
   // Shared secret of the local scale agent; without it the API refuses scale readings.
