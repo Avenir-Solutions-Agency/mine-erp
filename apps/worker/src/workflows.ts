@@ -73,3 +73,29 @@ export async function ekaerReport(reportId: string): Promise<string> {
 export async function ekaerDelete(reportId: string): Promise<void> {
   await ekaer.deleteEkaerReport(reportId);
 }
+
+/** Sends a person-approved weight change (after the second weighing) to NAV. */
+export async function ekaerModify(reportId: string): Promise<void> {
+  try {
+    await ekaer.modifyEkaerReport(reportId);
+  } catch (e) {
+    await ekaer.markEkaerUnresolved(
+      reportId,
+      "A súlymódosítás eredménye nem ismert; ellenőrizze a NAV felületén.",
+    );
+    throw e;
+  }
+}
+
+/** Reports unloading and closes the report. */
+export async function ekaerFinalize(reportId: string): Promise<void> {
+  try {
+    await ekaer.finalizeEkaerReport(reportId);
+  } catch (e) {
+    await ekaer.markEkaerUnresolved(
+      reportId,
+      "A lezárás eredménye nem ismert; ellenőrizze a NAV felületén.",
+    );
+    throw e;
+  }
+}

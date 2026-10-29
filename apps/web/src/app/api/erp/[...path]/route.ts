@@ -5,7 +5,7 @@ import { accessToken } from "@/lib/session";
 // httpOnly cookie and forwards to the NestJS API. Only the API's own routes pass through.
 const SAFE_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
 const ALLOWED =
-  /^(invoices(\/[0-9a-f-]{36}(\/(file|carrier))?)?|carriers|(customers|products)(\/[0-9a-f-]{36})?|scale\/live|weighings(\/[0-9a-f-]{36}\/(second|void|ticket|ekaer|ekaer\/delete))?)$/;
+  /^(invoices(\/[0-9a-f-]{36}(\/(file|carrier))?)?|carriers|(customers|products)(\/[0-9a-f-]{36})?|scale\/live|weighings(\/[0-9a-f-]{36}\/(second|void|ticket|ekaer|ekaer\/(delete|modify|finalize)))?)$/;
 
 async function forward(
   request: Request,

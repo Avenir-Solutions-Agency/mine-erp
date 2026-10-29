@@ -11,6 +11,8 @@ import {
 import {
   DeleteEkaerInput,
   FileEkaerInput,
+  FinalizeEkaerInput,
+  ModifyEkaerInput,
   type WeighingDto,
 } from "@mine-erp/contracts";
 import {
@@ -61,6 +63,7 @@ export class EkaerReports {
         out.set(r.weighingId, {
           id: r.id,
           status: r.status,
+          plannedKg: r.plannedKg,
           tcn: r.tcn,
           error: r.error,
         });
@@ -166,6 +169,71 @@ export class EkaerReports {
     await this.start("ekaerDelete", `ekaer-delete-${reportId}`, reportId);
   }
 
+  /** Moves the active report into a person-approved change and starts the worker's workflow. */
+  private async change(
+    weighingId: string,
+    set: Partial<typeof ekaerReport.$inferInsert>,
+    action: string,
+    workflow: string,
+    actor: Actor,
+  ) {
+    const reportId = await this.db.transaction(async (tx) => {
+      const [r] = await tx
+        .update(ekaerReport)
+        .set({ ...set, updatedAt: new Date() })
+        .where(
+          and(
+            eq(ekaerReport.weighingId, weighingId),
+            eq(ekaerReport.status, "active"),
+          ),
+        )
+        .returning({ id: ekaerReport.id });
+      if (!r) return null;
+      await tx.insert(eventLog).values({
+        actorId: actor.id,
+        actorType: "person",
+        entity: "ekaer_report",
+        entityId: r.id,
+        action,
+        payload: set,
+      });
+      return r.id;
+    });
+    if (!reportId)
+      throw new ApiError(
+        409,
+        "not_active",
+        "Nincs aktív EKÁER-bejelentés ehhez a mérlegeléshez.",
+      );
+    // A report can be modified more than once, so the workflow id carries the request time.
+    await this.start(
+      workflow,
+      `${workflow}-${reportId}-${Date.now()}`,
+      reportId,
+    );
+  }
+
+  /** Weight change after the second weighing; the person's request with a reason is the approval. */
+  modify(weighingId: string, kg: number, reason: string, actor: Actor) {
+    return this.change(
+      weighingId,
+      { status: "modifying", requestedKg: kg, changeReason: reason },
+      "modify_approved",
+      "ekaerModify",
+      actor,
+    );
+  }
+
+  finalize(weighingId: string, arrivalAt: Date, actor: Actor) {
+    return this.change(
+      weighingId,
+      { status: "finalizing", arrivalAt },
+      "finalize_requested",
+      "ekaerFinalize",
+      actor,
+    );
+  }
+
   private async start(workflow: string, workflowId: string, reportId: string) {
     try {
       await this.temporal.workflow.start(workflow, {
@@ -228,6 +296,40 @@ export class EkaerReportsController {
         "A törléshez legalább 3 karakteres indoklás kell.",
       );
     await this.reports.delete(id, input.data.reason, actor);
+    return { data: { ok: true } };
+  }
+
+  @Post(":id/ekaer/modify")
+  async modify(
+    @Param("id", new ParseUUIDPipe()) id: string,
+    @Body() body: unknown,
+    @CurrentActor() actor: Actor,
+  ) {
+    const input = ModifyEkaerInput.safeParse(body);
+    if (!input.success)
+      throw new ApiError(
+        400,
+        "invalid_input",
+        "Adja meg az új tömeget (kg) és az indoklást.",
+      );
+    await this.reports.modify(id, input.data.kg, input.data.reason, actor);
+    return { data: { ok: true } };
+  }
+
+  @Post(":id/ekaer/finalize")
+  async finalize(
+    @Param("id", new ParseUUIDPipe()) id: string,
+    @Body() body: unknown,
+    @CurrentActor() actor: Actor,
+  ) {
+    const input = FinalizeEkaerInput.safeParse(body);
+    if (!input.success)
+      throw new ApiError(
+        400,
+        "invalid_input",
+        input.error.issues[0]?.message ?? "Hibás lerakodási idő.",
+      );
+    await this.reports.finalize(id, new Date(input.data.arrivalAt), actor);
     return { data: { ok: true } };
   }
 }

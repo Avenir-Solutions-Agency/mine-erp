@@ -43,6 +43,13 @@
       "when": 1793310440661,
       "tag": "0005_ekaer_report",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793311922473,
+      "tag": "0006_ekaer_modify_finalize",
+      "breakpoints": true
     }
   ]
 }

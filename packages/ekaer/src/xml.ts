@@ -18,6 +18,10 @@ export interface Location {
 }
 
 export interface TradeCardItem {
+  /** NAV's item id; required to change an item in `modify`. */
+  id?: string;
+  /** Required on every item of a `modify` (unchanged items are `modify` too). */
+  itemOperation?: "create" | "modify" | "delete";
   /** S sale (the only one allowed for D), W contract work, O other. */
   tradeReason: "S" | "W" | "O";
   /** 8-digit customs tariff number. */
@@ -26,6 +30,8 @@ export interface TradeCardItem {
   weightKg: number;
   /** Whole forints; convert from fillér before calling. */
   valueHuf: number;
+  /** Required by NAV when a modify changes the weight. */
+  weightModReasonText?: string;
 }
 
 export interface Party {
@@ -36,6 +42,8 @@ export interface Party {
 }
 
 export interface TradeCard {
+  /** Only in `modify`: the report being changed. */
+  tcn?: string;
   orderNumber?: string;
   tradeType: "D" | "I" | "E";
   modByCarrierEnabled: boolean;
@@ -43,15 +51,18 @@ export interface TradeCard {
   destination: Party;
   vehicle?: { plateNumber: string; country: string };
   deliveryPlans: {
+    /** NAV's delivery plan id; required in `modify`. */
+    id?: string;
     loadLocation: Location;
     unloadLocation: Location;
     items: TradeCardItem[];
   }[];
 }
 
-/** shortcut: modify and correction (with itemOperation) come with T-014, when the workflow needs them. */
+/** shortcut: correction (after closing, with a surcharge) is left out until it is needed. */
 export type Operation =
   | { operation: "create"; tradeCard: TradeCard }
+  | { operation: "modify"; tradeCard: TradeCard & { tcn: string } }
   | { operation: "finalize"; tcn: string; arrivalDate: Date }
   | { operation: "delete"; tcn: string; reason: string };
 
@@ -91,20 +102,23 @@ const location = (l: Location) =>
   el("streetType", l.streetType) +
   el("streetNumber", l.streetNumber);
 
+const attr = (id: string | undefined) => (id ? ` id="${esc(id)}"` : "");
 const item = (i: TradeCardItem) =>
-  block(
-    "tradeCardItem",
-    el("tradeReason", i.tradeReason) +
-      el("productVtsz", i.productVtsz) +
-      el("productName", i.productName) +
-      el("weight", wholeNumber(i.weightKg, "weight")) +
-      el("value", wholeNumber(i.valueHuf, "value")),
-  );
+  `<tradeCardItem${attr(i.id)}>` +
+  el("itemOperation", i.itemOperation) +
+  el("tradeReason", i.tradeReason) +
+  el("productVtsz", i.productVtsz) +
+  el("productName", i.productName) +
+  el("weight", wholeNumber(i.weightKg, "weight")) +
+  el("value", wholeNumber(i.valueHuf, "value")) +
+  el("weightModReasonText", i.weightModReasonText) +
+  `</tradeCardItem>`;
 
 const tradeCard = (t: TradeCard) =>
   block(
     "tradeCard",
-    el("orderNumber", t.orderNumber) +
+    el("tcn", t.tcn) +
+      el("orderNumber", t.orderNumber) +
       el("tradeType", t.tradeType) +
       el("modByCarrierEnabled", t.modByCarrierEnabled) +
       el("sellerName", t.seller.name) +
@@ -125,13 +139,13 @@ const tradeCard = (t: TradeCard) =>
       block(
         "deliveryPlans",
         t.deliveryPlans
-          .map((p) =>
-            block(
-              "deliveryPlan",
+          .map(
+            (p) =>
+              `<deliveryPlan${attr(p.id)}>` +
               block("items", p.items.map(item).join("")) +
-                block("loadLocation", location(p.loadLocation)) +
-                block("unloadLocation", location(p.unloadLocation)),
-            ),
+              block("loadLocation", location(p.loadLocation)) +
+              block("unloadLocation", location(p.unloadLocation)) +
+              `</deliveryPlan>`,
           )
           .join(""),
       ),
@@ -142,7 +156,7 @@ const operation = (op: Operation, index: number) =>
     "tradeCardOperation",
     el("index", index) +
       el("operation", op.operation) +
-      (op.operation === "create"
+      (op.operation === "create" || op.operation === "modify"
         ? tradeCard(op.tradeCard)
         : op.operation === "finalize"
           ? el("tcn", op.tcn) + el("arrivalDate", xmlTimestamp(op.arrivalDate))
@@ -239,12 +253,15 @@ export interface TradeCardInfo {
   orderNumber: string | null;
   status: string | null;
   plateNumber: string | null;
+  /** NAV's ids, needed to send a `modify`. */
+  deliveryPlans: { id: string | null; itemIds: string[] }[];
 }
 
 const parser = new XMLParser({
   removeNSPrefix: true,
   parseTagValue: false,
-  ignoreAttributes: true,
+  ignoreAttributes: false,
+  attributeNamePrefix: "@_",
   isArray: (name) =>
     [
       "operationResult",
@@ -305,5 +322,13 @@ export function tradeCardInfos(r: Node): TradeCardInfo[] {
     orderNumber: str(t.orderNumber),
     status: str(t.status),
     plateNumber: str((t.vehicle as Node | undefined)?.plateNumber),
+    deliveryPlans: (
+      ((t.deliveryPlans as Node | undefined)?.deliveryPlan ?? []) as Node[]
+    ).map((p) => ({
+      id: str(p["@_id"]),
+      itemIds: (
+        ((p.items as Node | undefined)?.tradeCardItem ?? []) as Node[]
+      ).map((i) => String(i["@_id"])),
+    })),
   }));
 }

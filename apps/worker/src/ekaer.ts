@@ -36,6 +36,9 @@ export interface ReportView {
   value: bigint;
   createdAt: Date;
   deleteReason: string | null;
+  requestedKg: number | null;
+  changeReason: string | null;
+  arrivalAt: Date | null;
   weighing: { status: "open" | "completed" | "void"; plate: string };
   customer: {
     name: string;
@@ -57,6 +60,16 @@ export interface ReportStore {
   deleted(id: string, call: Evidence): Promise<void>;
   /** A delete NAV refused: the report stays active, with the reason recorded. */
   deleteRefused(id: string, error: string, call: Evidence): Promise<void>;
+  /** NAV accepted the weight change. */
+  modified(id: string, kg: number, call: Evidence): Promise<void>;
+  /** NAV took the unloading time; the report is closed. */
+  finalized(id: string, call: Evidence): Promise<void>;
+  /** A modify or finalize NAV refused or could not apply: back to active, reason kept. */
+  changeRefused(
+    id: string,
+    error: string,
+    call: Evidence | null,
+  ): Promise<void>;
 }
 
 function tradeCard(r: ReportView): TradeCard {
@@ -165,6 +178,81 @@ export async function fileReport(
   }
 }
 
+/**
+ * Sends the person-approved weight (requestedKg, changeReason) to NAV as a modify. NAV wants its
+ * own delivery plan and item ids, so the current report is queried first; that also shows whether
+ * the report is still active. Re-sending the same weight is harmless, so retries are safe.
+ */
+export async function modifyReport(
+  store: ReportStore,
+  client: EkaerClient,
+  id: string,
+): Promise<void> {
+  const r = await store.load(id);
+  if (!r) throw new PermanentEkaerError(`EKÁER report ${id} not found`);
+  if (r.status === "active" && r.plannedKg === r.requestedKg) return;
+  if (r.status !== "modifying" || !r.tcn || !r.requestedKg || !r.changeReason)
+    throw new PermanentEkaerError(
+      `EKÁER report ${id} is not waiting for a weight change`,
+    );
+  const found = await client.queryTradeCards({ tcn: r.tcn });
+  const nav = found.result[0];
+  const plan = nav?.deliveryPlans[0];
+  if (!nav || nav.status !== "S" || !plan?.id || plan.itemIds.length !== 1)
+    return store.changeRefused(
+      id,
+      "A NAV-nál a bejelentés nem aktív vagy nem egytételes; módosítás nem küldhető.",
+      found,
+    );
+  const card = tradeCard({ ...r, plannedKg: r.requestedKg });
+  const call = await client.manageTradeCards([
+    {
+      operation: "modify",
+      tradeCard: {
+        ...card,
+        tcn: r.tcn,
+        deliveryPlans: card.deliveryPlans.map((p) => ({
+          ...p,
+          id: plan.id!,
+          items: p.items.map((i) => ({
+            ...i,
+            id: plan.itemIds[0]!,
+            itemOperation: "modify" as const,
+            weightModReasonText: r.changeReason!,
+          })),
+        })),
+      },
+    },
+  ]);
+  const op = call.result[0];
+  if (op && op.funcCode !== "ERROR")
+    return store.modified(id, r.requestedKg, call);
+  await store.changeRefused(id, op ? navError(op) : navError(call), call);
+}
+
+/** Reports unloading (finalize). Asks NAV first, so a retry after a lost answer does not resend. */
+export async function finalizeReport(
+  store: ReportStore,
+  client: EkaerClient,
+  id: string,
+): Promise<void> {
+  const r = await store.load(id);
+  if (!r) throw new PermanentEkaerError(`EKÁER report ${id} not found`);
+  if (r.status === "finalized") return;
+  if (r.status !== "finalizing" || !r.tcn || !r.arrivalAt)
+    throw new PermanentEkaerError(
+      `EKÁER report ${id} is not waiting for finalize`,
+    );
+  const found = await client.queryTradeCards({ tcn: r.tcn });
+  if (found.result[0]?.status === "F") return store.finalized(id, found);
+  const call = await client.manageTradeCards([
+    { operation: "finalize", tcn: r.tcn, arrivalDate: r.arrivalAt },
+  ]);
+  const op = call.result[0];
+  if (op && op.funcCode !== "ERROR") return store.finalized(id, call);
+  await store.changeRefused(id, op ? navError(op) : navError(call), call);
+}
+
 /** Deletes an active report with the reason the person gave (human-approved by the request). */
 export async function deleteReport(
   store: ReportStore,
@@ -248,5 +336,29 @@ export function dbReportStore(db: Db): ReportStore {
       change(id, { status: "deleted", error: null, ...evidence(c) }, "deleted"),
     deleteRefused: (id, error, c) =>
       change(id, { status: "active", error, ...evidence(c) }, "delete_refused"),
+    modified: (id, kg, c) =>
+      change(
+        id,
+        {
+          status: "active",
+          plannedKg: kg,
+          requestedKg: null,
+          error: null,
+          ...evidence(c),
+        },
+        "modified",
+      ),
+    finalized: (id, c) =>
+      change(
+        id,
+        { status: "finalized", error: null, ...evidence(c) },
+        "finalized",
+      ),
+    changeRefused: (id, error, c) =>
+      change(
+        id,
+        { status: "active", requestedKg: null, error, ...evidence(c) },
+        "change_refused",
+      ),
   };
 }

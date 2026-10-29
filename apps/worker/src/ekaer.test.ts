@@ -8,6 +8,8 @@ import { describe, expect, test } from "vitest";
 import {
   deleteReport,
   fileReport,
+  finalizeReport,
+  modifyReport,
   PermanentEkaerError,
   type ReportStore,
   type ReportView,
@@ -31,6 +33,9 @@ const report = (over: Partial<ReportView> = {}): ReportView => ({
   value: 24_000_000n,
   createdAt: new Date(),
   deleteReason: null,
+  requestedKg: null,
+  changeReason: null,
+  arrivalAt: null,
   weighing: { status: "open", plate: "AACG971" },
   customer: {
     name: "Út Kft.",
@@ -60,6 +65,18 @@ function memoryStore(r: ReportView) {
     },
     deleteRefused: async (_, error) => {
       writes.push(`refused ${error}`);
+    },
+    modified: async (_, kg) => {
+      r = { ...r, status: "active", plannedKg: kg, requestedKg: null };
+      writes.push(`modified ${kg}`);
+    },
+    finalized: async () => {
+      r = { ...r, status: "finalized" };
+      writes.push("finalized");
+    },
+    changeRefused: async (_, error) => {
+      r = { ...r, status: "active", requestedKg: null };
+      writes.push(`change refused ${error}`);
     },
   };
   return { store, writes, get: () => r };
@@ -134,4 +151,62 @@ test("deleteReport sends the person's reason and marks the report deleted", asyn
 
   expect(pending.writes).toEqual(["deleted"]);
   expect([...nav.cards.values()][0]!.status).toBe("I");
+});
+
+describe("after the second weighing", () => {
+  async function filed() {
+    const nav = simulatedNav();
+    const client = createEkaerClient(cfg, { fetch: nav.fetch });
+    const m = memoryStore(report());
+    const tcn = await fileReport(m.store, client, "r1");
+    return { nav, client, tcn, base: m.get() };
+  }
+
+  test("modifyReport sends the weighed net with the reason and NAV's ids", async () => {
+    const { nav, client, base } = await filed();
+    const m = memoryStore({
+      ...base,
+      status: "modifying",
+      requestedKg: 24_360,
+      changeReason: "Mérlegelt nettó tömeg",
+    });
+
+    await modifyReport(m.store, client, "r1");
+
+    expect(m.writes).toEqual(["modified 24360"]);
+    expect(nav.cards.get("MJ-2026-000002")!.items[0]!.weight).toBe("24360");
+  });
+
+  test("finalizeReport closes the report, and a repeat after a lost answer does not resend", async () => {
+    const { nav, client, base } = await filed();
+    const waiting = { ...base, status: "finalizing", arrivalAt: new Date() };
+    const first = memoryStore(waiting);
+    const again = memoryStore(waiting);
+
+    await finalizeReport(first.store, client, "r1");
+    await finalizeReport(again.store, client, "r1");
+
+    expect(first.writes).toEqual(["finalized"]);
+    expect(again.writes).toEqual(["finalized"]);
+    expect(nav.cards.get("MJ-2026-000002")!.status).toBe("F");
+  });
+
+  test("a modify on a deleted report is refused and the report stays active in the ERP", async () => {
+    const { client, tcn, base } = await filed();
+    await client.manageTradeCards([
+      { operation: "delete", tcn, reason: "teszt" },
+    ]);
+    const m = memoryStore({
+      ...base,
+      status: "modifying",
+      requestedKg: 24_360,
+      changeReason: "x",
+    });
+
+    await modifyReport(m.store, client, "r1");
+
+    expect(m.writes[0]).toMatch(
+      /^change refused A NAV-nál a bejelentés nem aktív/,
+    );
+  });
 });

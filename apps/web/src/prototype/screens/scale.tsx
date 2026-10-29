@@ -93,7 +93,9 @@ function subscribe(l: () => void) {
     void pollLive();
     // While the worker files or deletes an EKÁER report, refresh the list every 2 s.
     const waiting = state.weighings.some((w) =>
-      ["pending", "deleting"].includes(w.ekaer?.status ?? ""),
+      ["pending", "deleting", "modifying", "finalizing"].includes(
+        w.ekaer?.status ?? "",
+      ),
     );
     if (waiting && ++tick % 4 === 0) void reload();
   }, 500);
