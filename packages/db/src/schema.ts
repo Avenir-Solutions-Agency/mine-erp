@@ -136,6 +136,28 @@ export const eventLog = pgTable("event_log", {
   payload: jsonb("payload"),
 });
 
+/** Buyers; no delete, inactive ones stay because old weigh tickets point at them. */
+export const customer = pgTable("customer", {
+  id: id(),
+  name: text("name").notNull(),
+  taxNumber: text("tax_number").unique(),
+  address: text("address"),
+  note: text("note"),
+  active: boolean("active").notNull().default(true),
+  ...audit,
+});
+
+/** Products sold over the scale; VTSZ decides the EKÁER obligation later. */
+export const product = pgTable("product", {
+  id: id(),
+  name: text("name").notNull().unique(),
+  fractionCode: text("fraction_code"),
+  vtsz: text("vtsz"),
+  note: text("note"),
+  active: boolean("active").notNull().default(true),
+  ...audit,
+});
+
 export type WeighingStatus = "open" | "completed" | "void";
 
 /** One pass or two over the weighbridge; never deleted, a cancelled one is `void`. */
@@ -150,8 +172,11 @@ export const weighing = pgTable(
     plate: text("plate").notNull(),
     vehicleId: uuid("vehicle_id").references(() => vehicle.id),
     trailerPlate: text("trailer_plate"),
+    // Names as they were at weighing time (the ticket must not change if master data is renamed).
     customer: text("customer"),
     material: text("material"),
+    customerId: uuid("customer_id").references(() => customer.id),
+    productId: uuid("product_id").references(() => product.id),
     note: text("note"),
     firstKg: integer("first_kg").notNull(),
     firstAt: timestamp("first_at", { withTimezone: true }).notNull(),

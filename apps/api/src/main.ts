@@ -10,6 +10,7 @@ import { InvoicesController } from "./invoices.controller.ts";
 import { DB, InvoicesRepository } from "./invoices.repository.ts";
 import { InvoicesService } from "./invoices.service.ts";
 import { AgentGuard, ScaleController, ScaleLive } from "./scale.ts";
+import { MasterData, MasterDataController } from "./master-data.ts";
 import { Storage } from "./storage.ts";
 import { TicketPdf } from "./ticket.ts";
 import { WeighingsController } from "./weighings.controller.ts";
@@ -33,6 +34,7 @@ class HealthController {
     InvoicesController,
     ScaleController,
     WeighingsController,
+    MasterDataController,
   ],
   providers: [
     { provide: ENV, useValue: env },
@@ -47,6 +49,7 @@ class HealthController {
     WeighingsRepository,
     WeighingsService,
     TicketPdf,
+    MasterData,
   ],
 })
 class AppModule {}

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { ScaleLive, sameSecret } from "./scale.ts";
-import { isUniqueViolation, toDomain } from "./weighings.service.ts";
+import { isUniqueViolation } from "./http.ts";
+import { toDomain } from "./weighings.service.ts";
 import type { WeighingRow } from "./weighings.repository.ts";
 
 const feed = (scale: ScaleLive, kgs: number[], start = 0, stepMs = 500) =>
