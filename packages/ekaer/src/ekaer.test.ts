@@ -238,8 +238,11 @@ describe("client", () => {
       create,
     ]);
 
-    await expect(a).rejects.toBeInstanceOf(EkaerTransportError);
-    await expect(b).rejects.toBeInstanceOf(EkaerOutcomeUnknownError);
+    // Both expectations attach before either promise settles, so no rejection goes unhandled.
+    await Promise.all([
+      expect(a).rejects.toBeInstanceOf(EkaerTransportError),
+      expect(b).rejects.toBeInstanceOf(EkaerOutcomeUnknownError),
+    ]);
   });
 
   test("an expired password is its own error", async () => {

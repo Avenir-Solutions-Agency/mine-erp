@@ -122,4 +122,4 @@ The NAV test levels need a secondary EKÁER user (§2). Never call the productio
 ## 9. Open points
 
 - Dependencies need approval (AGENTS.md §03): an XML builder/parser (e.g. `fast-xml-parser`) and an XSD validator (e.g. `xmllint-wasm`). `fetch` and `node:crypto` are built in.
-- It is not confirmed whether NAV's test system needs a separate registration or accepts the production user. Ask the company's EKÁER admin.
+- Answered 2026-10-29: NAV's test system does not accept the production user. The company's production login works on ekaer.nav.gov.hu, but `pnpm --filter @mine-erp/ekaer check` against `import-test` returns `INVALID_USER_OR_PASSWORD`. A separate test-system user is needed; ask the EKÁER help desk how to get one.

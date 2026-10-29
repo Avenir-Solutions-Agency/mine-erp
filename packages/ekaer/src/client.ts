@@ -21,14 +21,18 @@ export class EkaerOutcomeUnknownError extends Error {}
 export class EkaerExpiredPasswordError extends Error {}
 /** The request failed the local 2.2 XSD check and was not sent. */
 export class EkaerSchemaError extends Error {
-  constructor(readonly errors: string[]) {
+  readonly errors: string[];
+  constructor(errors: string[]) {
     super(`EKÁER request is not valid against the 2.2 XSD: ${errors[0]}`);
+    this.errors = errors;
   }
 }
 /** Any other non-200 answer. */
 export class EkaerHttpError extends Error {
-  constructor(readonly status: number) {
+  readonly status: number;
+  constructor(status: number) {
     super(`EKÁER answered HTTP ${status}`);
+    this.status = status;
   }
 }
 
