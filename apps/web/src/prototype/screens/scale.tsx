@@ -211,7 +211,7 @@ export function ScaleScreen() {
       ) : load === "login" ? (
         <Alert lvl="warn">
           A mérlegeléshez{" "}
-          <Link href="/login" className="font-semibold underline">
+          <Link href="/login/mfa" className="font-semibold underline">
             jelentkezzen be
           </Link>
           .

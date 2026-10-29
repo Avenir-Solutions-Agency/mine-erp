@@ -147,7 +147,7 @@ export function InboundTab() {
       ) : load === "login" ? (
         <Alert lvl="warn">
           A számlák megtekintéséhez{" "}
-          <Link href="/login" className="font-semibold underline">
+          <Link href="/login/mfa" className="font-semibold underline">
             jelentkezzen be
           </Link>
           .
