@@ -9,7 +9,7 @@ Derived from docs/PRD.md §05 and the spec's phase 1. Small tasks (at most a day
 - [ ] T-035 The ERP's own weighbridge (decided 2026-10-29, PRD §08): `packages/domain/weighing` rules, `weighing` table with gapless MJ-YYYY-NNNNNN numbers, API endpoints with live weight from `apps/scale-agent` (simulator), Mérleg screen. Open: real indicator reader (model and interface unknown), ticket PDF, plate camera, EKÁER from a weighing, customer/product master data, legal-metrology check
 - [ ] T-034 Real incoming invoices (decided 2026-10-29, pulls part of PRD §07 phase 4 forward): (a) `packages/db` tables `vehicle`, `machine`, `incoming_invoice`, `incoming_invoice_line`, `event_log` with RLS on, seed from the vehicle and machine workbooks (`packages/db/seed-data/`, gitignored); (b) `apps/api` upload → OpenAI extraction (Zod-validated) → Supabase Storage `invoices/YYYY-MM/` by issue date, Supabase email+password login (TOTP/`aal2` before production); (c) Számlák page on the API with the invoice-image modal and print
 - [ ] T-004 `packages/contracts`: Zod schemas for document, shipment, master data
-- [ ] T-005 `apps/api` NestJS skeleton: health, OpenAPI 3.1, Supabase JWT guard (JWKS, `aal2` for office users), event_log writer. Done: health, JWKS guard with `aal2` and TOTP enrolment (2026-10-29), event_log on every write. Open: OpenAPI 3.1
+- [x] T-005 `apps/api` NestJS skeleton: health, OpenAPI 3.1, Supabase JWT guard (JWKS, `aal2` for office users), event_log writer. OpenAPI 3.1 is generated from the Zod contracts (`packages/contracts/openapi.json`); tests fail when it drifts from the API routes
 
 ## Prototype track (PRD §05a)
 Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-inventory/`.

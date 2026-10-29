@@ -68,7 +68,7 @@ Do not add a dependency that overlaps with a row in this table without asking.
   packages/
     domain/              entities, state machines, rules; pure TS, no I/O   Target
     db/                  Drizzle schema, migrations, seed                    Exists (T-034a)
-    contracts/           Zod schemas, OpenAPI generation, client             Target
+    contracts/           Zod schemas, OpenAPI generation, client             Exists (T-005)
     ekaer/               EKÁER XML client (signing, XSD validation)          Exists (T-013)
     extraction/          AI extraction (prompt, schema, evaluation set)      Target
     ui/                  shared shadcn components (once a second app needs them) Target

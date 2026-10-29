@@ -1,8 +1,9 @@
 import "reflect-metadata";
-import { Controller, Get, Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { createDb } from "@mine-erp/db";
 import { AuthGuard } from "./auth.ts";
+import { HealthController } from "./health.ts";
 import { ENV, loadEnv } from "./env.ts";
 import { InvoiceExtractor } from "./extract.ts";
 import { ErrorFilter } from "./http.ts";
@@ -25,14 +26,6 @@ import { WeighingsService } from "./weighings.service.ts";
 
 const env = loadEnv();
 const { db } = createDb(env.DATABASE_URL);
-
-@Controller()
-class HealthController {
-  @Get("health")
-  health() {
-    return { data: { status: "ok" } };
-  }
-}
 
 @Module({
   controllers: [
