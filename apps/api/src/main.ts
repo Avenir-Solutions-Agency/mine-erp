@@ -9,7 +9,11 @@ import { ErrorFilter } from "./http.ts";
 import { InvoicesController } from "./invoices.controller.ts";
 import { DB, InvoicesRepository } from "./invoices.repository.ts";
 import { InvoicesService } from "./invoices.service.ts";
+import { AgentGuard, ScaleController, ScaleLive } from "./scale.ts";
 import { Storage } from "./storage.ts";
+import { WeighingsController } from "./weighings.controller.ts";
+import { WeighingsRepository } from "./weighings.repository.ts";
+import { WeighingsService } from "./weighings.service.ts";
 
 const env = loadEnv();
 const { db } = createDb(env.DATABASE_URL);
@@ -23,7 +27,12 @@ class HealthController {
 }
 
 @Module({
-  controllers: [HealthController, InvoicesController],
+  controllers: [
+    HealthController,
+    InvoicesController,
+    ScaleController,
+    WeighingsController,
+  ],
   providers: [
     { provide: ENV, useValue: env },
     { provide: DB, useValue: db },
@@ -32,6 +41,10 @@ class HealthController {
     InvoiceExtractor,
     InvoicesRepository,
     InvoicesService,
+    AgentGuard,
+    ScaleLive,
+    WeighingsRepository,
+    WeighingsService,
   ],
 })
 class AppModule {}

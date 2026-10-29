@@ -11,6 +11,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { uuidv7 } from "./uuidv7.ts";
@@ -167,6 +168,10 @@ export const weighing = pgTable(
   (t) => [
     index("weighing_first_at_idx").on(t.firstAt),
     index("weighing_plate_idx").on(t.plate),
+    // At most one open weighing per vehicle, even if two first weighings race.
+    uniqueIndex("weighing_one_open_per_plate")
+      .on(t.plate)
+      .where(sql`${t.status} = 'open'`),
     check(
       "weighing_status_chk",
       sql`${t.status} in ('open', 'completed', 'void')`,

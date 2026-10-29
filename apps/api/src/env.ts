@@ -13,6 +13,8 @@ const Env = z.object({
   INVOICE_BUCKET: z.string().default("invoices"),
   // Development only: enables DELETE /invoices (wipes every invoice). Never set in production.
   ALLOW_DATA_RESET: z.enum(["true", "false"]).default("false"),
+  // Shared secret of the local scale agent; without it the API refuses scale readings.
+  SCALE_AGENT_TOKEN: z.string().min(32).optional(),
 });
 export type Env = z.infer<typeof Env>;
 
