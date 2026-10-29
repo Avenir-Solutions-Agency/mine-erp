@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   eventLog,
+  isNull,
   nextWeighingTicketSeq,
   type Tx,
   vehicle,
@@ -121,6 +122,39 @@ export class WeighingsRepository {
       });
       await also?.(tx, w);
       return w;
+    });
+  }
+
+  /** Records the archived ticket once (only if no path is set yet), with its event. */
+  async setTicketFile(
+    id: string,
+    isVoid: boolean,
+    path: string,
+    sha256: string,
+  ) {
+    await this.db.transaction(async (tx) => {
+      const [w] = await tx
+        .update(weighing)
+        .set(
+          isVoid
+            ? { voidTicketPath: path, voidTicketSha256: sha256 }
+            : { ticketPath: path, ticketSha256: sha256 },
+        )
+        .where(
+          and(
+            eq(weighing.id, id),
+            isNull(isVoid ? weighing.voidTicketPath : weighing.ticketPath),
+          ),
+        )
+        .returning({ id: weighing.id });
+      if (w)
+        await tx.insert(eventLog).values({
+          actorType: "system",
+          entity: "weighing",
+          entityId: id,
+          action: isVoid ? "void_ticket_archived" : "ticket_archived",
+          payload: { path, sha256 },
+        });
     });
   }
 }

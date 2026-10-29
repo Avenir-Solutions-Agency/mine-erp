@@ -38,6 +38,7 @@ The client is the data controller; we are the processor (annex 4).
 - The Supabase secret key bypasses row-level security: api and worker only, never web, never `NEXT_PUBLIC_*`. The publishable key is public by design.
 - Supabase is a sub-processor of personal data: EU region only, listed in the data processing agreement.
 - OpenAI is a sub-processor for invoice extraction (invoices carry names and addresses): API data is not used for training; the project must use EU data residency and be listed in the data processing agreement before real invoices are processed in production.
+- Issued weigh tickets are archived once in the private `weigh-tickets` bucket (no upsert) with their SHA-256 on the weighing; downloads return the stored file, and a void adds a separate SZTORNÓ copy.
 - Supabase Auth: public sign-up is off; office users are created by an admin. After the password, every office user completes TOTP (authenticator app; QR enrolment on first sign-in at `/login/mfa`); the API accepts only `aal2` sessions and verifies tokens locally against the project JWKS (ES256), refusing `none` and HS* algorithms. `AUTH_REQUIRE_AAL2=false` is for local development only. Invoice files live in the private `invoices` bucket, reachable only through 5-minute signed links from the API.
 - EKÁER uses a secondary user with its own signing key; the password is sent only as its SHA-512 hash.
 - Rotation: by the system operator through the secret store (owner to be named).

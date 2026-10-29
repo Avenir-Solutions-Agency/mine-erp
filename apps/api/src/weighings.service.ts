@@ -1,4 +1,5 @@
-import { Injectable } from "@nestjs/common";
+import { createHash } from "node:crypto";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import type { FirstWeighingInput, WeighingDto } from "@mine-erp/contracts";
 import {
   firstWeighing,
@@ -17,6 +18,8 @@ import { EkaerReports } from "./ekaer-reports.ts";
 import { Shipments } from "./shipments.ts";
 import { MasterData } from "./master-data.ts";
 import { ScaleLive } from "./scale.ts";
+import { ENV, type Env } from "./env.ts";
+import { Storage } from "./storage.ts";
 import { TicketPdf } from "./ticket.ts";
 import {
   type WeighingRow,
@@ -100,7 +103,11 @@ export class WeighingsService {
     private readonly masterData: MasterData,
     private readonly ekaer: EkaerReports,
     private readonly shipments: Shipments,
+    private readonly storage: Storage,
+    @Inject(ENV) private readonly env: Env,
   ) {}
+
+  private readonly log = new Logger("WeighTickets");
 
   /** One weighing with its latest EKÁER report and its shipment. */
   private async dto(row: WeighingRow): Promise<WeighingDto> {
@@ -205,6 +212,7 @@ export class WeighingsService {
           );
         throw e;
       });
+    if (row.status === "completed") this.archiveSoon(row);
     return await this.dto(row);
   }
 
@@ -237,6 +245,7 @@ export class WeighingsService {
         "changed",
         "A mérlegelést közben lezárták vagy sztornózták.",
       );
+    this.archiveSoon(saved);
     return await this.dto(saved);
   }
 
@@ -258,6 +267,7 @@ export class WeighingsService {
         "changed",
         "A mérlegelés közben megváltozott, töltse újra.",
       );
+    this.archiveSoon(saved);
     return await this.dto(saved);
   }
 
@@ -270,10 +280,46 @@ export class WeighingsService {
         "not_completed",
         "Nyitott mérlegeléshez még nincs mérlegjegy.",
       );
-    return {
-      number: row.ticketNumber,
-      pdf: await this.tickets.render(await this.dto(row)),
-    };
+    return { number: row.ticketNumber, pdf: await this.archive(row) };
+  }
+
+  /**
+   * The archived PDF of this ticket version (issued, or the SZTORNÓ copy). It is rendered and
+   * written once; every later download returns the stored file, so an issued ticket never changes
+   * when master data does. The file's SHA-256 is kept as evidence.
+   */
+  private async archive(row: WeighingRow): Promise<Buffer> {
+    const bucket = this.env.WEIGH_TICKET_BUCKET;
+    const isVoid = row.status === "void";
+    const known = isVoid ? row.voidTicketPath : row.ticketPath;
+    if (known) return this.storage.download(bucket, known);
+    // YYYY-MM in Hungarian time, so a ticket issued just after midnight lands in the right month.
+    const month = (row.secondAt ?? row.firstAt)
+      .toLocaleString("sv-SE", { timeZone: "Europe/Budapest" })
+      .slice(0, 7);
+    const path = `${month}/${row.ticketNumber}${isVoid ? "-sztorno" : ""}.pdf`;
+    const pdf = await this.tickets.render(await this.dto(row));
+    // Another request may have archived it first; then its file is the issued one.
+    const stored = (await this.storage.putOnce(
+      bucket,
+      path,
+      pdf,
+      "application/pdf",
+    ))
+      ? pdf
+      : await this.storage.download(bucket, path);
+    const sha256 = createHash("sha256").update(stored).digest("hex");
+    await this.repo.setTicketFile(row.id, isVoid, path, sha256);
+    return stored;
+  }
+
+  /** Right after completion or void; if Gotenberg or Storage is down, the first download archives it. */
+  private archiveSoon(row: WeighingRow) {
+    void this.archive(row).catch((e: unknown) =>
+      this.log.warn(
+        `${row.ticketNumber} not archived yet: ${e instanceof Error ? e.message : String(e)}`,
+      ),
+    );
   }
 
   private async load(id: string): Promise<WeighingRow> {

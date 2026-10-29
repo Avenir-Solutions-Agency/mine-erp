@@ -72,4 +72,5 @@ app.enableCors({
 });
 app.useGlobalFilters(new ErrorFilter());
 await app.get(Storage).ensureBucket();
+await app.get(Storage).ensureBucket(env.WEIGH_TICKET_BUCKET);
 await app.listen(env.API_PORT);
