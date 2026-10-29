@@ -69,4 +69,14 @@ export class Storage {
     const { signedURL } = (await res.json()) as { signedURL: string };
     return `${this.env.SUPABASE_URL}/storage/v1${signedURL}`;
   }
+
+  async remove(paths: string[]) {
+    if (!paths.length) return;
+    const res = await fetch(this.url(`object/${this.env.INVOICE_BUCKET}`), {
+      method: "DELETE",
+      headers: this.headers({ "content-type": "application/json" }),
+      body: JSON.stringify({ prefixes: paths }),
+    });
+    if (!res.ok) throw new Error(`Storage remove: HTTP ${res.status}`);
+  }
 }

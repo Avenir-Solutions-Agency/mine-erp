@@ -656,6 +656,61 @@ async function uploadFiles(files: File[]) {
   }
 }
 
+async function resetInvoices() {
+  try {
+    const { removed } = await api<{ removed: number }>("invoices", {
+      method: "DELETE",
+    });
+    setState({ selected: null });
+    await reload();
+    toast(`${removed} számla törölve, a fájlok újra feltölthetők`);
+    return true;
+  } catch (e) {
+    toast((e as Error).message);
+    return false;
+  }
+}
+
+/** Development helper: wipes every invoice after an explicit confirmation. */
+function ResetInvoices() {
+  const { invoices } = usePortal();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  return (
+    <>
+      <Btn kind="bad" disabled={!invoices.length} onClick={() => setOpen(true)}>
+        Összes számla törlése (teszt)
+      </Btn>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Összes számla törlése</DialogTitle>
+          </DialogHeader>
+          <p>
+            {invoices.length} számla, a tételei és a tárolt fájlok véglegesen
+            törlődnek. A járművek és gépek megmaradnak, a törlés bekerül a
+            naplóba. Nem vonható vissza.
+          </p>
+          <DialogFooter>
+            <Btn onClick={() => setOpen(false)}>Mégse</Btn>
+            <Btn
+              kind="bad"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                if (await resetInvoices()) setOpen(false);
+                setBusy(false);
+              }}
+            >
+              {busy ? "Törlés…" : "Végleges törlés"}
+            </Btn>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function UploadView() {
   const { uploading } = usePortal();
   const file = useRef<HTMLInputElement>(null);
@@ -690,6 +745,10 @@ function UploadView() {
           e.currentTarget.value = "";
         }}
       />
+      <Row className="mt-2">
+        <ResetInvoices />
+        <Small>Csak fejlesztői környezetben működik.</Small>
+      </Row>
     </>
   );
 }

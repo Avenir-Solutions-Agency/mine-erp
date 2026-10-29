@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import type { InvoiceDto } from "@mine-erp/contracts";
 import {
   assignByHandwriting,
@@ -8,6 +8,7 @@ import {
   toFiller,
 } from "@mine-erp/domain/invoices";
 import type { Actor } from "./auth.ts";
+import { ENV, type Env } from "./env.ts";
 import { InvoiceExtractor } from "./extract.ts";
 import { ApiError } from "./http.ts";
 import { type InvoiceRow, InvoicesRepository } from "./invoices.repository.ts";
@@ -66,6 +67,7 @@ export class InvoicesService {
     private readonly repo: InvoicesRepository,
     private readonly extractor: InvoiceExtractor,
     private readonly storage: Storage,
+    @Inject(ENV) private readonly env: Env,
   ) {}
 
   async upload(
@@ -183,5 +185,18 @@ export class InvoicesService {
     if (!(await this.repo.assign(id, costCarrier, actor)))
       throw new ApiError(404, "not_found", "A számla nem található.");
     return (await this.get(id))!;
+  }
+
+  /** Wipes invoices so the same files can be uploaded again; refused unless ALLOW_DATA_RESET=true. */
+  async reset(actor: Actor): Promise<{ removed: number }> {
+    if (this.env.ALLOW_DATA_RESET !== "true")
+      throw new ApiError(
+        403,
+        "reset_disabled",
+        "A törlés ebben a környezetben nincs engedélyezve.",
+      );
+    const paths = await this.repo.deleteAll(actor);
+    await this.storage.remove(paths);
+    return { removed: paths.length };
   }
 }

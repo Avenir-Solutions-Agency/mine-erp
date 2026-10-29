@@ -149,4 +149,21 @@ export class InvoicesRepository {
       return true;
     });
   }
+
+  /** Development reset: removes every invoice (lines cascade) and logs one event; returns the stored paths. */
+  async deleteAll(actor: Actor): Promise<string[]> {
+    return this.db.transaction(async (tx) => {
+      const removed = await tx
+        .delete(incomingInvoice)
+        .returning({ path: incomingInvoice.filePath });
+      await tx.insert(eventLog).values({
+        actorId: actor.id,
+        actorType: "person",
+        entity: "incoming_invoice",
+        action: "reset",
+        payload: { removed: removed.length },
+      });
+      return removed.map((r) => r.path);
+    });
+  }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -60,6 +61,11 @@ export class InvoicesController {
     return {
       data: await this.invoices.assign(id, input.data.costCarrier, actor),
     };
+  }
+
+  @Delete("invoices")
+  async reset(@CurrentActor() actor: Actor) {
+    return { data: await this.invoices.reset(actor) };
   }
 
   @Get("carriers")
