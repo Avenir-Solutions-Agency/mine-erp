@@ -64,7 +64,7 @@ Do not add a dependency that overlaps with a row in this table without asking.
     api/                 NestJS REST API + MCP server            Exists: invoices (T-034b)
     worker/              Temporal workflows and activities       Target (not yet true)
     bot/                 Telegram bot (grammY, webhook)          Target (not yet true)
-    scale-agent/         local scale agent, single binary        Target (not yet true)
+    scale-agent/         local scale agent, single binary        Exists: simulator only (T-035)
   packages/
     domain/              entities, state machines, rules; pure TS, no I/O   Target
     db/                  Drizzle schema, migrations, seed                    Exists (T-034a)
