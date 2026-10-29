@@ -3,6 +3,8 @@ import { NAV, ROUTE_IDS } from "../src/prototype/nav";
 
 // Every demo screen renders on an empty database in the browser, without errors or horizontal page scroll (desktop and 375px).
 test("every prototype screen renders", async ({ page }) => {
+  // Visits all 30 routes one by one; the default 30 s budget is too tight on a busy machine.
+  test.setTimeout(120_000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {

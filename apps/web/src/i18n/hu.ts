@@ -53,5 +53,14 @@ export const hu = {
     pending: "Belépés…",
     failed: "Hibás e-mail-cím vagy jelszó.",
     logout: "Kijelentkezés",
+    mfaTitle: "Kétlépcsős azonosítás",
+    mfaEnroll:
+      "Olvassa be a QR-kódot egy hitelesítő alkalmazással (pl. Google vagy Microsoft Authenticator), majd írja be az ott látható 6 jegyű kódot.",
+    mfaVerify: "Írja be a hitelesítő alkalmazásban látható 6 jegyű kódot.",
+    mfaSecret: "Ha nem tudja beolvasni, adja meg kézzel ezt a kulcsot:",
+    mfaCode: "6 jegyű kód",
+    mfaSubmit: "Ellenőrzés",
+    mfaFailed: "Hibás vagy lejárt kód, próbálja újra.",
+    mfaLoading: "Betöltés…",
   },
 } as const;

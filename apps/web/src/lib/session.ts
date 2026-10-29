@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { env } from "@/lib/env";
+import { svgDataUrl } from "@/lib/svg-data-url";
 
 // Supabase Auth tokens live in httpOnly cookies, so browser JavaScript never sees them.
 const ACCESS = "erp_at";
@@ -69,4 +70,85 @@ export async function accessToken(): Promise<string | null> {
   if (!t) return null;
   await store(t);
   return t.access_token;
+}
+
+/** Calls Supabase Auth as the signed-in user (MFA endpoints). */
+async function asUser(path: string, init: RequestInit = {}) {
+  const token = await accessToken();
+  if (
+    !token ||
+    !env.NEXT_PUBLIC_SUPABASE_URL ||
+    !env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  )
+    return null;
+  return fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/${path}`, {
+    ...init,
+    headers: {
+      apikey: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    cache: "no-store",
+  });
+}
+
+type Factor = { id: string; factor_type: string; status: string };
+
+export type MfaSetup =
+  | { state: "signed_out" }
+  | { state: "verify"; factorId: string }
+  | { state: "enroll"; factorId: string; qrCode: string; secret: string };
+
+/**
+ * The TOTP step after the password (SECURITY.md: office users need aal2). A user with a verified
+ * authenticator only types the code; anyone else gets a fresh QR code (unfinished enrolments are
+ * removed first, as Supabase keeps them).
+ */
+export async function mfaSetup(): Promise<MfaSetup> {
+  const me = await asUser("user");
+  if (!me?.ok) return { state: "signed_out" };
+  const factors = ((await me.json()) as { factors?: Factor[] }).factors ?? [];
+  const verified = factors.find(
+    (f) => f.factor_type === "totp" && f.status === "verified",
+  );
+  if (verified) return { state: "verify", factorId: verified.id };
+  for (const f of factors.filter((f) => f.status !== "verified"))
+    await asUser(`factors/${f.id}`, { method: "DELETE" });
+  const res = await asUser("factors", {
+    method: "POST",
+    body: JSON.stringify({
+      factor_type: "totp",
+      friendly_name: `ERP ${new Date().toISOString()}`,
+    }),
+  });
+  if (!res?.ok) return { state: "signed_out" };
+  const f = (await res.json()) as {
+    id: string;
+    totp: { qr_code: string; secret: string };
+  };
+  return {
+    state: "enroll",
+    factorId: f.id,
+    qrCode: svgDataUrl(f.totp.qr_code),
+    secret: f.totp.secret,
+  };
+}
+
+/** Checks the 6-digit code; on success Supabase returns an aal2 session, which replaces the cookies. */
+export async function mfaVerify(
+  factorId: string,
+  code: string,
+): Promise<boolean> {
+  const challenge = await asUser(`factors/${factorId}/challenge`, {
+    method: "POST",
+  });
+  if (!challenge?.ok) return false;
+  const { id } = (await challenge.json()) as { id: string };
+  const res = await asUser(`factors/${factorId}/verify`, {
+    method: "POST",
+    body: JSON.stringify({ challenge_id: id, code }),
+  });
+  if (!res?.ok) return false;
+  await store((await res.json()) as TokenResponse);
+  return true;
 }
