@@ -14,6 +14,7 @@ import { customer, product } from "@mine-erp/db";
 import type { Actor } from "./auth.ts";
 import { ApiError, isUniqueViolation } from "./http.ts";
 import { EkaerReports } from "./ekaer-reports.ts";
+import { Shipments } from "./shipments.ts";
 import { MasterData } from "./master-data.ts";
 import { ScaleLive } from "./scale.ts";
 import { TicketPdf } from "./ticket.ts";
@@ -25,6 +26,7 @@ import {
 export function toDto(
   w: WeighingRow,
   ekaer: WeighingDto["ekaer"] = null,
+  shipment: WeighingDto["shipment"] = null,
 ): WeighingDto {
   return {
     id: w.id,
@@ -45,6 +47,7 @@ export function toDto(
     savedTare: w.savedTare,
     voidReason: w.voidReason,
     ekaer,
+    shipment,
   };
 }
 
@@ -96,20 +99,32 @@ export class WeighingsService {
     private readonly tickets: TicketPdf,
     private readonly masterData: MasterData,
     private readonly ekaer: EkaerReports,
+    private readonly shipments: Shipments,
   ) {}
 
-  /** One weighing with its latest EKÁER report. */
+  /** One weighing with its latest EKÁER report and its shipment. */
   private async dto(row: WeighingRow): Promise<WeighingDto> {
+    const [reports, shipments] = await Promise.all([
+      this.ekaer.latestFor([row.id]),
+      this.shipments.forWeighings([row.id]),
+    ]);
     return toDto(
       row,
-      (await this.ekaer.latestFor([row.id])).get(row.id) ?? null,
+      reports.get(row.id) ?? null,
+      shipments.get(row.id) ?? null,
     );
   }
 
   async list(): Promise<WeighingDto[]> {
     const rows = await this.repo.list(200);
-    const reports = await this.ekaer.latestFor(rows.map((r) => r.id));
-    return rows.map((r) => toDto(r, reports.get(r.id) ?? null));
+    const ids = rows.map((r) => r.id);
+    const [reports, shipments] = await Promise.all([
+      this.ekaer.latestFor(ids),
+      this.shipments.forWeighings(ids),
+    ]);
+    return rows.map((r) =>
+      toDto(r, reports.get(r.id) ?? null, shipments.get(r.id) ?? null),
+    );
   }
 
   /** First pass, or a finished one-pass weighing with the vehicle's saved tare. The weight comes from the scale, never the client. */
@@ -174,6 +189,11 @@ export class WeighingsService {
         budapestYear(now),
         (seq) => formatTicketNumber(budapestYear(now), seq),
         actor,
+        // A one-pass weighing with saved tare is complete at once: register it in the same transaction.
+        (tx, w) =>
+          w.status === "completed"
+            ? this.shipments.registerIn(tx, w, actor)
+            : Promise.resolve(),
       )
       .catch((e: unknown) => {
         // Two first weighings for the same plate at once: the partial unique index stops the second.
@@ -207,6 +227,9 @@ export class WeighingsService {
       },
       "second_weighing",
       actor,
+      // Registered in the same transaction; without customer or product it stays unregistered
+      // and the Mérleg screen offers "Nyilvántartásba vétel" once they are added.
+      (tx, w) => this.shipments.registerIn(tx, w, actor),
     );
     if (!saved)
       throw new ApiError(
@@ -227,6 +250,7 @@ export class WeighingsService {
       { status: "void", voidReason: w.voidReason, voidedAt: new Date() },
       "voided",
       actor,
+      (tx) => this.shipments.cancelIn(tx, id, actor),
     );
     if (!saved)
       throw new ApiError(

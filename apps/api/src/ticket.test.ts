@@ -21,6 +21,7 @@ const base: WeighingDto = {
   savedTare: false,
   voidReason: null,
   ekaer: null,
+  shipment: { registryNumber: "SZ-2026-000001", status: "registered" },
 };
 
 describe("renderTicketHtml", () => {
@@ -29,6 +30,7 @@ describe("renderTicketHtml", () => {
 
     expect(html).toContain("MJ-2026-000001");
     expect(html).toContain("AACG971");
+    expect(html).toContain("SZ-2026-000001");
     expect(html).toMatch(/24\s360 kg/);
     expect(html).not.toContain("SZTORNÓ");
   });

@@ -1071,6 +1071,27 @@
                           "voidReason": {
                             "type": ["string", "null"]
                           },
+                          "shipment": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "registryNumber": {
+                                    "type": "string"
+                                  },
+                                  "status": {
+                                    "type": "string",
+                                    "enum": ["registered", "cancelled"]
+                                  }
+                                },
+                                "required": ["registryNumber", "status"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "ekaer": {
                             "anyOf": [
                               {
@@ -1139,6 +1160,7 @@
                           "netKg",
                           "savedTare",
                           "voidReason",
+                          "shipment",
                           "ekaer"
                         ],
                         "additionalProperties": false
@@ -1372,6 +1394,27 @@
                         "voidReason": {
                           "type": ["string", "null"]
                         },
+                        "shipment": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "registryNumber": {
+                                  "type": "string"
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "enum": ["registered", "cancelled"]
+                                }
+                              },
+                              "required": ["registryNumber", "status"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "ekaer": {
                           "anyOf": [
                             {
@@ -1440,6 +1483,7 @@
                         "netKg",
                         "savedTare",
                         "voidReason",
+                        "shipment",
                         "ekaer"
                       ],
                       "additionalProperties": false
@@ -1596,6 +1640,27 @@
                         "voidReason": {
                           "type": ["string", "null"]
                         },
+                        "shipment": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "registryNumber": {
+                                  "type": "string"
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "enum": ["registered", "cancelled"]
+                                }
+                              },
+                              "required": ["registryNumber", "status"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "ekaer": {
                           "anyOf": [
                             {
@@ -1664,6 +1729,7 @@
                         "netKg",
                         "savedTare",
                         "voidReason",
+                        "shipment",
                         "ekaer"
                       ],
                       "additionalProperties": false
@@ -1838,6 +1904,27 @@
                         "voidReason": {
                           "type": ["string", "null"]
                         },
+                        "shipment": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "registryNumber": {
+                                  "type": "string"
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "enum": ["registered", "cancelled"]
+                                }
+                              },
+                              "required": ["registryNumber", "status"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "ekaer": {
                           "anyOf": [
                             {
@@ -1906,6 +1993,7 @@
                         "netKg",
                         "savedTare",
                         "voidReason",
+                        "shipment",
                         "ekaer"
                       ],
                       "additionalProperties": false
@@ -2300,6 +2388,178 @@
             }
           }
         },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "ok": {
+                          "type": "boolean",
+                          "const": true
+                        }
+                      },
+                      "required": ["ok"],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Hungarian, safe to show"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shipments": {
+      "get": {
+        "summary": "Shipment register, newest first (500), with the EKÁER number",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "registryNumber": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["registered", "cancelled"]
+                          },
+                          "weighingId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "plate": {
+                            "type": "string"
+                          },
+                          "customer": {
+                            "type": "string"
+                          },
+                          "product": {
+                            "type": "string"
+                          },
+                          "netKg": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "shippedAt": {
+                            "type": "string"
+                          },
+                          "ekaerTcn": {
+                            "type": ["string", "null"]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "registryNumber",
+                          "status",
+                          "weighingId",
+                          "plate",
+                          "customer",
+                          "product",
+                          "netKg",
+                          "shippedAt",
+                          "ekaerTcn"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Hungarian, safe to show"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/weighings/{id}/register": {
+      "post": {
+        "summary": "Register a completed weighing as a shipment (when it was not registered automatically)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "OK",

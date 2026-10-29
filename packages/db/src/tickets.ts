@@ -1,8 +1,8 @@
 import { sql } from "drizzle-orm";
 import type { Db } from "./index.ts";
-import { weighingTicketCounter } from "./schema.ts";
+import { shipmentRegistryCounter, weighingTicketCounter } from "./schema.ts";
 
-type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /**
  * Next gapless ticket sequence for the year. Call it inside the transaction that saves the
@@ -20,5 +20,21 @@ export async function nextWeighingTicketSeq(
       set: { last: sql`${weighingTicketCounter.last} + 1` },
     })
     .returning({ last: weighingTicketCounter.last });
+  return row!.last;
+}
+
+/** Next gapless shipment registry sequence for the year; same locking rule as the ticket counter. */
+export async function nextShipmentRegistrySeq(
+  tx: Tx,
+  year: number,
+): Promise<number> {
+  const [row] = await tx
+    .insert(shipmentRegistryCounter)
+    .values({ year, last: 1 })
+    .onConflictDoUpdate({
+      target: shipmentRegistryCounter.year,
+      set: { last: sql`${shipmentRegistryCounter.last} + 1` },
+    })
+    .returning({ last: shipmentRegistryCounter.last });
   return row!.last;
 }

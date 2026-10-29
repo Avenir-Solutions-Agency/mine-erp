@@ -278,3 +278,48 @@ export const ekaerReport = pgTable(
     check("ekaer_report_value_chk", sql`${t.value} > 0`),
   ],
 );
+
+export type ShipmentStatus = "registered" | "cancelled";
+
+/**
+ * The register (PRD F4): one shipment per completed weighing, with a gapless yearly number
+ * SZ-YYYY-NNNNNN. Never deleted; a voided weighing cancels its shipment and the number stays.
+ * Names and net weight are copied so the register does not change when master data does.
+ */
+export const shipment = pgTable(
+  "shipment",
+  {
+    id: id(),
+    registryYear: integer("registry_year").notNull(),
+    registrySeq: integer("registry_seq").notNull(),
+    registryNumber: text("registry_number").notNull().unique(),
+    weighingId: uuid("weighing_id")
+      .notNull()
+      .unique()
+      .references(() => weighing.id),
+    status: text("status").$type<ShipmentStatus>().notNull(),
+    plate: text("plate").notNull(),
+    customerId: uuid("customer_id").references(() => customer.id),
+    productId: uuid("product_id").references(() => product.id),
+    customer: text("customer").notNull(),
+    product: text("product").notNull(),
+    netKg: integer("net_kg").notNull(),
+    shippedAt: timestamp("shipped_at", { withTimezone: true }).notNull(),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    ...audit,
+  },
+  (t) => [
+    index("shipment_shipped_at_idx").on(t.shippedAt),
+    check(
+      "shipment_status_chk",
+      sql`${t.status} in ('registered', 'cancelled')`,
+    ),
+    check("shipment_net_kg_chk", sql`${t.netKg} > 0`),
+  ],
+);
+
+/** Gapless SZ-YYYY-NNNNNN numbers, bumped in the transaction that registers the shipment. */
+export const shipmentRegistryCounter = pgTable("shipment_registry_counter", {
+  year: integer("year").primaryKey(),
+  last: integer("last").notNull(),
+});

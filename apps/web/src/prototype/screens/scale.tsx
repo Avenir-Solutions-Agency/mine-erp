@@ -487,6 +487,7 @@ function ClosedToday({
         <TableHeader>
           <TableRow>
             <TableHead>Mérlegjegy</TableHead>
+            <TableHead>Szállítás</TableHead>
             <TableHead>Idő</TableHead>
             <TableHead>Rendszám</TableHead>
             <TableHead>Anyag</TableHead>
@@ -505,6 +506,30 @@ function ClosedToday({
               <TableRow key={w.id}>
                 <TableCell>
                   <Mono>{w.ticketNumber}</Mono>
+                </TableCell>
+                <TableCell>
+                  {w.shipment ? (
+                    <Mono>{w.shipment.registryNumber}</Mono>
+                  ) : w.status === "completed" ? (
+                    <Btn
+                      sm
+                      onClick={async () => {
+                        try {
+                          await api(`weighings/${w.id}/register`, {
+                            method: "POST",
+                          });
+                          toast("Nyilvántartásba véve");
+                          await reload();
+                        } catch (e) {
+                          toast((e as Error).message);
+                        }
+                      }}
+                    >
+                      Nyilvántartásba vétel
+                    </Btn>
+                  ) : (
+                    <Small>—</Small>
+                  )}
                 </TableCell>
                 <TableCell>{time(w.secondAt ?? w.firstAt)}</TableCell>
                 <TableCell>{w.plate}</TableCell>
@@ -552,7 +577,7 @@ function ClosedToday({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={11} className="text-muted-foreground">
+              <TableCell colSpan={12} className="text-muted-foreground">
                 Ma még nincs lezárt mérlegelés.
               </TableCell>
             </TableRow>
