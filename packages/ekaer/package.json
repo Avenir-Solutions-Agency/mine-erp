@@ -8,7 +8,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "node --env-file-if-exists=../../.env.local scripts/check.ts"
   },
   "dependencies": {
     "fast-xml-parser": "5.11.2",

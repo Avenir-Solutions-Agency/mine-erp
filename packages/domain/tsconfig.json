@@ -8,6 +8,8 @@
     "noUncheckedIndexedAccess": false,
     "noEmit": true,
     "isolatedModules": true,
+    // These files also run under Node type stripping, which rejects enums and parameter properties.
+    "erasableSyntaxOnly": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "types": ["node"]
