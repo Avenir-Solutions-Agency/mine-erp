@@ -3,6 +3,7 @@ import { accessToken } from "@/lib/session";
 
 // Backend-for-frontend: the browser calls /api/erp/*, this adds the Supabase token from the
 // httpOnly cookie and forwards to the NestJS API. Only the API's own routes pass through.
+const SAFE_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
 const ALLOWED = /^(invoices(\/[0-9a-f-]{36}(\/(file|carrier))?)?|carriers)$/;
 
 async function forward(
@@ -49,11 +50,20 @@ async function forward(
     ) {
       const { data } = (await res.json()) as { data: { url: string } };
       const file = await fetch(data.url, { cache: "no-store" });
+      // Served from our origin, so only the three uploadable types render; anything else downloads.
+      const type = file.headers
+        .get("content-type")
+        ?.split(";")[0]
+        ?.trim()
+        .toLowerCase();
+      const safe = SAFE_TYPES.has(type ?? "")
+        ? type!
+        : "application/octet-stream";
       return new Response(file.body, {
         status: file.status,
         headers: {
-          "content-type":
-            file.headers.get("content-type") ?? "application/octet-stream",
+          "content-type": safe,
+          "x-content-type-options": "nosniff",
           "cache-control": "private, no-store",
         },
       });
