@@ -36,6 +36,13 @@
       "when": 1793282097620,
       "tag": "0004_customer_product",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793310440661,
+      "tag": "0005_ekaer_report",
+      "breakpoints": true
     }
   ]
 }

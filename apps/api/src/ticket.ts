@@ -1,14 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { WeighingDto } from "@mine-erp/contracts";
+import { COMPANY } from "@mine-erp/domain/ekaer";
 import { ENV, type Env } from "./env.ts";
 
-// Issuer shown on the ticket. Source: the company's own invoices (tax number) and PRD §01 (site).
+// Issuer: the company data shared with EKÁER (packages/domain/ekaer).
 // shortcut: one issuer; the three firms sharing the scale need a per-weighing seller later (T-035).
-const ISSUER = {
-  name: "Mészkő-Polgár Kft.",
-  site: "Polgárdi-Kőszárhegy",
-  taxNumber: "23419791-2-43",
-};
+const ISSUER = COMPANY;
 
 const esc = (s: string) =>
   s.replace(
@@ -41,7 +38,7 @@ export function renderTicketHtml(w: WeighingDto): string {
   body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11pt; color: #111; }
   header { display: flex; justify-content: space-between; border-bottom: 2px solid #111; padding-bottom: 8px; }
   h1 { font-size: 20pt; margin: 0; }
-  .no { font-size: 14pt; font-weight: bold; text-align: right; }
+  .no { font-size: 14pt; font-weight: bold; text-align: right; white-space: nowrap; padding-left: 16px; }
   table { width: 100%; border-collapse: collapse; margin-top: 14px; }
   th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid #ccc; vertical-align: top; }
   th { width: 38%; font-weight: normal; color: #444; }
@@ -53,7 +50,7 @@ export function renderTicketHtml(w: WeighingDto): string {
 </style></head><body>
 ${w.status === "void" ? `<div class="void">SZTORNÓ</div>` : ""}
 <header>
-  <div><h1>Mérlegjegy</h1>${esc(ISSUER.name)} · ${esc(ISSUER.site)}<br>Adószám: ${esc(ISSUER.taxNumber)}</div>
+  <div><h1>Mérlegjegy</h1>${esc(ISSUER.name)} · Telephely: ${esc(`${ISSUER.site.zipCode} ${ISSUER.site.city}, ${ISSUER.site.street}`)}<br>Székhely: ${esc(ISSUER.seat)} · Adószám: ${esc(ISSUER.taxNumber)}</div>
   <div class="no">${esc(w.ticketNumber)}</div>
 </header>
 <table>
@@ -67,6 +64,7 @@ ${w.status === "void" ? `<div class="void">SZTORNÓ</div>` : ""}
   ${row("Tára", kg(w.tareKg))}
   <tr class="net"><th>Nettó</th><td>${kg(w.netKg)}</td></tr>
   ${row("Megjegyzés", text(w.note))}
+  ${w.ekaer?.status === "active" && w.ekaer.tcn ? row("EKÁER-szám", esc(w.ekaer.tcn)) : ""}
   ${w.status === "void" ? row("Sztornó oka", text(w.voidReason)) : ""}
 </table>
 <div class="sign"><div>Mérlegkezelő</div><div>Gépkocsivezető</div></div>

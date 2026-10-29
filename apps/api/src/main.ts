@@ -11,6 +11,12 @@ import { DB, InvoicesRepository } from "./invoices.repository.ts";
 import { InvoicesService } from "./invoices.service.ts";
 import { AgentGuard, ScaleController, ScaleLive } from "./scale.ts";
 import { MasterData, MasterDataController } from "./master-data.ts";
+import { Client, Connection } from "@temporalio/client";
+import {
+  EkaerReports,
+  EkaerReportsController,
+  TEMPORAL,
+} from "./ekaer-reports.ts";
 import { Storage } from "./storage.ts";
 import { TicketPdf } from "./ticket.ts";
 import { WeighingsController } from "./weighings.controller.ts";
@@ -35,6 +41,7 @@ class HealthController {
     ScaleController,
     WeighingsController,
     MasterDataController,
+    EkaerReportsController,
   ],
   providers: [
     { provide: ENV, useValue: env },
@@ -50,6 +57,14 @@ class HealthController {
     WeighingsService,
     TicketPdf,
     MasterData,
+    EkaerReports,
+    {
+      provide: TEMPORAL,
+      // Lazy: the API starts without Temporal; only starting a workflow needs it.
+      useValue: new Client({
+        connection: Connection.lazy({ address: env.TEMPORAL_ADDRESS }),
+      }),
+    },
   ],
 })
 class AppModule {}

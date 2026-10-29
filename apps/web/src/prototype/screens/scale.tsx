@@ -48,6 +48,7 @@ import {
   MasterDataTab,
   type MasterField,
 } from "@/prototype/screens/scale-master-data";
+import { EkaerActions, EkaerStatus } from "@/prototype/screens/scale-ekaer";
 
 // Mérleg: the ERP's own weighbridge screen (decided 2026-10-29). The weight always comes from
 // the scale agent through the API; nobody types a weight here.
@@ -86,8 +87,15 @@ const pollLive = () =>
     .catch(() => setState({ live: null }));
 function subscribe(l: () => void) {
   listeners.add(l);
+  let tick = 0;
   poller ??= setInterval(() => {
-    if (state.load === "ready") void pollLive();
+    if (state.load !== "ready") return;
+    void pollLive();
+    // While the worker files or deletes an EKÁER report, refresh the list every 2 s.
+    const waiting = state.weighings.some((w) =>
+      ["pending", "deleting"].includes(w.ekaer?.status ?? ""),
+    );
+    if (waiting && ++tick % 4 === 0) void reload();
   }, 500);
   return () => {
     listeners.delete(l);
@@ -146,7 +154,8 @@ const PRODUCT_FIELDS: MasterField[] = [
     placeholder: "pl. Zúzottkő 22/63",
   },
   { key: "fractionCode", label: "Frakció", placeholder: "22/63" },
-  { key: "vtsz", label: "VTSZ", placeholder: "2517" },
+  { key: "vtsz", label: "VTSZ", placeholder: "25171010" },
+  { key: "ekaerRequired", label: "EKÁER-köteles", type: "checkbox" },
   { key: "note", label: "Megjegyzés" },
 ];
 
@@ -439,6 +448,8 @@ function OpenWeighings({
                 </Small>
               </div>
               <Row>
+                <EkaerStatus ekaer={w.ekaer} />
+                <EkaerActions weighing={w} onChanged={reload} />
                 <Btn kind="pri" disabled={!stable} onClick={() => onSecond(w)}>
                   Második mérés
                 </Btn>
@@ -475,6 +486,7 @@ function ClosedToday({
             <TableHead numeric>Bruttó</TableHead>
             <TableHead numeric>Tára</TableHead>
             <TableHead numeric>Nettó</TableHead>
+            <TableHead>EKÁER</TableHead>
             <TableHead>Állapot</TableHead>
             <TableHead />
           </TableRow>
@@ -501,6 +513,9 @@ function ClosedToday({
                   {w.netKg != null ? formatKg(w.netKg) : "—"}
                 </TableCell>
                 <TableCell>
+                  <EkaerStatus ekaer={w.ekaer} />
+                </TableCell>
+                <TableCell>
                   {w.status === "void" ? (
                     <span title={w.voidReason ?? undefined}>
                       <Pill tone="destructive">Sztornó</Pill>
@@ -519,6 +534,7 @@ function ClosedToday({
                     >
                       Mérlegjegy
                     </a>
+                    <EkaerActions weighing={w} onChanged={reload} />
                     {w.status === "completed" ? (
                       <VoidButton weighing={w} onVoid={onVoid} />
                     ) : null}
@@ -528,7 +544,7 @@ function ClosedToday({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={10} className="text-muted-foreground">
+              <TableCell colSpan={11} className="text-muted-foreground">
                 Ma még nincs lezárt mérlegelés.
               </TableCell>
             </TableRow>
