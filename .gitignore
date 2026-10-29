@@ -29,3 +29,6 @@ playwright-report/
 
 # Playwright MCP screenshots and logs
 .playwright-mcp/
+
+# Seed source workbooks (VINs, owners): local only
+packages/db/seed-data/

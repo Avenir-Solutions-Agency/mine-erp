@@ -67,7 +67,7 @@ Do not add a dependency that overlaps with a row in this table without asking.
     scale-agent/         local scale agent, single binary        Target (not yet true)
   packages/
     domain/              entities, state machines, rules; pure TS, no I/O   Target
-    db/                  Drizzle schema, migrations, seed                    Target
+    db/                  Drizzle schema, migrations, seed                    Exists (T-034a)
     contracts/           Zod schemas, OpenAPI generation, client             Target
     ekaer/               EKÁER XML client (signing, XSD validation)          Target
     extraction/          AI extraction (prompt, schema, evaluation set)      Target
