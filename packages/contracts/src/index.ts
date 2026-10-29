@@ -142,6 +142,15 @@ export const WeighingDto = z.object({
   netKg: z.number().int().nullable(),
   savedTare: z.boolean(),
   voidReason: z.string().nullable(),
+  /** The latest EKÁER report for this weighing, if any. */
+  ekaer: z
+    .object({
+      id: z.uuid(),
+      status: z.enum(["pending", "active", "deleting", "deleted", "failed"]),
+      tcn: z.string().nullable(),
+      error: z.string().nullable(),
+    })
+    .nullable(),
 });
 export type WeighingDto = z.infer<typeof WeighingDto>;
 
@@ -193,6 +202,7 @@ export const ProductInput = z.object({
     .nullable()
     .optional()
     .or(z.literal("").transform(() => null)),
+  ekaerRequired: z.boolean().optional(),
   note: Opt(500),
 });
 export const ProductPatch = ProductInput.partial().extend({
@@ -203,7 +213,18 @@ export const ProductDto = z.object({
   name: z.string(),
   fractionCode: z.string().nullable(),
   vtsz: z.string().nullable(),
+  ekaerRequired: z.boolean(),
   note: z.string().nullable(),
   active: z.boolean(),
 });
 export type ProductDto = z.infer<typeof ProductDto>;
+
+export const FileEkaerInput = z.object({
+  plannedKg: z.number().int().positive().max(999_999_999),
+  /** Whole forints as typed; stored as fillér. */
+  valueHuf: z.number().int().positive().max(999_999_999),
+});
+
+export const DeleteEkaerInput = z.object({
+  reason: z.string().trim().min(3).max(200),
+});

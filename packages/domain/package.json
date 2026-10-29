@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./demo": "./src/demo/index.ts",
     "./invoices": "./src/invoices.ts",
-    "./weighing": "./src/weighing.ts"
+    "./weighing": "./src/weighing.ts",
+    "./ekaer": "./src/ekaer.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

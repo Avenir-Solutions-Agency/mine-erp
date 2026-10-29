@@ -20,6 +20,7 @@ const base: WeighingDto = {
   netKg: 24360,
   savedTare: false,
   voidReason: null,
+  ekaer: null,
 };
 
 describe("renderTicketHtml", () => {
@@ -52,6 +53,24 @@ describe("renderTicketHtml", () => {
 
     expect(html).toContain("SZTORNÓ");
     expect(html).toContain("rossz rendszám");
+  });
+
+  test("prints the EKÁER number of an active report and the site address", () => {
+    const w = {
+      ...base,
+      ekaer: {
+        id: base.id,
+        status: "active" as const,
+        tcn: "E123456789012",
+        error: null,
+      },
+    };
+
+    const html = renderTicketHtml(w);
+
+    expect(html).toContain("EKÁER-szám");
+    expect(html).toContain("E123456789012");
+    expect(html).toContain("8154 Polgárdi, Somlyói út 18");
   });
 
   test("times are shown in Budapest time", () => {

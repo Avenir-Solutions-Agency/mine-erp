@@ -153,6 +153,8 @@ export const product = pgTable("product", {
   name: text("name").notNull().unique(),
   fractionCode: text("fraction_code"),
   vtsz: text("vtsz"),
+  /** Set by hand until the accountant's rule (VTSZ + threshold) is known (PRD §08). */
+  ekaerRequired: boolean("ekaer_required").notNull().default(false),
   note: text("note"),
   active: boolean("active").notNull().default(true),
   ...audit,
@@ -222,3 +224,45 @@ export const weighingTicketCounter = pgTable("weighing_ticket_counter", {
   year: integer("year").primaryKey(),
   last: integer("last").notNull(),
 });
+
+export type EkaerReportStatus =
+  "pending" | "active" | "deleting" | "deleted" | "failed";
+
+/**
+ * One EKÁER report (trade card) for a weighing. The request and response XML (credentials masked)
+ * are the evidence. shortcut: kept in the row; ARCHITECTURE §06 wants them in the object store,
+ * move them when reports become many.
+ */
+export const ekaerReport = pgTable(
+  "ekaer_report",
+  {
+    id: id(),
+    weighingId: uuid("weighing_id")
+      .notNull()
+      .references(() => weighing.id),
+    status: text("status").$type<EkaerReportStatus>().notNull(),
+    /** The weighing's ticket number; NAV is queried by it before any resend. */
+    orderNumber: text("order_number").notNull(),
+    tcn: text("tcn"),
+    plannedKg: integer("planned_kg").notNull(),
+    value: money("value").notNull(),
+    requestId: text("request_id"),
+    requestXml: text("request_xml"),
+    responseXml: text("response_xml"),
+    error: text("error"),
+    deleteReason: text("delete_reason"),
+    ...audit,
+  },
+  (t) => [
+    // At most one live report per weighing (pending, active or being deleted).
+    uniqueIndex("ekaer_report_one_live_per_weighing")
+      .on(t.weighingId)
+      .where(sql`${t.status} in ('pending', 'active', 'deleting')`),
+    check(
+      "ekaer_report_status_chk",
+      sql`${t.status} in ('pending', 'active', 'deleting', 'deleted', 'failed')`,
+    ),
+    check("ekaer_report_planned_kg_chk", sql`${t.plannedKg} > 0`),
+    check("ekaer_report_value_chk", sql`${t.value} > 0`),
+  ],
+);

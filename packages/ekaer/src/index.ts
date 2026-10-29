@@ -23,3 +23,4 @@ export type {
   TradeCardInfo,
   TradeCardItem,
 } from "./xml.ts";
+export { simulatedNav } from "./simulator.ts";

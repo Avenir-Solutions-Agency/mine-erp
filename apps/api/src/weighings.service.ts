@@ -13,6 +13,7 @@ import {
 import { customer, product } from "@mine-erp/db";
 import type { Actor } from "./auth.ts";
 import { ApiError, isUniqueViolation } from "./http.ts";
+import { EkaerReports } from "./ekaer-reports.ts";
 import { MasterData } from "./master-data.ts";
 import { ScaleLive } from "./scale.ts";
 import { TicketPdf } from "./ticket.ts";
@@ -21,7 +22,10 @@ import {
   WeighingsRepository,
 } from "./weighings.repository.ts";
 
-export function toDto(w: WeighingRow): WeighingDto {
+export function toDto(
+  w: WeighingRow,
+  ekaer: WeighingDto["ekaer"] = null,
+): WeighingDto {
   return {
     id: w.id,
     ticketNumber: w.ticketNumber,
@@ -40,6 +44,7 @@ export function toDto(w: WeighingRow): WeighingDto {
     netKg: w.netKg,
     savedTare: w.savedTare,
     voidReason: w.voidReason,
+    ekaer,
   };
 }
 
@@ -90,10 +95,21 @@ export class WeighingsService {
     private readonly scale: ScaleLive,
     private readonly tickets: TicketPdf,
     private readonly masterData: MasterData,
+    private readonly ekaer: EkaerReports,
   ) {}
 
+  /** One weighing with its latest EKÁER report. */
+  private async dto(row: WeighingRow): Promise<WeighingDto> {
+    return toDto(
+      row,
+      (await this.ekaer.latestFor([row.id])).get(row.id) ?? null,
+    );
+  }
+
   async list(): Promise<WeighingDto[]> {
-    return (await this.repo.list(200)).map(toDto);
+    const rows = await this.repo.list(200);
+    const reports = await this.ekaer.latestFor(rows.map((r) => r.id));
+    return rows.map((r) => toDto(r, reports.get(r.id) ?? null));
   }
 
   /** First pass, or a finished one-pass weighing with the vehicle's saved tare. The weight comes from the scale, never the client. */
@@ -169,7 +185,7 @@ export class WeighingsService {
           );
         throw e;
       });
-    return toDto(row);
+    return await this.dto(row);
   }
 
   async second(id: string, actor: Actor): Promise<WeighingDto> {
@@ -198,7 +214,7 @@ export class WeighingsService {
         "changed",
         "A mérlegelést közben lezárták vagy sztornózták.",
       );
-    return toDto(saved);
+    return await this.dto(saved);
   }
 
   async void(id: string, reason: string, actor: Actor): Promise<WeighingDto> {
@@ -218,7 +234,7 @@ export class WeighingsService {
         "changed",
         "A mérlegelés közben megváltozott, töltse újra.",
       );
-    return toDto(saved);
+    return await this.dto(saved);
   }
 
   /** PDF of a completed or void weighing; an open one has no ticket yet. */
@@ -232,7 +248,7 @@ export class WeighingsService {
       );
     return {
       number: row.ticketNumber,
-      pdf: await this.tickets.render(toDto(row)),
+      pdf: await this.tickets.render(await this.dto(row)),
     };
   }
 

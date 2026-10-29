@@ -10,6 +10,9 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@mine-erp/db": "workspace:*",
+    "@mine-erp/domain": "workspace:*",
+    "@mine-erp/ekaer": "workspace:*",
     "@temporalio/activity": "1.24.0",
     "@temporalio/client": "1.24.0",
     "@temporalio/worker": "1.24.0",

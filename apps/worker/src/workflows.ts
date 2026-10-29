@@ -1,7 +1,7 @@
 // Temporal workflows. This file is bundled into Temporal's deterministic sandbox: only
 // @temporalio/workflow and type-only imports here, no Node APIs, no I/O.
 import { proxyActivities } from "@temporalio/workflow";
-import type { DocumentActivities } from "./activities.ts";
+import type { DocumentActivities, EkaerActivities } from "./activities.ts";
 
 /** ARCHITECTURE §04: every document goes through these steps, in this order. */
 export const DOCUMENT_STEPS = [
@@ -41,4 +41,35 @@ export async function processDocument(
     done.push(step);
   }
   return done;
+}
+
+const ekaer = proxyActivities<EkaerActivities>({
+  startToCloseTimeout: "1 minute",
+  retry: {
+    initialInterval: "5 seconds",
+    backoffCoefficient: 2,
+    maximumAttempts: 3,
+    nonRetryableErrorTypes: ["PermanentEkaerError"],
+  },
+});
+
+/**
+ * Files one EKÁER report (T-014). Started with workflowId `ekaer-<reportId>`. If the outcome is
+ * still unknown after the retries, the report is marked failed for a person to check in NAV.
+ */
+export async function ekaerReport(reportId: string): Promise<string> {
+  try {
+    return await ekaer.fileEkaerReport(reportId);
+  } catch (e) {
+    await ekaer.markEkaerUnresolved(
+      reportId,
+      "Az EKÁER-bejelentés eredménye nem ismert; ellenőrizze a NAV felületén, mielőtt újra bejelenti.",
+    );
+    throw e;
+  }
+}
+
+/** Deletes an active report with the reason given by a person. */
+export async function ekaerDelete(reportId: string): Promise<void> {
+  await ekaer.deleteEkaerReport(reportId);
 }

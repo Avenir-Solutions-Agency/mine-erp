@@ -29,11 +29,19 @@ export interface MasterField {
   label: string;
   placeholder?: string;
   required?: boolean;
+  type?: "checkbox";
 }
 
 type MasterRow = { id: string; active: boolean } & Record<string, unknown>;
 
-const cell = (v: unknown) => (v == null || v === "" ? "—" : String(v));
+const cell = (v: unknown) =>
+  v === true
+    ? "Igen"
+    : v === false
+      ? "Nem"
+      : v == null || v === ""
+        ? "—"
+        : String(v);
 
 /** Saves through the API; returns false (and shows the API's message) on failure. */
 async function save(path: string, method: "POST" | "PATCH", body: object) {
@@ -53,7 +61,12 @@ async function save(path: string, method: "POST" | "PATCH", body: object) {
 const formBody = (form: HTMLFormElement, fields: MasterField[]) => {
   const f = new FormData(form);
   return Object.fromEntries(
-    fields.map((x) => [x.key, String(f.get(x.key) ?? "").trim()]),
+    fields.map((x) => [
+      x.key,
+      x.type === "checkbox"
+        ? f.get(x.key) === "on"
+        : String(f.get(x.key) ?? "").trim(),
+    ]),
   );
 };
 
@@ -62,13 +75,22 @@ function Fields({ fields, row }: { fields: MasterField[]; row?: MasterRow }) {
     <Grid cols={2}>
       {fields.map((x) => (
         <Field key={x.key} label={x.label}>
-          <Inp
-            name={x.key}
-            required={x.required}
-            placeholder={x.placeholder}
-            defaultValue={row ? cell(row[x.key]).replace("—", "") : undefined}
-            autoComplete="off"
-          />
+          {x.type === "checkbox" ? (
+            <input
+              type="checkbox"
+              name={x.key}
+              defaultChecked={row ? row[x.key] === true : false}
+              className="size-4"
+            />
+          ) : (
+            <Inp
+              name={x.key}
+              required={x.required}
+              placeholder={x.placeholder}
+              defaultValue={row ? cell(row[x.key]).replace("—", "") : undefined}
+              autoComplete="off"
+            />
+          )}
         </Field>
       ))}
     </Grid>
