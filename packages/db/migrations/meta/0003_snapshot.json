@@ -241,9 +241,7 @@
         "incoming_invoice_file_sha256_unique": {
           "name": "incoming_invoice_file_sha256_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "file_sha256"
-          ]
+          "columns": ["file_sha256"]
         }
       },
       "policies": {},
@@ -357,12 +355,8 @@
           "name": "incoming_invoice_line_invoice_id_incoming_invoice_id_fk",
           "tableFrom": "incoming_invoice_line",
           "tableTo": "incoming_invoice",
-          "columnsFrom": [
-            "invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invoice_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -453,9 +447,7 @@
         "machine_name_unique": {
           "name": "machine_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -602,9 +594,7 @@
         "vehicle_plate_unique": {
           "name": "vehicle_plate_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "plate"
-          ]
+          "columns": ["plate"]
         }
       },
       "policies": {},
@@ -816,12 +806,8 @@
           "name": "weighing_vehicle_id_vehicle_id_fk",
           "tableFrom": "weighing",
           "tableTo": "vehicle",
-          "columnsFrom": [
-            "vehicle_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vehicle_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -831,9 +817,7 @@
         "weighing_ticket_number_unique": {
           "name": "weighing_ticket_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "ticket_number"
-          ]
+          "columns": ["ticket_number"]
         }
       },
       "policies": {},
