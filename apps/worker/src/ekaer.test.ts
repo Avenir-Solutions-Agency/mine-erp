@@ -119,6 +119,23 @@ describe("fileReport", () => {
     expect(tcn).toBe([...nav.cards.values()][0]!.tcn);
   });
 
+  test("a NAV refusal marks the report failed with NAV's code, and is not retried", async () => {
+    const nav = simulatedNav();
+    const m = memoryStore(
+      report({ weighing: { status: "open", plate: "HIBA123" } }),
+    );
+
+    const call = fileReport(
+      m.store,
+      createEkaerClient(cfg, { fetch: nav.fetch }),
+      "r1",
+    );
+
+    await expect(call).rejects.toBeInstanceOf(PermanentEkaerError);
+    expect(m.writes[0]).toMatch(/^failed NAV: TC_PLATE_NUMBER_INVALID/);
+    expect(nav.cards.size).toBe(0);
+  });
+
   test("missing data fails at once with Hungarian reasons and files nothing", async () => {
     const nav = simulatedNav();
     const m = memoryStore(report({ customer: null }));

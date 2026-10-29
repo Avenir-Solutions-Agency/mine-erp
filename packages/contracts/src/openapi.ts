@@ -172,6 +172,15 @@ export const ROUTES: Route[] = [
   },
   {
     method: "post",
+    path: "/weighings/:id/ekaer/retry",
+    summary:
+      "File a failed report again with the same weight and value (NAV is queried first)",
+    auth: "user",
+    body: null,
+    reply: z.object({ reportId: z.uuid() }),
+  },
+  {
+    method: "post",
     path: "/weighings/:id/ekaer/modify",
     summary: "Person-approved weight change of the active report",
     auth: "user",
