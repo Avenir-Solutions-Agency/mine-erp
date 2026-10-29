@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { env } from "@/lib/env";
+import { svgDataUrl } from "@/lib/svg-data-url";
 
 // Supabase Auth tokens live in httpOnly cookies, so browser JavaScript never sees them.
 const ACCESS = "erp_at";
@@ -128,7 +129,7 @@ export async function mfaSetup(): Promise<MfaSetup> {
   return {
     state: "enroll",
     factorId: f.id,
-    qrCode: f.totp.qr_code,
+    qrCode: svgDataUrl(f.totp.qr_code),
     secret: f.totp.secret,
   };
 }
