@@ -8,6 +8,7 @@ import { HealthController } from "./health.ts";
 import { InvoicesController } from "./invoices.controller.ts";
 import { MasterDataController } from "./master-data.ts";
 import { ScaleController } from "./scale.ts";
+import { ReportsController } from "./reports.ts";
 import { ShipmentsController } from "./shipments.ts";
 import { WeighingsController } from "./weighings.controller.ts";
 
@@ -19,6 +20,7 @@ const CONTROLLERS = [
   WeighingsController,
   EkaerReportsController,
   ShipmentsController,
+  ReportsController,
 ];
 
 /** "METHOD /path" for every route Nest would map, read from the decorators. */

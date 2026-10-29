@@ -9,7 +9,8 @@
     "./invoices": "./src/invoices.ts",
     "./weighing": "./src/weighing.ts",
     "./ekaer": "./src/ekaer.ts",
-    "./shipment": "./src/shipment.ts"
+    "./shipment": "./src/shipment.ts",
+    "./report": "./src/report.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

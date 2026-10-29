@@ -277,3 +277,21 @@ export const ShipmentDto = z.object({
   ekaerTcn: z.string().nullable(),
 });
 export type ShipmentDto = z.infer<typeof ShipmentDto>;
+
+const Total = z.object({
+  key: z.string(),
+  count: z.number().int(),
+  netKg: z.number().int(),
+});
+
+/** Shipments of a Budapest-day range with the accountant's totals (cancelled ones listed, not counted). */
+export const ShipmentReportDto = z.object({
+  from: z.string(),
+  to: z.string(),
+  rows: z.array(ShipmentDto),
+  total: z.object({ count: z.number().int(), netKg: z.number().int() }),
+  byCustomer: z.array(Total),
+  byProduct: z.array(Total),
+  byCustomerProduct: z.array(Total),
+});
+export type ShipmentReportDto = z.infer<typeof ShipmentReportDto>;

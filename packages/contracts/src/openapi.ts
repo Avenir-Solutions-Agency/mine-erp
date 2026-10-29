@@ -19,6 +19,7 @@ import {
   ProductPatch,
   ScaleLiveDto,
   ShipmentDto,
+  ShipmentReportDto,
   ScaleReadingInput,
   VoidWeighingInput,
   WeighingDto,
@@ -26,7 +27,7 @@ import {
 
 type Auth = "none" | "user" | "agent";
 type Body = z.ZodType | "multipart-file" | null;
-type Reply = z.ZodType | "pdf" | "file" | null;
+type Reply = z.ZodType | "pdf" | "xlsx" | "file" | null;
 
 export interface Route {
   method: "get" | "post" | "patch" | "delete";
@@ -35,6 +36,8 @@ export interface Route {
   summary: string;
   auth: Auth;
   body: Body;
+  /** Required query parameters, e.g. a date range. */
+  query?: { name: string; description: string }[];
   /** The `data` of a `{ data }` reply (Nest answers POST with 201), a PDF or a file stream; null for 204. */
   reply: Reply;
 }
@@ -223,6 +226,40 @@ export const ROUTES: Route[] = [
   },
   {
     method: "get",
+    path: "/reports/shipments",
+    summary:
+      "Shipments of a Budapest-day range with totals by customer, product and both",
+    auth: "user",
+    body: null,
+    query: [
+      { name: "from", description: "First day, YYYY-MM-DD (Budapest)" },
+      {
+        name: "to",
+        description:
+          "Last day, YYYY-MM-DD (Budapest), at most a year after from",
+      },
+    ],
+    reply: ShipmentReportDto,
+  },
+  {
+    method: "get",
+    path: "/reports/shipments.xlsx",
+    summary:
+      "The same report as an Excel workbook (Szállítások, Vevők szerint, Termékek szerint)",
+    auth: "user",
+    body: null,
+    query: [
+      { name: "from", description: "First day, YYYY-MM-DD (Budapest)" },
+      {
+        name: "to",
+        description:
+          "Last day, YYYY-MM-DD (Budapest), at most a year after from",
+      },
+    ],
+    reply: "xlsx",
+  },
+  {
+    method: "get",
     path: "/customers",
     summary: "Customers",
     auth: "user",
@@ -298,12 +335,22 @@ export function buildOpenApi() {
   const paths: Record<string, Record<string, unknown>> = {};
   for (const r of ROUTES) {
     const path = r.path.replace(/:(\w+)/g, "{$1}");
-    const params = [...r.path.matchAll(/:(\w+)/g)].map((m) => ({
+    const params: Record<string, unknown>[] = [
+      ...r.path.matchAll(/:(\w+)/g),
+    ].map((m) => ({
       name: m[1],
       in: "path",
       required: true,
       schema: { type: "string", format: "uuid" },
     }));
+    for (const q of r.query ?? [])
+      params.push({
+        name: q.name,
+        in: "query",
+        required: true,
+        description: q.description,
+        schema: { type: "string", format: "date" },
+      });
     const requestBody =
       r.body === null
         ? undefined
@@ -348,22 +395,38 @@ export function buildOpenApi() {
                 },
               },
             }
-          : r.reply === "file"
-            ? { "200": { description: "File" } }
-            : {
-                [r.method === "post" ? "201" : "200"]: {
-                  description: "OK",
+          : r.reply === "xlsx"
+            ? {
+                "200": {
+                  description: "Excel workbook",
                   content: {
-                    "application/json": {
-                      schema: {
-                        type: "object",
-                        required: ["data"],
-                        properties: { data: schema(r.reply, "output") },
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                      {
+                        schema: {
+                          type: "string",
+                          contentMediaType:
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        },
+                      },
+                  },
+                },
+              }
+            : r.reply === "file"
+              ? { "200": { description: "File" } }
+              : {
+                  [r.method === "post" ? "201" : "200"]: {
+                    description: "OK",
+                    content: {
+                      "application/json": {
+                        schema: {
+                          type: "object",
+                          required: ["data"],
+                          properties: { data: schema(r.reply, "output") },
+                        },
                       },
                     },
                   },
-                },
-              };
+                };
     paths[path] ??= {};
     paths[path][r.method] = {
       summary: r.summary,
