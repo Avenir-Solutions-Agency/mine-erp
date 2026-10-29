@@ -2,6 +2,8 @@
 
 import type {
   CarrierDto,
+  CustomerDto,
+  ProductDto,
   ScaleLiveDto,
   WeighingDto,
 } from "@mine-erp/contracts";
@@ -38,8 +40,14 @@ import {
   Mono,
   Panel,
   Row,
+  Sel,
   Small,
+  TabBar,
 } from "@/prototype/ui";
+import {
+  MasterDataTab,
+  type MasterField,
+} from "@/prototype/screens/scale-master-data";
 
 // Mérleg: the ERP's own weighbridge screen (decided 2026-10-29). The weight always comes from
 // the scale agent through the API; nobody types a weight here.
@@ -49,6 +57,9 @@ type ScaleState = {
   error: string;
   weighings: WeighingDto[];
   vehicles: CarrierDto[];
+  customers: CustomerDto[];
+  products: ProductDto[];
+  view: string;
   live: ScaleLiveDto | null;
 };
 let state: ScaleState = {
@@ -57,6 +68,9 @@ let state: ScaleState = {
   weighings: [],
   vehicles: [],
   live: null,
+  customers: [],
+  products: [],
+  view: "weigh",
 };
 const listeners = new Set<() => void>();
 function setState(patch: Partial<ScaleState>) {
@@ -93,14 +107,18 @@ const useScale = () =>
 async function reload() {
   if (state.load === "idle") setState({ load: "loading" });
   try {
-    const [weighings, carriers] = await Promise.all([
+    const [weighings, carriers, customers, products] = await Promise.all([
       api<WeighingDto[]>("weighings"),
       api<CarrierDto[]>("carriers"),
+      api<CustomerDto[]>("customers"),
+      api<ProductDto[]>("products"),
     ]);
     setState({
       load: "ready",
       weighings,
       vehicles: carriers.filter((x) => x.type === "vehicle"),
+      customers,
+      products,
     });
   } catch (e) {
     if (e instanceof ApiFailure && e.status === 401)
@@ -108,6 +126,29 @@ async function reload() {
     else setState({ load: "error", error: (e as Error).message });
   }
 }
+
+const VIEWS: [string, string][] = [
+  ["weigh", "Mérlegelés"],
+  ["customers", "Vevők"],
+  ["products", "Termékek"],
+];
+const CUSTOMER_FIELDS: MasterField[] = [
+  { key: "name", label: "Név", required: true },
+  { key: "taxNumber", label: "Adószám", placeholder: "12345678-1-12" },
+  { key: "address", label: "Cím" },
+  { key: "note", label: "Megjegyzés" },
+];
+const PRODUCT_FIELDS: MasterField[] = [
+  {
+    key: "name",
+    label: "Név",
+    required: true,
+    placeholder: "pl. Zúzottkő 22/63",
+  },
+  { key: "fractionCode", label: "Frakció", placeholder: "22/63" },
+  { key: "vtsz", label: "VTSZ", placeholder: "2517" },
+  { key: "note", label: "Megjegyzés" },
+];
 
 const time = (iso: string) =>
   new Date(iso).toLocaleTimeString("hu-HU", {
@@ -118,7 +159,8 @@ const isToday = (iso: string) =>
   new Date(iso).toDateString() === new Date().toDateString();
 
 export function ScaleScreen() {
-  const { load, error, weighings, vehicles, live } = useScale();
+  const { load, error, weighings, vehicles, live, customers, products, view } =
+    useScale();
   useEffect(() => {
     if (state.load === "idle") void reload();
   }, []);
@@ -172,38 +214,67 @@ export function ScaleScreen() {
         </Alert>
       ) : (
         <>
-          <Grid cols={3} className="mb-3.5">
-            <Kpi
-              label="Ma lezárva"
-              value={today.filter((w) => w.status === "completed").length}
-            />
-            <Kpi label="Ma nettó összesen" value={formatKg(netToday)} />
-            <Kpi label="Nyitott mérlegelés" value={open.length} />
-          </Grid>
-          <div className="mb-3.5 grid gap-3.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-            <LiveWeight live={live} />
-            <FirstWeighingForm
-              vehicles={vehicles}
-              stable={live?.stableKg != null}
-              onSubmit={(body) => act("weighings", body, "első mérés rögzítve")}
-            />
-          </div>
-          <OpenWeighings
-            open={open}
-            stable={live?.stableKg != null}
-            onSecond={(w) =>
-              void act(`weighings/${w.id}/second`, {}, "lezárva")
-            }
-            onVoid={(w, reason) =>
-              act(`weighings/${w.id}/void`, { reason }, "sztornózva")
-            }
+          <TabBar
+            items={VIEWS}
+            active={view}
+            onSelect={(v) => setState({ view: v })}
           />
-          <ClosedToday
-            rows={closed}
-            onVoid={(w, reason) =>
-              act(`weighings/${w.id}/void`, { reason }, "sztornózva")
-            }
-          />
+          {view === "customers" ? (
+            <MasterDataTab
+              title="Vevők"
+              path="customers"
+              fields={CUSTOMER_FIELDS}
+              rows={customers}
+              onChanged={reload}
+            />
+          ) : view === "products" ? (
+            <MasterDataTab
+              title="Termékek"
+              path="products"
+              fields={PRODUCT_FIELDS}
+              rows={products}
+              onChanged={reload}
+            />
+          ) : (
+            <>
+              <Grid cols={3} className="mb-3.5">
+                <Kpi
+                  label="Ma lezárva"
+                  value={today.filter((w) => w.status === "completed").length}
+                />
+                <Kpi label="Ma nettó összesen" value={formatKg(netToday)} />
+                <Kpi label="Nyitott mérlegelés" value={open.length} />
+              </Grid>
+              <div className="mb-3.5 grid gap-3.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+                <LiveWeight live={live} />
+                <FirstWeighingForm
+                  vehicles={vehicles}
+                  customers={customers.filter((c) => c.active)}
+                  products={products.filter((p) => p.active)}
+                  stable={live?.stableKg != null}
+                  onSubmit={(body) =>
+                    act("weighings", body, "első mérés rögzítve")
+                  }
+                />
+              </div>
+              <OpenWeighings
+                open={open}
+                stable={live?.stableKg != null}
+                onSecond={(w) =>
+                  void act(`weighings/${w.id}/second`, {}, "lezárva")
+                }
+                onVoid={(w, reason) =>
+                  act(`weighings/${w.id}/void`, { reason }, "sztornózva")
+                }
+              />
+              <ClosedToday
+                rows={closed}
+                onVoid={(w, reason) =>
+                  act(`weighings/${w.id}/void`, { reason }, "sztornózva")
+                }
+              />
+            </>
+          )}
         </>
       )}
     </>
@@ -247,10 +318,14 @@ function LiveWeight({ live }: { live: ScaleLiveDto | null }) {
 
 function FirstWeighingForm({
   vehicles,
+  customers,
+  products,
   stable,
   onSubmit,
 }: {
   vehicles: CarrierDto[];
+  customers: CustomerDto[];
+  products: ProductDto[];
   stable: boolean;
   onSubmit: (body: object) => Promise<boolean>;
 }) {
@@ -268,8 +343,8 @@ function FirstWeighingForm({
           const ok = await onSubmit({
             plate: text("plate") ?? "",
             trailerPlate: text("trailerPlate"),
-            material: text("material"),
-            customer: text("customer"),
+            productId: text("productId"),
+            customerId: text("customerId"),
             note: text("note"),
             useSavedTare: f.get("useSavedTare") === "on",
           });
@@ -284,11 +359,30 @@ function FirstWeighingForm({
           <Field label="Pótkocsi">
             <Inp name="trailerPlate" autoComplete="off" />
           </Field>
-          <Field label="Anyag">
-            <Inp name="material" placeholder="pl. 22/63 zúzottkő" />
+          <Field label="Termék">
+            <Sel name="productId" defaultValue="">
+              <option value="">
+                {products.length ? "Válasszon…" : "Nincs termék (Termékek fül)"}
+              </option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                  {p.fractionCode ? ` (${p.fractionCode})` : ""}
+                </option>
+              ))}
+            </Sel>
           </Field>
           <Field label="Vevő">
-            <Inp name="customer" />
+            <Sel name="customerId" defaultValue="">
+              <option value="">
+                {customers.length ? "Válasszon…" : "Nincs vevő (Vevők fül)"}
+              </option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Sel>
           </Field>
         </Grid>
         <Field label="Megjegyzés" className="mt-3">

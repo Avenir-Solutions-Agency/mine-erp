@@ -10,8 +10,10 @@ import {
   type Weighing,
   weighingWithSavedTare,
 } from "@mine-erp/domain/weighing";
+import { customer, product } from "@mine-erp/db";
 import type { Actor } from "./auth.ts";
-import { ApiError } from "./http.ts";
+import { ApiError, isUniqueViolation } from "./http.ts";
+import { MasterData } from "./master-data.ts";
 import { ScaleLive } from "./scale.ts";
 import { TicketPdf } from "./ticket.ts";
 import {
@@ -67,19 +69,6 @@ export function toDomain(w: WeighingRow): Weighing {
   };
 }
 
-/** Postgres unique violation on a named constraint; Drizzle wraps the driver error in `cause`. */
-export function isUniqueViolation(e: unknown, constraint: string): boolean {
-  for (
-    let x = e;
-    x && typeof x === "object";
-    x = (x as { cause?: unknown }).cause
-  ) {
-    const pg = x as { code?: string; constraint_name?: string };
-    if (pg.code === "23505" && pg.constraint_name === constraint) return true;
-  }
-  return false;
-}
-
 function ok<T>(r: Result<T>): T {
   if (!r.ok) throw new ApiError(422, r.code, r.message);
   return r.value;
@@ -100,6 +89,7 @@ export class WeighingsService {
     private readonly repo: WeighingsRepository,
     private readonly scale: ScaleLive,
     private readonly tickets: TicketPdf,
+    private readonly masterData: MasterData,
   ) {}
 
   async list(): Promise<WeighingDto[]> {
@@ -118,6 +108,15 @@ export class WeighingsService {
         "already_open",
         `Ennek a járműnek nyitott mérlegelése van (${open.ticketNumber}); azt zárja le második méréssel.`,
       );
+    // Picked from master data: the name is copied so the ticket keeps it even if it is renamed later.
+    const [c, p] = await Promise.all([
+      input.customerId
+        ? this.masterData.activeById(customer, input.customerId)
+        : null,
+      input.productId
+        ? this.masterData.activeById(product, input.productId)
+        : null,
+    ]);
     const kg = this.scale.requireStable();
     const now = new Date();
     const v = await this.repo.vehicleByPlate(plate);
@@ -142,8 +141,10 @@ export class WeighingsService {
           trailerPlate: input.trailerPlate
             ? normalizePlate(input.trailerPlate)
             : null,
-          customer: input.customer || null,
-          material: input.material || null,
+          customer: c?.name ?? (input.customer || null),
+          material: p?.name ?? (input.material || null),
+          customerId: c?.id ?? null,
+          productId: p?.id ?? null,
           note: input.note || null,
           firstKg: kg,
           firstAt: now,

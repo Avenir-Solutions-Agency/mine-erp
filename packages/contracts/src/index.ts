@@ -113,6 +113,8 @@ export const FirstWeighingInput = z.object({
   customer: Text(200),
   material: Text(200),
   note: Text(500),
+  customerId: z.uuid().nullable().optional(),
+  productId: z.uuid().nullable().optional(),
   /** One pass with the vehicle's saved tare instead of a second weighing. */
   useSavedTare: z.boolean().optional(),
 });
@@ -142,3 +144,66 @@ export const WeighingDto = z.object({
   voidReason: z.string().nullable(),
 });
 export type WeighingDto = z.infer<typeof WeighingDto>;
+
+const Opt = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .transform((v) => v || null)
+    .nullable()
+    .optional();
+
+/** Hungarian tax number, e.g. 12345678-2-42. */
+const TaxNumber = z
+  .string()
+  .trim()
+  .regex(/^\d{8}-\d-\d{2}$/, "Adószám: 12345678-1-12 formában.")
+  .nullable()
+  .optional()
+  .or(z.literal("").transform(() => null));
+
+export const CustomerInput = z.object({
+  name: z.string().trim().min(2).max(200),
+  taxNumber: TaxNumber,
+  address: Opt(300),
+  note: Opt(500),
+});
+export const CustomerPatch = CustomerInput.partial().extend({
+  active: z.boolean().optional(),
+});
+export const CustomerDto = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  taxNumber: z.string().nullable(),
+  address: z.string().nullable(),
+  note: z.string().nullable(),
+  active: z.boolean(),
+});
+export type CustomerDto = z.infer<typeof CustomerDto>;
+
+export const ProductInput = z.object({
+  name: z.string().trim().min(2).max(200),
+  fractionCode: Opt(20),
+  /** Customs tariff number (VTSZ), 4 to 8 digits. */
+  vtsz: z
+    .string()
+    .trim()
+    .regex(/^\d{4,8}$/, "VTSZ: 4–8 számjegy.")
+    .nullable()
+    .optional()
+    .or(z.literal("").transform(() => null)),
+  note: Opt(500),
+});
+export const ProductPatch = ProductInput.partial().extend({
+  active: z.boolean().optional(),
+});
+export const ProductDto = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  fractionCode: z.string().nullable(),
+  vtsz: z.string().nullable(),
+  note: z.string().nullable(),
+  active: z.boolean(),
+});
+export type ProductDto = z.infer<typeof ProductDto>;

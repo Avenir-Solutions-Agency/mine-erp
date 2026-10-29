@@ -48,3 +48,16 @@ export class ErrorFilter implements ExceptionFilter {
     });
   }
 }
+
+/** Postgres unique violation on a named constraint; Drizzle wraps the driver error in `cause`. */
+export function isUniqueViolation(e: unknown, constraint: string): boolean {
+  for (
+    let x = e;
+    x && typeof x === "object";
+    x = (x as { cause?: unknown }).cause
+  ) {
+    const pg = x as { code?: string; constraint_name?: string };
+    if (pg.code === "23505" && pg.constraint_name === constraint) return true;
+  }
+  return false;
+}

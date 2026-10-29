@@ -29,6 +29,13 @@
       "when": 1793274905820,
       "tag": "0003_one_open_weighing",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793282097620,
+      "tag": "0004_customer_product",
+      "breakpoints": true
     }
   ]
 }
