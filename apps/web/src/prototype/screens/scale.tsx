@@ -297,13 +297,17 @@ function LiveWeight({ live }: { live: ScaleLiveDto | null }) {
     ? "offline"
     : live.stableKg != null
       ? "stable"
-      : "moving";
+      : live.empty
+        ? "empty"
+        : "moving";
   return (
     <Panel>
       <div className="flex items-start justify-between gap-2">
         <h2>Élő súly</h2>
         {state === "stable" ? (
           <Pill tone="success">Stabil</Pill>
+        ) : state === "empty" ? (
+          <Pill tone="neutral">Üres</Pill>
         ) : state === "moving" ? (
           <Pill tone="warning">Mozgásban</Pill>
         ) : (
@@ -319,9 +323,11 @@ function LiveWeight({ live }: { live: ScaleLiveDto | null }) {
       <Small className="mt-2">
         {state === "offline"
           ? "A mérleg nem küld adatot. Ellenőrizze a mérlegfejet és a scale agentet."
-          : state === "moving"
-            ? "Mérni csak stabil súlynál lehet (3 mp nyugalom)."
-            : "A súly rögzíthető."}
+          : state === "empty"
+            ? "A mérleg üres; a mérés akkor indítható, ha jármű áll rajta."
+            : state === "moving"
+              ? "Mérni csak stabil súlynál lehet (3 mp nyugalom)."
+              : "A súly rögzíthető."}
       </Small>
     </Panel>
   );

@@ -102,6 +102,8 @@ export const ScaleLiveDto = z.object({
   /** The weight a weighing would record now, or null while moving or empty. */
   stableKg: z.number().int().nullable(),
   online: z.boolean(),
+  /** Below the minimum weight: no vehicle on the bridge (not the same as moving). */
+  empty: z.boolean(),
 });
 export type ScaleLiveDto = z.infer<typeof ScaleLiveDto>;
 
