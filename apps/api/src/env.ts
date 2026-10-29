@@ -11,6 +11,7 @@ const Env = z.object({
   API_PORT: z.coerce.number().int().default(4000),
   WEB_ORIGIN: z.url().default("http://localhost:3000"),
   INVOICE_BUCKET: z.string().default("invoices"),
+  WEIGH_TICKET_BUCKET: z.string().default("weigh-tickets"),
   GOTENBERG_URL: z.url().default("http://localhost:3001"),
   TEMPORAL_ADDRESS: z.string().default("localhost:7233"),
   // "false" lets a password-only session in (local development before TOTP is set up). Never in production.

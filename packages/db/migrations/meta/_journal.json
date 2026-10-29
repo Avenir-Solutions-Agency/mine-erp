@@ -57,6 +57,13 @@
       "when": 1793314971843,
       "tag": "0007_shipment",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793315641530,
+      "tag": "0008_weigh_ticket_archive",
+      "breakpoints": true
     }
   ]
 }

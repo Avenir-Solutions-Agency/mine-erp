@@ -190,6 +190,12 @@ export const weighing = pgTable(
     savedTare: boolean("saved_tare").notNull().default(false),
     voidReason: text("void_reason"),
     voidedAt: timestamp("voided_at", { withTimezone: true }),
+    /** The issued ticket PDF in the weigh-tickets bucket, written once, with its SHA-256 as evidence. */
+    ticketPath: text("ticket_path"),
+    ticketSha256: text("ticket_sha256"),
+    /** The SZTORNÓ copy, issued when the weighing is voided; the original stays. */
+    voidTicketPath: text("void_ticket_path"),
+    voidTicketSha256: text("void_ticket_sha256"),
     ...audit,
   },
   (t) => [

@@ -18,9 +18,8 @@ export class Storage {
     };
   }
 
-  /** Creates the private bucket on first boot; a second call is a no-op. */
-  async ensureBucket() {
-    const name = this.env.INVOICE_BUCKET;
+  /** Creates a private bucket on first boot; a second call is a no-op. */
+  async ensureBucket(name = this.env.INVOICE_BUCKET) {
     const res = await fetch(this.url(`bucket/${name}`), {
       headers: this.headers(),
     });
@@ -78,5 +77,41 @@ export class Storage {
       body: JSON.stringify({ prefixes: paths }),
     });
     if (!res.ok) throw new Error(`Storage remove: HTTP ${res.status}`);
+  }
+
+  /**
+   * Writes a file that must never change (issued weigh tickets): no upsert, so a second write of
+   * the same path is refused. Returns false when the file already exists.
+   */
+  async putOnce(
+    bucket: string,
+    path: string,
+    body: Buffer,
+    contentType: string,
+  ): Promise<boolean> {
+    const res = await fetch(this.url(`object/${bucket}/${path}`), {
+      method: "POST",
+      headers: this.headers({
+        "content-type": contentType,
+        "x-upsert": "false",
+      }),
+      body: new Uint8Array(body),
+    });
+    if (res.ok) return true;
+    // Supabase answers an existing object with 400/409 "Duplicate".
+    if (
+      (res.status === 400 || res.status === 409) &&
+      (await res.text()).includes("Duplicate")
+    )
+      return false;
+    throw new Error(`Storage upload: HTTP ${res.status}`);
+  }
+
+  async download(bucket: string, path: string): Promise<Buffer> {
+    const res = await fetch(this.url(`object/${bucket}/${path}`), {
+      headers: this.headers(),
+    });
+    if (!res.ok) throw new Error(`Storage download: HTTP ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
   }
 }
