@@ -13,7 +13,11 @@ import {
 } from "@nestjs/common";
 import type { Request } from "express";
 import { ScaleReadingInput, type ScaleLiveDto } from "@mine-erp/contracts";
-import { type Reading, stableWeight } from "@mine-erp/domain/weighing";
+import {
+  DEFAULT_STABILITY,
+  type Reading,
+  stableWeight,
+} from "@mine-erp/domain/weighing";
 import { AuthGuard } from "./auth.ts";
 import { ENV, type Env } from "./env.ts";
 import { ApiError } from "./http.ts";
@@ -43,6 +47,7 @@ export class ScaleLive {
       kg: online ? Math.round(last.kg) : null,
       stableKg: online ? stableWeight(this.readings, now) : null,
       online,
+      empty: online && last.kg < DEFAULT_STABILITY.minKg,
     };
   }
 

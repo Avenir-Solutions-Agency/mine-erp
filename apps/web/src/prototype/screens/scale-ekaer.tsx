@@ -41,6 +41,17 @@ export function EkaerStatus({ ekaer }: { ekaer: WeighingDto["ekaer"] }) {
         {ekaer.error ? <Small>{ekaer.error}</Small> : null}
       </span>
     );
+  if (ekaer.status === "finalized")
+    return (
+      <span className="flex flex-col gap-0.5">
+        <Pill tone="success">Lezárva (lerakodva)</Pill>
+        <Mono>{ekaer.tcn}</Mono>
+      </span>
+    );
+  if (ekaer.status === "modifying")
+    return <Pill tone="warning">Súlymódosítás folyamatban</Pill>;
+  if (ekaer.status === "finalizing")
+    return <Pill tone="warning">Lezárás folyamatban</Pill>;
   if (ekaer.status === "pending")
     return <Pill tone="warning">Bejelentés folyamatban</Pill>;
   if (ekaer.status === "deleting")
@@ -62,12 +73,16 @@ export function EkaerActions({
   weighing: WeighingDto;
   onChanged: () => Promise<void>;
 }) {
-  const [dialog, setDialog] = useState<"file" | "delete" | null>(null);
+  const [dialog, setDialog] = useState<
+    "file" | "delete" | "modify" | "finalize" | null
+  >(null);
   const [busy, setBusy] = useState(false);
-  const live =
-    w.ekaer && ["pending", "active", "deleting"].includes(w.ekaer.status);
+  const [openedAt, setOpenedAt] = useState("");
+  const live = w.ekaer && !["deleted", "failed"].includes(w.ekaer.status);
   if (w.status === "void" || (live && w.ekaer!.status !== "active"))
     return null;
+  // The report went out with the planned weight; the weighed net may differ (T-014).
+  const netDiffers = live && w.netKg != null && w.netKg !== w.ekaer!.plannedKg;
 
   const submit = async (path: string, body: object, done: string) => {
     setBusy(true);
@@ -82,9 +97,37 @@ export function EkaerActions({
   return (
     <>
       {live ? (
-        <Btn sm kind="bad" onClick={() => setDialog("delete")}>
-          EKÁER törlés
-        </Btn>
+        <>
+          {w.status === "completed" ? (
+            <Btn
+              sm
+              kind={netDiffers ? "pri" : "default"}
+              onClick={() => setDialog("modify")}
+            >
+              {netDiffers
+                ? "EKÁER súly ≠ nettó: módosítás"
+                : "EKÁER súly módosítása"}
+            </Btn>
+          ) : null}
+          <Btn
+            sm
+            onClick={() => {
+              // Local time for the datetime-local field, taken when the dialog opens.
+              const now = new Date();
+              setOpenedAt(
+                new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
+                  .toISOString()
+                  .slice(0, 16),
+              );
+              setDialog("finalize");
+            }}
+          >
+            EKÁER lezárás
+          </Btn>
+          <Btn sm kind="bad" onClick={() => setDialog("delete")}>
+            EKÁER törlés
+          </Btn>
+        </>
       ) : (
         <Btn sm kind="ai" onClick={() => setDialog("file")}>
           EKÁER bejelentés
@@ -179,6 +222,105 @@ export function EkaerActions({
               <Btn onClick={() => setDialog(null)}>Mégse</Btn>
               <Btn kind="bad" type="submit" disabled={busy}>
                 {busy ? "Indítás…" : "Törlés"}
+              </Btn>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={dialog === "modify"}
+        onOpenChange={(o) => !o && setDialog(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>EKÁER súlymódosítás · {w.ekaer?.tcn}</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              void submit(
+                `weighings/${w.id}/ekaer/modify`,
+                {
+                  kg: Number(f.get("kg")),
+                  reason: String(f.get("reason") ?? ""),
+                },
+                "EKÁER-súlymódosítás elindítva",
+              );
+            }}
+          >
+            <p className="mb-3">
+              Bejelentve: {w.ekaer?.plannedKg} kg. Mért nettó: {w.netKg ?? "—"}{" "}
+              kg. A módosítás az indoklással együtt megy a NAV-hoz, és bekerül a
+              naplóba.
+            </p>
+            <Row>
+              <Field label="Új tömeg (kg)">
+                <Inp
+                  name="kg"
+                  type="number"
+                  min={1}
+                  step={1}
+                  required
+                  defaultValue={w.netKg ?? undefined}
+                />
+              </Field>
+              <Field label="Indoklás">
+                <Inp
+                  name="reason"
+                  minLength={3}
+                  maxLength={200}
+                  required
+                  defaultValue="Mérlegelt nettó tömeg"
+                />
+              </Field>
+            </Row>
+            <DialogFooter className="mt-3">
+              <Btn onClick={() => setDialog(null)}>Mégse</Btn>
+              <Btn kind="pri" type="submit" disabled={busy}>
+                {busy ? "Indítás…" : "Módosítás"}
+              </Btn>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={dialog === "finalize"}
+        onOpenChange={(o) => !o && setDialog(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>EKÁER lezárás · {w.ekaer?.tcn}</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const local = String(
+                new FormData(e.currentTarget).get("arrivalAt") ?? "",
+              );
+              void submit(
+                `weighings/${w.id}/ekaer/finalize`,
+                { arrivalAt: new Date(local).toISOString() },
+                "EKÁER-lezárás elindítva",
+              );
+            }}
+          >
+            <p className="mb-3">
+              A lerakodás idejét jelenti a NAV-nak; utána a bejelentés nem
+              módosítható.
+            </p>
+            <Field label="Lerakodás ideje">
+              <Inp
+                name="arrivalAt"
+                type="datetime-local"
+                required
+                defaultValue={openedAt}
+              />
+            </Field>
+            <DialogFooter className="mt-3">
+              <Btn onClick={() => setDialog(null)}>Mégse</Btn>
+              <Btn kind="pri" type="submit" disabled={busy}>
+                {busy ? "Indítás…" : "Lezárás"}
               </Btn>
             </DialogFooter>
           </form>

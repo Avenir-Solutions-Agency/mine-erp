@@ -102,6 +102,8 @@ export const ScaleLiveDto = z.object({
   /** The weight a weighing would record now, or null while moving or empty. */
   stableKg: z.number().int().nullable(),
   online: z.boolean(),
+  /** Below the minimum weight: no vehicle on the bridge (not the same as moving). */
+  empty: z.boolean(),
 });
 export type ScaleLiveDto = z.infer<typeof ScaleLiveDto>;
 
@@ -146,7 +148,17 @@ export const WeighingDto = z.object({
   ekaer: z
     .object({
       id: z.uuid(),
-      status: z.enum(["pending", "active", "deleting", "deleted", "failed"]),
+      status: z.enum([
+        "pending",
+        "active",
+        "modifying",
+        "finalizing",
+        "finalized",
+        "deleting",
+        "deleted",
+        "failed",
+      ]),
+      plannedKg: z.number().int(),
       tcn: z.string().nullable(),
       error: z.string().nullable(),
     })
@@ -227,4 +239,20 @@ export const FileEkaerInput = z.object({
 
 export const DeleteEkaerInput = z.object({
   reason: z.string().trim().min(3).max(200),
+});
+
+/** A person-approved weight change, usually the weighed net after the second weighing. */
+export const ModifyEkaerInput = z.object({
+  kg: z.number().int().positive().max(999_999_999),
+  reason: z.string().trim().min(3).max(200),
+});
+
+/** Unloading time for finalize; NAV refuses a time in the future. */
+export const FinalizeEkaerInput = z.object({
+  arrivalAt: z.iso
+    .datetime({ offset: true })
+    .refine(
+      (v) => new Date(v).getTime() <= Date.now() + 5 * 60_000,
+      "A lerakodás ideje nem lehet a jövőben.",
+    ),
 });

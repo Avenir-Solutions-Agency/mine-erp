@@ -144,6 +144,34 @@ describe("XML against NAV's 2.2 XSD", () => {
     expect(errors).toEqual([]);
   });
 
+  test("a modify with NAV's ids, item operation and reason is schema-valid", async () => {
+    const card = create.operation === "create" ? create.tradeCard : null!;
+    const modify: Operation = {
+      operation: "modify",
+      tradeCard: {
+        ...card,
+        tcn: "E0000000000123",
+        deliveryPlans: card.deliveryPlans.map((p) => ({
+          ...p,
+          id: "10",
+          items: p.items.map((i) => ({
+            ...i,
+            id: "11",
+            itemOperation: "modify" as const,
+            weightKg: 24360,
+            weightModReasonText: "Mérlegelt nettó tömeg",
+          })),
+        })),
+      },
+    };
+
+    const errors = await validateRequest(
+      manageTradeCardsXml([modify], cfg, "f".repeat(32), at),
+    );
+
+    expect(errors).toEqual([]);
+  });
+
   test("query requests by tcn and by parameters are schema-valid", async () => {
     const byTcn = queryTradeCardsXml(
       { tcn: "E0000000000123" },

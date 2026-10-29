@@ -8,13 +8,27 @@ const feed = (scale: ScaleLive, kgs: number[], start = 0, stepMs = 500) =>
   kgs.forEach((kg, i) => scale.add(kg, start + i * stepMs));
 
 describe("ScaleLive", () => {
+  test("an empty bridge is reported as empty, not as moving", () => {
+    const scale = new ScaleLive();
+    feed(scale, [0, 0, 0, 0, 0, 0, 0]);
+
+    const live = scale.live(3000);
+
+    expect(live).toEqual({ kg: 0, stableKg: null, online: true, empty: true });
+  });
+
   test("reports a stable weight after three still seconds", () => {
     const scale = new ScaleLive();
     feed(scale, [24360, 24360, 24370, 24360, 24360, 24360, 24360]);
 
     const live = scale.live(3000);
 
-    expect(live).toEqual({ kg: 24360, stableKg: 24360, online: true });
+    expect(live).toEqual({
+      kg: 24360,
+      stableKg: 24360,
+      online: true,
+      empty: false,
+    });
   });
 
   test("goes offline when the agent stops sending", () => {
@@ -23,7 +37,12 @@ describe("ScaleLive", () => {
 
     const live = scale.live(3000 + 2500);
 
-    expect(live).toEqual({ kg: null, stableKg: null, online: false });
+    expect(live).toEqual({
+      kg: null,
+      stableKg: null,
+      online: false,
+      empty: false,
+    });
   });
 
   test("refuses to record while the truck is moving or the scale is offline", () => {

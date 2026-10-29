@@ -4,6 +4,8 @@ import type { EkaerClient } from "@mine-erp/ekaer";
 import {
   deleteReport,
   fileReport,
+  finalizeReport,
+  modifyReport,
   PermanentEkaerError,
   type ReportStore,
 } from "./ekaer.ts";
@@ -46,12 +48,19 @@ export function createEkaerActivities(
   return {
     fileEkaerReport: (id: string) =>
       permanent(() => fileReport(store, client(), id)),
+    modifyEkaerReport: (id: string) =>
+      permanent(() => modifyReport(store, client(), id)),
+    finalizeEkaerReport: (id: string) =>
+      permanent(() => finalizeReport(store, client(), id)),
     deleteEkaerReport: (id: string) =>
       permanent(() => deleteReport(store, client(), id)),
     /** After the last retry: a still-pending report is marked failed so a person checks NAV. */
     async markEkaerUnresolved(id: string, error: string): Promise<void> {
       const r = await store.load(id);
       if (r?.status === "pending") await store.failed(id, error, null);
+      // A modify or finalize that never got an answer: back to active so a person can retry.
+      if (r?.status === "modifying" || r?.status === "finalizing")
+        await store.changeRefused(id, error, null);
     },
   };
 }

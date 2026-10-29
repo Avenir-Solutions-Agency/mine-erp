@@ -226,7 +226,14 @@ export const weighingTicketCounter = pgTable("weighing_ticket_counter", {
 });
 
 export type EkaerReportStatus =
-  "pending" | "active" | "deleting" | "deleted" | "failed";
+  | "pending"
+  | "active"
+  | "modifying"
+  | "finalizing"
+  | "finalized"
+  | "deleting"
+  | "deleted"
+  | "failed";
 
 /**
  * One EKÁER report (trade card) for a weighing. The request and response XML (credentials masked)
@@ -251,16 +258,21 @@ export const ekaerReport = pgTable(
     responseXml: text("response_xml"),
     error: text("error"),
     deleteReason: text("delete_reason"),
+    /** A person-approved weight change waiting for NAV (T-014). */
+    requestedKg: integer("requested_kg"),
+    changeReason: text("change_reason"),
+    /** Unloading time sent with finalize. */
+    arrivalAt: timestamp("arrival_at", { withTimezone: true }),
     ...audit,
   },
   (t) => [
-    // At most one live report per weighing (pending, active or being deleted).
+    // At most one live report per weighing: anything not deleted or failed.
     uniqueIndex("ekaer_report_one_live_per_weighing")
       .on(t.weighingId)
-      .where(sql`${t.status} in ('pending', 'active', 'deleting')`),
+      .where(sql`${t.status} not in ('deleted', 'failed')`),
     check(
       "ekaer_report_status_chk",
-      sql`${t.status} in ('pending', 'active', 'deleting', 'deleted', 'failed')`,
+      sql`${t.status} in ('pending', 'active', 'modifying', 'finalizing', 'finalized', 'deleting', 'deleted', 'failed')`,
     ),
     check("ekaer_report_planned_kg_chk", sql`${t.plannedKg} > 0`),
     check("ekaer_report_value_chk", sql`${t.value} > 0`),
