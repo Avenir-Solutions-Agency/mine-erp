@@ -1,6 +1,6 @@
 # PORTAL AI (Netto Scales): scale software interface summary
 
-The quarry's weighbridge runs Netto Scales PORTAL AI. This is what the scale adapter (PRD §08, first blocking question) talks to.
+Not used: decided 2026-10-29, the new ERP does the weighing itself (PRD §08). Kept as a reference for what a weighing program handles: two-stage weighing, gross/tare roles, stability, void instead of delete, stock from movements, the weighing record's fields.
 Sources, received 2026-10-29 and kept next to this file (the PDFs are the authority; this file picks out what the ERP needs):
 
 - [`portal-ai/erp-api-1.2-hu.pdf`](portal-ai/erp-api-1.2-hu.pdf): ERP API developer reference, API 1.2, released 2026-09-05, needs program version 2026 fix2149 or later.

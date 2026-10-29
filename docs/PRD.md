@@ -93,7 +93,7 @@ Do not build these in v1 as production features (backend, database, real integra
 
 Not decided yet. The agent must ask before assuming an answer.
 
-- [Blocking, partly answered 2026-10-29] Scale software: Netto Scales PORTAL AI with an ERP API 1.2 (Bearer key, read and optional write) and a read-only SQLite file; see `docs/reference/portal-ai.md`. Still open: network path from the hosted ERP to the scale PC (VPN or the local scale agent), who issues the API key, and whether PORTAL or the ERP files EKÁER.
+- [Blocking] Decided 2026-10-29: the new ERP does the weighing itself (the PORTAL AI scale program is not used; its docs stay in `docs/reference/portal-ai.md` as a reference for what a weighing program must do). Still open: the weight indicator's make, model, interface (RS-232/RS-485/Ethernet) and protocol; cameras for plate recognition; ticket printer; whether the scale and indicator are verified (hitelesített) and what the legal-metrology rules require from weighing software used for trade.
 - [Blocking] EKÁER test environment request to NAV, and a secondary EKÁER user for the ERP under the client's primary user.
 - [Blocking] Which products are EKÁER-required (VTSZ 2517, 2516, 2505), and with what weight or value threshold? Needs the accountant's or tax advisor's opinion.
 - At least 100 real weigh ticket and delivery note photos from the Viber group, with the client's consent.
