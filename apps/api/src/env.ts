@@ -16,7 +16,10 @@ export type Env = z.infer<typeof Env>;
 
 /** Fails fast at boot with the names of the missing variables, never their values. */
 export function loadEnv(): Env {
-  const parsed = Env.safeParse(process.env);
+  // Empty lines in .env files mean "not set", so defaults apply.
+  const parsed = Env.safeParse(
+    Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== "")),
+  );
   if (!parsed.success)
     throw new Error(
       `Invalid environment: ${parsed.error.issues.map((i) => i.path.join(".")).join(", ")}`,
