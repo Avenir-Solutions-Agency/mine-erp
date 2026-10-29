@@ -62,7 +62,7 @@ Do not add a dependency that overlaps with a row in this table without asking.
       src/components/ui/ primitives (see DESIGN_SYSTEM.md)
       src/lib/           web-only helpers, env.ts (server-only)
     api/                 NestJS REST API + MCP server            Exists: invoices (T-034b)
-    worker/              Temporal workflows and activities       Target (not yet true)
+    worker/              Temporal workflows and activities       Exists: skeleton (T-009)
     bot/                 Telegram bot (grammY, webhook)          Target (not yet true)
     scale-agent/         local scale agent, single binary        Exists: simulator only (T-035)
   packages/

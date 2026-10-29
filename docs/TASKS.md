@@ -30,7 +30,7 @@ Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-in
 - [ ] T-006 (F7) Master data CRUD API: customer, delivery_address, product (with aliases), vehicle (plate normalization), person
 - [ ] T-007 (F7) Billingo partner import into `customer`
 - [ ] T-008 (F3) Validation rules in `packages/domain` as pure functions with codes and Hungarian messages (≥ 90% coverage)
-- [ ] T-009 `apps/worker` Temporal skeleton; `ProcessDocumentWorkflow` with ingest → notify steps as stubs
+- [x] T-009 `apps/worker` Temporal skeleton; `ProcessDocumentWorkflow` with ingest → notify steps as stubs
 - [ ] T-010 (F1) Ingest activity: object store upload, SHA-256, `document` record, duplicate detection
 - [ ] T-011 (F2) `packages/extraction`: Claude vision tool-use schema, prompt versioning, evaluation script on the labelled set
 - [ ] T-012 (F4) Normalize, link and register activities; gapless registry number sequence
