@@ -15,6 +15,13 @@
       "when": 1793263877615,
       "tag": "0001_lock_down",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793273658969,
+      "tag": "0002_weighing",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
+  check,
   index,
   date,
   integer,
@@ -39,6 +41,8 @@ export const vehicle = pgTable("vehicle", {
   model: text("model"),
   engineNumber: text("engine_number"),
   powerKw: integer("power_kw"),
+  /** Saved tare for one-pass weighing, kg. */
+  tareKg: integer("tare_kg"),
   vin: text("vin"),
   v9Code: text("v9_code"),
   euroClass: text("euro_class"),
@@ -129,4 +133,62 @@ export const eventLog = pgTable("event_log", {
   entityId: uuid("entity_id"),
   action: text("action").notNull(),
   payload: jsonb("payload"),
+});
+
+export type WeighingStatus = "open" | "completed" | "void";
+
+/** One pass or two over the weighbridge; never deleted, a cancelled one is `void`. */
+export const weighing = pgTable(
+  "weighing",
+  {
+    id: id(),
+    ticketYear: integer("ticket_year").notNull(),
+    ticketSeq: integer("ticket_seq").notNull(),
+    ticketNumber: text("ticket_number").notNull().unique(),
+    status: text("status").$type<WeighingStatus>().notNull(),
+    plate: text("plate").notNull(),
+    vehicleId: uuid("vehicle_id").references(() => vehicle.id),
+    trailerPlate: text("trailer_plate"),
+    customer: text("customer"),
+    material: text("material"),
+    note: text("note"),
+    firstKg: integer("first_kg").notNull(),
+    firstAt: timestamp("first_at", { withTimezone: true }).notNull(),
+    secondKg: integer("second_kg"),
+    secondAt: timestamp("second_at", { withTimezone: true }),
+    grossKg: integer("gross_kg"),
+    tareKg: integer("tare_kg"),
+    netKg: integer("net_kg"),
+    savedTare: boolean("saved_tare").notNull().default(false),
+    voidReason: text("void_reason"),
+    voidedAt: timestamp("voided_at", { withTimezone: true }),
+    ...audit,
+  },
+  (t) => [
+    index("weighing_first_at_idx").on(t.firstAt),
+    index("weighing_plate_idx").on(t.plate),
+    check(
+      "weighing_status_chk",
+      sql`${t.status} in ('open', 'completed', 'void')`,
+    ),
+    check("weighing_first_kg_chk", sql`${t.firstKg} > 0`),
+    check(
+      "weighing_net_chk",
+      sql`${t.netKg} is null or (${t.netKg} = ${t.grossKg} - ${t.tareKg} and ${t.netKg} > 0)`,
+    ),
+    check(
+      "weighing_completed_chk",
+      sql`${t.status} <> 'completed' or (${t.grossKg} is not null and ${t.tareKg} is not null and ${t.netKg} is not null)`,
+    ),
+    check(
+      "weighing_void_chk",
+      sql`${t.status} <> 'void' or (${t.voidReason} is not null and ${t.voidedAt} is not null)`,
+    ),
+  ],
+);
+
+/** Gapless MJ-YYYY-NNNNNN numbers: one row per year, bumped in the transaction that saves the weighing. */
+export const weighingTicketCounter = pgTable("weighing_ticket_counter", {
+  year: integer("year").primaryKey(),
+  last: integer("last").notNull(),
 });

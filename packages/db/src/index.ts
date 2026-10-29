@@ -4,6 +4,7 @@ import * as schema from "./schema.ts";
 
 export * from "./schema.ts";
 export { uuidv7 } from "./uuidv7.ts";
+export { nextWeighingTicketSeq } from "./tickets.ts";
 export { asc, desc, eq, inArray } from "drizzle-orm";
 
 /** Server-only: DATABASE_URL carries the database password. */
