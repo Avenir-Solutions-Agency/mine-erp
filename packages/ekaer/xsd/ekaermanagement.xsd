@@ -1,0 +1,1183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2014 sp1 (x64) (http://www.altova.com) by Agnes Septey (i-Cell Mobilsoft Zrt.) -->
+<xs:schema xmlns="http://schemas.nav.gov.hu/EKAER/1.0/ekaermanagement" xmlns:common="http://schemas.nav.gov.hu/EKAER/1.0/common" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://schemas.nav.gov.hu/EKAER/1.0/ekaermanagement" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:annotation>
+		<xs:documentation>
+   2015.02.17 T.K A ReasonCodeType bővült a TCI_VALUE_MISSING elemmel.
+   2015.03.17 T.K A ReasonCodeType bővült a TC_MOD_REASON_MISSING elemmel.
+   2015.03.18
+   - TCDEV-182 new ReasonCodeType: TC_SELLER_DELIVERY_NOT_ALLOWED_WITH_TRADETYPE, TC_SELLER_VATNUMBER_MUST_BE_CUSTOMERS, TCI_RISKY_TRADECARD_ITEM_ONLY_ALLOWED_WITH_SELLER_DELIVERY, TC_SELLER_DELIVERY_MOD_NOT_ALLOWED
+- isDestinationCompanyIdentical flag. Import esetén kockázatos terméknél használható
+2015.03.23
+- TCDEV-209 new ReasonCodeType: TC_UNLOAD_LOCATION_COMPANY_INFO_MISSING
+- TCDEV-208 new ReasonCodeType: TC_DESTINATION_VATNUMBER_MUST_BE_CUSTOMERS
+2015.03.25
+- TCDEV-220 new ReasonCodeType: TC_IS_DESTINATION_COMPANY_IDENTICAL_MISSING
+- TCDEV-220 new ReasonCodeType: TC_IS_DESTINATION_COMPANY_REQUIRED
+- TCDEV-220 new ReasonCodeType: TC_NOT_ALLOWED_DATA_MODIFICATION
+2015.03.26
+- TCDEV-182 TC_SELLER_DELIVERY_NOT_ALLOWED_WITH_TRADETYPE -> TC_ONLY_SELLER_DELIVERY_ALLOWED_WITH_TRADETYPE
+2015.04.17
+-TCDEV-296 BasicInfoElementsGroup bővült az insUser és a modUser elemmel.
+2015.05.06
+-TCDEV-335 új complexType-ok: DeliveryPlanType és DeliveryPlanListType
+- A TradeCardType bővült a deliveryPlans elemmel.
+- A TradeCardType items eleme opcionális lett.
+2015.05.14
+- TCDEV-352 new ReasonCodeType: INVALID_TRANSACTION_STATE
+- TCDEV-362 new ReasonCodeType: TC_DELIVERY_PLAN_MISSING
+2015.05.18
+- TCDEV-352 new ReasonCodeType: TCI_STATUS_MOD_REASON_MISSING
+- TCDEV-352 new ReasonCodeType: TCI_PRODUCT_MOD_REASON_MISSING
+2015.06.04
+-TCDEV-394 A TradeCardItemGroup value eleme a korábbi maximum 9-ről 11 számjegyre növekedett.
+2015.06.08
+- TCDEV-393 new ReasonCodeType: TC_UNKNOWN_LICENCE_PLATE_COUNTRY_CODE
+- TCDEV-396 new ReasonCodeType: NO_VALID_MASTER_USER
+2015.06.16
+- TCDEV-412 új complexType: ItemOperationType
+-  A TradeCardItemType bővült az itemOperation elemmel.
+2015.06.18
+- TCDEV-413 new ReasonCodeType: TCI_ITEM_OPERATION_MISSING
+2015.07.03
+- TCDEV-433 new ReasonCodeType: TCI_PRODUCT_MOD_NOT_ALLOWED
+- TCDEV-433 new ReasonCodeType: TCI_CREATE_NOT_ALLOWED
+- TCDEV-433 new ReasonCodeType: TCI_DELETE_NOT_ALLOWED
+2015.07.06
+- TCDEV-448 new ReasonCodeType: LOW_BALANCE
+2015.07.03
+- TCDEV-526 Az unloadReporter elementhez tartozó dokumentáció korrigálva lett.
+2016.01.04
+- TCDEV-542 new ReasonCodeType: TC_INACTIVE_CPA_FOUND
+2016.03.30
+- TCDEV-619 Új complexType-ok: NAVValidationType, NAVValidationListType, NAVValidationCodeType
+            A TradeCardOperationType bővült a NAVValidations elemmel.
+2016.05.11
+- TCDEV-641 new ReasonCodeType: TC_SELLER_VAT_NUMBER_CDV_ERROR
+- TCDEV-641 new ReasonCodeType: TC_DESTINATION_VAT_NUMBER_CDV_ERROR
+2016.05.25
+- TCDEV-712 new ReasonCodeType: TC_LOAD_AND_UNLOAD_LOCATION_ERROR, TC_UNLOAD_LOCATION_ERROR, TC_LOAD_AND_UNLOAD_LOCATION_ERROR
+2016.05.30 
+- TCDEV-657 new NAVValidationCodeType: TC_WRONG_ZIP_CITY_WARN
+- TCDEV-703 new ReasonCodeType: TC_REQUEST_VERSION_ERROR
+2016.05.31
+- TCDEV-641 new ReasonCodeType: TC_FOREIGN_VAT_NUMBER_COUNTRY_CODE_MISMATCH
+2016.06.27
+- TCDEV-753 A ReasonCodeType simpleType az importban használt common.xsd-be lett átemelve. 
+2016.07.12
+- TCDEV-872 Új simpleType: ManagementVersionType, a requestVersion kötelező lett, default 1.0 érték megszűnt, a típusa ManagementVersionType lett
+2016.07.28
+- TCDEV-966 A BasicTradeCardDetailsGroup bővült az isPrivateDelivery elemmel.
+2016.12.08
+- TCDEV-1291 new NAVValidationCodeType: TC_INACTIVE_CPA_FOUND
+2017.02.28
+- TCDEV-1562 add to QueryParamsType sellerVatNumber and destinationVatNumber 
+2019.03.07
+- TCDEV-3696 TradeCardOperationResultType bővült - warning opcionális mező (v 1.10)
+2019.03.19
+- TCDEV-3773 loadDate és arrivalDate szigorítás
+- TCDEV-3773 2.0 verzió felvétele
+2020.12.01
+- TCDEV-6769 2.1 verzió felvétele
+- TCDEV-6769 TradeCardItemGroup bővült vatRateAssuranceExemption elemmel.
+</xs:documentation>
+	</xs:annotation>
+	<xs:import namespace="http://schemas.nav.gov.hu/EKAER/1.0/common" schemaLocation="common.xsd"/>
+	<!--  COMPLEX types -->
+	<!-- management -->
+	<xs:simpleType name="ManagementVersionType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="1.0">
+				<xs:annotation>
+					<xs:documentation>1.0</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.1">
+				<xs:annotation>
+					<xs:documentation>1.1</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.2">
+				<xs:annotation>
+					<xs:documentation>1.2</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.3">
+				<xs:annotation>
+					<xs:documentation>1.3</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.4">
+				<xs:annotation>
+					<xs:documentation>1.4</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.5">
+				<xs:annotation>
+					<xs:documentation>1.5</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.6">
+				<xs:annotation>
+					<xs:documentation>1.6</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.7">
+				<xs:annotation>
+					<xs:documentation>1.7</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.8">
+				<xs:annotation>
+					<xs:documentation>1.8</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.9">
+				<xs:annotation>
+					<xs:documentation>1.9</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="1.10">
+				<xs:annotation>
+					<xs:documentation>1.10</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="2.0">
+				<xs:annotation>
+					<xs:documentation>2.0</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="2.1">
+				<xs:annotation>
+					<xs:documentation>2.1</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FunctionCodeType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="OK">
+				<xs:annotation>
+					<xs:documentation>OK</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="WARNING">
+				<xs:annotation>
+					<xs:documentation>Warning</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="ERROR">
+				<xs:annotation>
+					<xs:documentation>Error</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="BasicVehicleDetailType">
+		<xs:sequence>
+			<xs:element name="plateNumber" type="common:LicensePlateNumberType"/>
+			<xs:element name="country" type="common:VehicleCountryCode" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="LocationType">
+		<xs:sequence>
+			<xs:element name="name" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Rakodási hely üzemeltetőjének neve. opcionális, csak magyar cím esetén kötelező</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="VATNumber" type="common:VatNumberType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Rakodási hely üzemeltetőjének adószáma. Opcionális, csak magyar cím esetén kötelező</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="phone" type="common:PhoneType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>opcionális, csak magyar cím esetén kötelező</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="email" type="common:EmailType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>opcionális, csak magyar cím esetén kötelező</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="country" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="common:CountryCodeType">
+						<xs:minLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="zipCode" type="common:ZipCodeType" minOccurs="0"/>
+			<xs:element name="city" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="common:SimpleText50Type">
+						<xs:minLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="street" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Közterület neve.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="common:SimpleText150Type">
+						<xs:minLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="streetType" type="common:SimpleText50Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Közterület jellege, opcionális</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="streetNumber" type="common:SimpleText10Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Házszám</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="lotNumber" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Helyrajzi szám, ha nem létezik házszám</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="3"/>
+						<xs:maxLength value="15"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="gpsPosition" type="common:GPSCoordType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>GPS pozíció. WGS84!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BasicHeaderType">
+		<xs:sequence>
+			<xs:element name="requestId">
+				<xs:annotation>
+					<xs:documentation>A kérés/válasz azonosítója, minden üzenetnél más</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="common:IdType">
+						<xs:maxLength value="50"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="timestamp" type="xs:dateTime">
+				<xs:annotation>
+					<xs:documentation>A kérés/válasz keletkezésének ideje</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="requestVersion" type="ManagementVersionType">
+				<xs:annotation>
+					<xs:documentation>A kérés/válasz verziószáma, a request struktúra verziója</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="headerVersion" type="common:VersionType" default="1.0" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A header verziószáma!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="UserHeaderType">
+		<xs:sequence>
+			<xs:element name="user">
+				<xs:annotation>
+					<xs:documentation>Felhasznólnév</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="30"/>
+						<xs:pattern value="[a-zA-Z0-9\-@\.]{6,30}"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="passwordHash">
+				<xs:annotation>
+					<xs:documentation>Jelszó. SHA-512 hash-e a jelszónak! UPPER CASE!</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="128"/>
+						<xs:minLength value="128"/>
+						<xs:pattern value="[0-9A-Za-z]{128}"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="VATNumber" type="common:VatNumberType">
+				<xs:annotation>
+					<xs:documentation>Az EKAER-ben regisztrált adóalany akinek a bejelentéseinek kezelése a cél!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="requestSignature">
+				<xs:annotation>
+					<xs:documentation>A requestId + timestamp yyyyMMddHHmmss + user titkos aláíró kulcsa összefűzésének az SHA-512 hash értéke. UPPER CASE!</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="128"/>
+						<xs:minLength value="128"/>
+						<xs:pattern value="[0-9A-Za-z]{128}"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BasicRequestType">
+		<xs:sequence>
+			<xs:element name="header" type="BasicHeaderType"/>
+			<xs:element name="user" type="UserHeaderType">
+				<xs:annotation>
+					<xs:documentation>Authentikációs adatok. Ugyan azok az azonosító adatok kellenek, amiket a WEB-es felületen is használni kell!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BasicResponseType">
+		<xs:sequence>
+			<xs:element name="header" type="BasicHeaderType"/>
+			<xs:element name="result" type="BaseResultType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="NAVValidationCodeType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="TC_LOW_TOTAL_VALUE_WARN">
+				<xs:annotation>
+					<xs:documentation>Figyelem! A bejelentésében irreálisan alacsony értéket jelölt meg!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="TC_HIGH_TOTAL_VALUE_WARN">
+				<xs:annotation>
+					<xs:documentation>Figyelem! A bejelentésben irreálisan magas értéket jelölt meg!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="TC_HIGH_TOTAL_WEIGHT_WARN">
+				<xs:annotation>
+					<xs:documentation>Figyelem! A bejelentésben irreálisan magas össztömeget jelentett be!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="TC_LOW_TOTAL_WEIGHT_WARN">
+				<xs:annotation>
+					<xs:documentation>Figyelem! A bejelentésben túl alacsony össztömeget jelentett be!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="TC_WRONG_ZIP_CITY_WARN">
+				<xs:annotation>
+					<xs:documentation>Figyelem! A bejelentésben nem megfelelő zip és város pár található!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="TC_INACTIVE_CPA_FOUND">
+				<xs:annotation>
+					<xs:documentation>Figyelem! Érvénytelen vtsz szám miatti hiba!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="NAVValidationType">
+		<xs:sequence>
+			<xs:element name="code" type="NAVValidationCodeType" />
+			<xs:element name="message" type="xs:string" minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="NAVValidationListType">
+		<xs:sequence>
+			<xs:element name="NAVValidation" type="NAVValidationType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BaseResultType">
+		<xs:sequence>
+			<xs:element name="funcCode" type="FunctionCodeType">
+				<xs:annotation>
+					<xs:documentation>Sikeresség: OK, hiba ERROR, vagy WARNING</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="reasonCode" type="common:ReasonCodeType">
+				<xs:annotation>
+					<xs:documentation>Végrehajtási eredmény kódja!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="msg" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A végrehajtással kapcsolatos szöveges leírás ha szükséges. Általában akkor van töltve ha a funcCode nem SUCCESS</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:group name="BasicTradeCardDetailsGroup">
+		<xs:sequence>
+			<xs:element name="tcn" type="common:TCNType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Szállítmányhoz tartozó EKAER szám. Új bejelentésnél NEM kell megadni! Bejelentés módosításnál kötelező. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="orderNumber" type="common:SimpleText50Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Megrendelés szám. A bejelentő saját rendszerében, a bejelentéssel kapcsolatos rendelés/fuvar azonosítója!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="tradeType" type="common:TradeType">
+				<xs:annotation>
+					<xs:documentation>Fuvar jellege, E: Beflöldről közösségbe, I: Közösségből belföldre, D:Belfold - belföld. A fuvar jellegét/irányát mutatja</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isSellerDelivery" type="xs:boolean" default="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Eladó végzi-e a szállítást. Címzetti bejelentés rögzítése esetén false (tehát nem az eladó végzi)!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="modByCarrierEnabled" type="xs:boolean">
+				<xs:annotation>
+					<xs:documentation>Szállítmányozó módosíthatja a bejelentő lapon a jármű adatokat?</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="carrier" type="common:CommonIdType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Szállítmányozó azonosítója EKAER-ben. Ha ismert a szállító azonosítója az EKAER-ben akkor az itt adható meg! Akkor tudja a szállító módosítani a bejelentést, ha ez az adat meg van adva és a modByCarrierEnabled = true</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="carrierText" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Szállítmányozó szöveges megjelölése</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isIntermodal" type="xs:boolean" default="false" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Intermodális szállítmány esetén ezt igen-re kell állítani. Ha ez az érték igaz, akkor mind a fel mind a lerakodási cím Magyarországon kell hogy legyen. Bármely típusú fuvar esetén megadható! Default false-ként van kezelve!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isDestinationCompanyIdentical" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>címzett (vevő) megegyezik-e a kirakodás címzettjével? amennyiben a címzettől eltérő cég szerepel a kirakodás címnél, értéke 'false' csak import relációban, kockázatos termék esetén szükséges megadni.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="sellerName" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A feladó/eladó neve</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="sellerVatNumber" type="common:VatNumberType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A feladó/eladó  adószáma</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="sellerCountry" type="common:CountryCodeType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A feladó/eladó országának kódja</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="sellerAddress" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A feladó/eladó Címe, egybe írva.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="destinationName" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Az átvevő/vevő, címzett neve</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="destinationVatNumber" type="common:VatNumberType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Az átvevő/vevő, címzett adószáma</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="destinationCountry" type="common:CountryCodeType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A  átvevő/vevő országának kódja</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="destinationAddress" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A  átvevő/vevő Címe, egybe írva.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="unloadReporter" type="common:UnloadReporterType" default="S" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Lerakodás bejelentést szabályozó Flag. A címzett által történő lejelentés megszűnése miatt, a megadott értéktől függetlenül, minden esetben S értéket kap!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="loadLocation" type="LocationType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Felrakodás helye</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="saveLoadLocation" type="xs:boolean" default="false" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A kedvenc címekhez automatikusan mentődik a beküldött cím, ha még nem létezik!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="unloadLocation" type="LocationType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Első lerakodási/raktározási hely</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="saveUnloadLocation" type="xs:boolean" default="false" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A kedvenc címekhez automatikusan mentődik a beküldött cím, ha még nem létezik!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="plateNumberModReasonText" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Ha módosítják  a járművet, akkor a módosítás okát meg kell adni, ha a bejelentés Aktív státuszba van!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="vehicle" type="BasicVehicleDetailType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Vonó jármű</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="vehicle2" type="BasicVehicleDetailType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Vontatmány ha van</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice>
+				<xs:element name="loadDate" type="common:TimestampType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Felrakodás, indulás időpontja!</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="loadDateOnly" type="xs:date" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Felrakodás, indulás dátuma!</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+			<xs:choice>
+				<xs:element name="arrivalDate" type="common:TimestampType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Lerakodás, érkezés időpontja!</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="arrivalDateOnly" type="xs:date" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Lerakodás, érkezés dátuma!</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="tradeCardType" type="common:TradeCardType" default="N" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Bejelentés típusa (N)ormál vagy (S)imple. 1.7 verziótól!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="statusChangeModReasonText" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Státusz váltás oka, csak lekérdezésben / csomag átadásban van használva!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isPrivateDelivery" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Csak akkor kell megadni, ha export esetén külföldi magánszemély részére történik az értékesítés, illetve import esetén, ha a beszerzést külföldi magánszemélytől eszközlik. Belföldi bejelentés esetén nincs figyelembe véve. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="BasicTradeCardType">
+		<xs:sequence>
+			<xs:group ref="BasicTradeCardDetailsGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TradeCardListType">
+		<xs:sequence>
+			<xs:element name="tradeCard" type="TradeCardType" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:group name="DeliveryPlanGroup">
+				<xs:sequence>
+			<xs:element name="loadLocation" type="LocationType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Felrakodás helye</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="unloadLocation" type="LocationType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Első lerakodási/raktározási hely</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isDestinationCompanyIdentical" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>címzett (vevő) megegyezik-e a kirakodás címzettjével? amennyiben a címzettől eltérő cég szerepel a kirakodás címnél, értéke 'false' csak import relációban, kockázatos termék esetén szükséges megadni.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="saveLoadLocation" type="xs:boolean" default="false" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A kedvenc címekhez automatikusan mentődik a beküldött cím, ha még nem létezik!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="saveUnloadLocation" type="xs:boolean" default="false" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A kedvenc címekhez automatikusan mentődik a beküldött cím, ha még nem létezik!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="externalId" type="common:SimpleText50Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Menetlevélen belüli tetszőleges azonosító! Ez alapján lehet a kérésben küldött menetleveleket összehozni a válaszban érkező menetlevelekkel!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:group>
+	<xs:group name="TradeCardItemGroup">
+		<xs:sequence>
+			<xs:element name="tradeReason" type="common:TradeReasonType">
+				<xs:annotation>
+					<xs:documentation>Tétel beszerzési oka: S: Értékesítés A: Beszerzés W: Bérmunka O: Egyéb</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="productVtsz" type="common:VTSZType">
+				<xs:annotation>
+					<xs:documentation>Termék VTSZ száma!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="productName">
+				<xs:annotation>
+					<xs:documentation>Termék user által megadható neve. pl.: Málnás joghurt :)</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="200"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="productVtszGroupName" type="common:SimpleText1000Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>VTSZ csoport neve! Csak 1.10 verziótól van használva!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="adrNumber" type="common:ADRType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>BVeszélyességi BÁRCA szám. Veszélyes áru esetén kitöltendő.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="transportLincense" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Veszélyes áru esetén a fuvar engedély azonosítója, amit kiadtak a szállításhoz</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="30"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="weight">
+				<xs:annotation>
+					<xs:documentation>Súly, tömeg Kg-ban. </xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:minInclusive value="0"/>
+						<xs:maxExclusive value="1000000000"/>
+						<xs:totalDigits value="12"/>
+						<xs:fractionDigits value="3"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="value" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>HUF-ban az érték</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:minExclusive value="0"/>
+						<xs:fractionDigits value="0"/>
+						<xs:totalDigits value="11"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="valueModReasonText" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Érték módosítás oka szövegesen. Csak akkor kell, ha az értéket módosítja a hívó!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="weightModReasonText" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Súly módosítás oka szövegesen. Csak akkor kell, ha a súlyt módosítja a hívó!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="factoryItemNumber" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A termék gyári száma</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="200"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="importerItemNumber" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Bejelentő által használt cikkszám, amin kezeli, raktárnyilvántartja.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="200"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="expirationDate" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Lejárati dátum, szavatossági idő</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="batchNumber" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>SARZS szám (batch number), amit a gyártó ad! Ami alapján azonosítani lehet a gyártási paramétereket, gyártó sort.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="3"/>
+						<xs:maxLength value="30"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="statusModReasonText" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Státusz váltás oka szövegesen.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="productModReasonText" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Termék módosítás oka szövegesen.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="vatRateAssuranceExemption" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A termék biztosíték mentes áfakulcs alá tartozik?</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="TradeCardItemType">
+		<xs:sequence>
+			<xs:element name="itemExternalId" type="common:SimpleText50Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Tétel bejelentésen belüli tetszőleges azonosítója! Ez alapján lehet a kérésben küldött tételeket összehozni a válaszban érkező tételekkel! 1.6 requestVersion es nagyobbtól</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="itemOperation" type="ItemOperationType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Művelet típusa: create: Új tétel létrehozása, modify: Meglévő módosítása, delete: Meglévő tétel törlése!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="TradeCardItemGroup"/>
+			<xs:element name="insDate" type="xs:dateTime" minOccurs="0"/>
+			<xs:element name="insUser" type="common:UserNameType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Létrehozó user! EKAER felhasználó user azonosító.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="modDate" type="xs:dateTime" minOccurs="0"/>
+			<xs:element name="modUser" type="common:UserNameType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Módosítást végző user! EKAER felhasználó user azonosító.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="id" type="common:CommonIdType">
+			<xs:annotation>
+				<xs:documentation>Csak módosítási kérés esetén kell tölteni, ha az adott elem már létezik és módosítani akarja a hívó. Ha az operation módosítás de a tétel új akkor nem kell megadni, kitölteni!</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="TradeCardItemsType">
+		<xs:sequence>
+			<xs:element name="tradeCardItem" type="TradeCardItemType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Egyszerű bejelentés esetén nem lesz tétel a bejelentéshez!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>	
+	<xs:complexType name="DeliveryPlanType">
+		<xs:sequence>
+			<xs:element name="items" type="TradeCardItemsType">
+				<xs:annotation>
+					<xs:documentation>Bejelentés tételek</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="DeliveryPlanGroup"/>
+		</xs:sequence>
+		<xs:attribute name="id" type="common:CommonIdType" use="optional">
+			<xs:annotation>
+				<xs:documentation>Csak módosítási kérés esetén kell tölteni, ha az adott elem már létezik és módosítani akarja a hívó.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DeliveryPlanListType">
+		<xs:sequence>
+			<xs:element name="deliveryPlan" type="DeliveryPlanType" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TradeCardType">
+		<xs:complexContent>
+			<xs:extension base="BasicTradeCardType">
+				<xs:sequence>
+					<xs:element name="items" type="TradeCardItemsType" minOccurs="0"/>
+					<xs:element name="deliveryPlans" type="DeliveryPlanListType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="AllowanceListType">
+		<xs:sequence maxOccurs="unbounded">
+			<xs:element name="allowance" type="AllowanceType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AllowanceType">
+		<xs:sequence>
+			<xs:element name="allowanceValue" type="xs:decimal">
+				<xs:annotation>
+					<xs:documentation>A kiszabott pótlék összege</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="allowanceDueDate" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>A kiszabott pótlék esedékessége</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:group name="BasicInfoElementsGroup">
+		<xs:sequence>
+			<xs:element name="VATNumber" type="common:VatNumberType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Adószám, a bejelentéskor, server állítja be!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="taxIdentifier" type="common:VatNumberType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Adóazonosító jel! Bejelentés rögzítésnél</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="status" type="common:TradeCardStatusType">
+				<xs:annotation>
+					<xs:documentation>Bejelentési lap státusza</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="totalWeight" type="xs:decimal" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Teljes tömeg KG-ban. Out paraméter</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="totalValue" type="xs:decimal" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Teljes érték HUF-ban. Out paraméter</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="totalAssuranceLocked" type="xs:decimal" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Teljes zárolási érték HUF-ban, ami az adott bejelentőhöz köthető</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="finalizationTime" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Véglegesítés időpontja. Csak ha véglegesítve van a bejelentő.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="insDate" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Rekord beszúrásának időpontja!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="tcnValidityStart" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Az EKAER szám érvényességének kezdete!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="tcnValidityEnd" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Az EKAER szám érvényességének vége</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="insUser" type="common:UserNameType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Létrehozó user! EKAER felhasználó user azonosító.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="modUser" type="common:UserNameType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Módosítást végző user! EKAER felhasználó user azonosító.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="TradeCardBasicInfo">
+		<xs:sequence>
+			<xs:element name="tcn" type="common:TCNType">
+				<xs:annotation>
+					<xs:documentation>Bejelentéshez tartozó TCN szám!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:group ref="BasicInfoElementsGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TradeCardInfoType">
+		<xs:complexContent>
+			<xs:extension base="TradeCardType">
+				<xs:sequence>
+					<xs:group ref="BasicInfoElementsGroup"/>
+					<xs:element name="modDate" type="xs:dateTime" minOccurs="0"/>
+					<xs:element name="allowances" type="AllowanceListType" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="TradeCardInfoListType">
+		<xs:sequence>
+			<xs:element name="tradeCardInfo" type="TradeCardInfoType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="OperationType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="create">
+				<xs:annotation>
+					<xs:documentation>Új bejegyzés létrehozása!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="modify">
+				<xs:annotation>
+					<xs:documentation>Meglévő bejelentés módosítása! tradeCard/tcn megadása kötelező!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="delete">
+				<xs:annotation>
+					<xs:documentation>Delete operation esetén a tcn element-et kell csak a listán megadni.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="finalize">
+				<xs:annotation>
+					<xs:documentation>A bejelentés végleges állapotba hozatala. Ettől a ponttól a bejelentésben közölt adatok véglegesek, többet nem lehet rajtuk módosítani.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="correction">
+				<xs:annotation>
+					<xs:documentation>A bejelentés utólagos módosítása. Módosítható adatok: felségjel, rendszám, termékek értéke, termékek súlya</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ItemOperationType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="create">
+				<xs:annotation>
+					<xs:documentation>Új tétel létrehozása!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="modify">
+				<xs:annotation>
+					<xs:documentation>Meglévő tétel módosítása!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="delete">
+				<xs:annotation>
+					<xs:documentation>Meglévő tétel törlése!</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="TradeCardOperationType">
+		<xs:sequence>
+			<xs:element name="index" type="xs:int">
+				<xs:annotation>
+					<xs:documentation>A tradeCard operation sorszáma a request-en belül. Ezzel azonosítható a tétel egy adott requestben! A válaszban is megtalálható, az egyértelmű request elem és válasz elem összeköttetésének.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="operation" type="OperationType">
+				<xs:annotation>
+					<xs:documentation>Művelet típusa</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice>
+				<xs:element name="tradeCard" type="TradeCardType">
+					<xs:annotation>
+						<xs:documentation>Az operation alapján feldolgozandó bejelentés objektum</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="tcn" type="common:TCNType">
+					<xs:annotation>
+						<xs:documentation>Ha delete az operation akkor csak ide kell megadni az EKAER számot, nem kell az objektumot feltölteni!</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+			<xs:choice>
+				<xs:element name="arrivalDate" type="common:TimestampType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Lerakodás, érkezés időpontja!</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="arrivalDateOnly" type="xs:date" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Lerakodás, érkezés dátuma!</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="statusChangeModReasonText" type="common:SimpleText200Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Ha delete az operation és S a státusz, akkor kötelező, legalább 1 karakter hosszú érték!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TradeCardOperationListType">
+		<xs:sequence>
+			<xs:element name="tradeCardOperation" type="TradeCardOperationType" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="OperationResultType">
+		<xs:complexContent>
+			<xs:extension base="BaseResultType">
+				<xs:sequence>
+					<xs:element name="index" type="xs:int">
+						<xs:annotation>
+							<xs:documentation>A tradeCardoperation sorszáma a request-en belül. Ezzel azonosítható a tétel egy adott requestben! A válaszban is megtalálható, az egyértelmű request elem és válasz elem összeköttetésének.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="operation" type="OperationType">
+						<xs:annotation>
+							<xs:documentation>A kérésben küldött művelet operation-je!, aminek az eredményét tartalmazza az elemenet</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="TradeCardOperationResultType">
+		<xs:sequence>
+			<xs:element name="result" type="OperationResultType"/>
+			<xs:element name="tradeCardInfo" type="TradeCardInfoType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A server oldalon aktuális adatok a bejelentésről. Ha create volt az operation és nem sikerült a végrehajtás akkor ez az elem nem fog létezni a váalszban!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="NAVValidations" type="NAVValidationListType" minOccurs="0"/>
+			<xs:element name="warnings" type="WarningListType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="WarningListType">
+		<xs:sequence>
+			<xs:element name="warning" type="common:ReasonCodeType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TradeCardOperationResultListType">
+		<xs:sequence>
+			<xs:element name="operationResult" type="TradeCardOperationResultType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="manageTradeCardsRequest">
+		<xs:annotation>
+			<xs:documentation>POST /manageTradeCards operation! Request element structure</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="BasicRequestType">
+					<xs:sequence>
+						<xs:element name="tradeCardOperations" type="TradeCardOperationListType"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="manageTradeCardsResponse">
+		<xs:annotation>
+			<xs:documentation>/manageTradeCards response structure</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="BasicResponseType">
+					<xs:sequence>
+						<xs:element name="tradeCardOperationsResults" type="TradeCardOperationResultListType"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="QueryParamsType">
+		<xs:sequence>
+			<xs:element name="insertFromDate" type="xs:dateTime">
+				<xs:annotation>
+					<xs:documentation>Rögzítés időpontja, intervallum alja, keződ időpont</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="insertToDate" type="xs:dateTime">
+				<xs:annotation>
+					<xs:documentation>Rögzítés időpontja, intervallum felső határa</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="orderNumber" type="common:SimpleText50Type" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Megrendelés szám. A bejelentő saját rendszerében, a bejelentéssel kapcsolatos rendelés/fuvar azonosítója!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="tradeType" type="common:TradeType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Ha meg van adva akkor csak az adott irányultság lesz lekérdezve! Ha nincs megadva akkor minden irányultságot vissz ada a rendszer!</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="status" type="common:TradeCardStatusType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Bejelentés státusza</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="plateNumber" type="common:LicensePlateNumberType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Rendszám</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="sellerVatNumber" type="common:VatNumberType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Feladó adószáma.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="destinationVatNumber" type="common:VatNumberType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Címzett adószáma.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="maxRowNum" default="1000" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>A maximálisan lekérdezhető rekordok száma! A hívó megadhatja mennyi rekordot szeretne maximum lekérdezni, ez a szám 1000-ben van maximalizálva. Opcionális, ha nincs megadva a szerver 1000-el fog dolgozni!</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:maxInclusive value="1000"/>
+						<xs:minInclusive value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="queryTradeCardsRequest">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="BasicRequestType">
+					<xs:choice>
+						<xs:element name="tcn" type="common:TCNType">
+							<xs:annotation>
+								<xs:documentation>Ha konkrét EKAER számra történik a lekérdezés akkor csak azt kell megadni</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="queryParams" type="QueryParamsType">
+							<xs:annotation>
+								<xs:documentation>Ha bejelentés listára szűrünk akkor ebben kell megadni a szűrési feltételeket!</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:choice>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="queryTradeCardsResponse">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="BasicResponseType">
+					<xs:sequence>
+						<xs:element name="tradeCards" type="TradeCardInfoListType"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

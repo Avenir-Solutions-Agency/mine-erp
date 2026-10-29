@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns2:manageTradeCardsResponse xmlns:ns2="http://schemas.nav.gov.hu/EKAER/1.0/ekaermanagement">
+  <ns2:header>
+    <ns2:requestId>0190f2a400007000800000000000aaaa</ns2:requestId>
+    <ns2:timestamp>2026-10-29T08:00:01Z</ns2:timestamp>
+    <ns2:requestVersion>2.2</ns2:requestVersion>
+  </ns2:header>
+  <ns2:result>
+    <ns2:funcCode>OK</ns2:funcCode>
+    <ns2:reasonCode>SUCCESS</ns2:reasonCode>
+  </ns2:result>
+  <ns2:tradeCardOperationsResults>
+    <ns2:operationResult>
+      <ns2:result>
+        <ns2:funcCode>WARNING</ns2:funcCode>
+        <ns2:reasonCode>SUCCESS</ns2:reasonCode>
+        <ns2:msg>Feldolgozva</ns2:msg>
+        <ns2:index>1</ns2:index>
+        <ns2:operation>create</ns2:operation>
+      </ns2:result>
+      <ns2:tradeCardInfo>
+        <ns2:tcn>E0000000000123</ns2:tcn>
+        <ns2:orderNumber>SZ-2026-000123</ns2:orderNumber>
+        <ns2:tradeType>D</ns2:tradeType>
+        <ns2:status>S</ns2:status>
+      </ns2:tradeCardInfo>
+      <ns2:warnings>
+        <ns2:warning>TC_WRONG_ZIP_CITY_WARN</ns2:warning>
+      </ns2:warnings>
+    </ns2:operationResult>
+  </ns2:tradeCardOperationsResults>
+</ns2:manageTradeCardsResponse>
