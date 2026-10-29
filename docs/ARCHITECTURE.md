@@ -15,7 +15,7 @@ Browser -------> web (Next.js) --------+          |                             
 AI agents -----> MCP (inside api) -----+          v                                  |
                                           Temporal <--> worker (workflows, activities)
                                                           |
-                                                          +--> NAV EKÁER, Claude API, Telegram Bot API,
+                                                          +--> NAV EKÁER, OpenAI API, Telegram Bot API,
                                                                Billingo, S3 object store, Gotenberg
 ```
 
@@ -38,7 +38,7 @@ AI agents -----> MCP (inside api) -----+          v                             
 | Validation | Zod (`packages/contracts`) | Same schemas on API, web and worker |
 | Auth | Supabase Auth, TOTP 2FA (MFA); PIN or QR card on mobile | Same project as the database, no separate identity server to run (decided 2026-10-28, replaces Keycloak) |
 | Files | Supabase Storage through its S3-compatible endpoint, SHA-256 on every file | Evidence for EKÁER and documents; S3 API keeps the client portable (decided 2026-10-28, replaces MinIO) |
-| AI | Claude API (vision + tool use), own MCP server | Structured extraction; model id in config, never in code |
+| AI | OpenAI Responses API (PDF and image input, structured outputs; decided 2026-10-29), own MCP server | Structured extraction; model id in config (`OPENAI_MODEL`), never in code |
 | Telegram | grammY, webhook mode | TypeScript-native, stateless |
 | PDF | HTML template → Gotenberg | Delivery note, quote, TIG |
 | Payments / Email | none in v1 | Out of scope |
@@ -61,7 +61,7 @@ Do not add a dependency that overlaps with a row in this table without asking.
       src/app/           routes and pages only, no business logic
       src/components/ui/ primitives (see DESIGN_SYSTEM.md)
       src/lib/           web-only helpers, env.ts (server-only)
-    api/                 NestJS REST API + MCP server            Target (not yet true)
+    api/                 NestJS REST API + MCP server            Exists: invoices (T-034b)
     worker/              Temporal workflows and activities       Target (not yet true)
     bot/                 Telegram bot (grammY, webhook)          Target (not yet true)
     scale-agent/         local scale agent, single binary        Target (not yet true)

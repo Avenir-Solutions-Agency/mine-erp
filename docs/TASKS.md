@@ -23,7 +23,7 @@ Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-in
 - [x] T-030 Pénzügy and Projekt: reports and pricing (what-if, profitability, plan vs actual), payroll (CSV export), plan
 - [ ] T-031 AI features ("Kérdezze az ERP-t", inquiry re-parse, "Ma" summary): server-side endpoint, Zod-validated output. Needs approval: Anthropic SDK + `ANTHROPIC_API_KEY`
 - [x] T-032 E2E smoke over all 30 routes at 1280px and 375px
-- [x] T-033 Incoming invoice portal (the boss's demo, mpkft-szamlaportal-demo.netlify.app) as the Számlák › Bejövő számlák tab: invoices, lines, cost carriers, upload; logic in `packages/domain/src/demo/invoices.ts`
+- [x] T-033 (demo data replaced by T-034) Incoming invoice portal (the boss's demo, mpkft-szamlaportal-demo.netlify.app) as the Számlák › Bejövő számlák tab: invoices, lines, cost carriers, upload; logic in `packages/domain/src/demo/invoices.ts`
 
 ## Next
 - [ ] T-006 (F7) Master data CRUD API: customer, delivery_address, product (with aliases), vehicle (plate normalization), person

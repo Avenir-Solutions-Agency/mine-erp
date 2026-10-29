@@ -45,4 +45,13 @@ export const hu = {
   empty: "Még nincs rögzített adat.",
   loading: "Betöltés…",
   demo: { badge: "Példaadatok · 2026. 10. 03." },
+  login: {
+    title: "Bejelentkezés",
+    email: "E-mail-cím",
+    password: "Jelszó",
+    submit: "Belépés",
+    pending: "Belépés…",
+    failed: "Hibás e-mail-cím vagy jelszó.",
+    logout: "Kijelentkezés",
+  },
 } as const;

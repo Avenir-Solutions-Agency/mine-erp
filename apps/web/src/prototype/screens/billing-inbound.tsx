@@ -1,26 +1,19 @@
 "use client";
 
+import type { CarrierDto, InvoiceDto } from "@mine-erp/contracts";
+import { ds, fmt, ft } from "@mine-erp/domain/demo";
+import Link from "next/link";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
-  approveInvoice,
-  assignCarrier,
-  carrierTotals,
-  ds,
-  filterLineRows,
-  fmt,
-  ft,
-  invoiceCategories,
-  invoiceKpis,
-  seedInvoicePortal,
-  sumLines,
-  unassignInvoice,
-  type IncomingInvoice,
-  type InvoicePortal,
-  type LineFilter,
-} from "@mine-erp/domain/demo";
-import { useRef, useSyncExternalStore } from "react";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Kpi } from "@/components/ui/kpi";
 import { Pill } from "@/components/ui/pill";
-import { ProgressBar } from "@/components/ui/progress-bar";
 import {
   Table,
   TableBody,
@@ -44,19 +37,28 @@ import {
   TabBar,
 } from "@/prototype/ui";
 
-// The boss's invoice portal (mpkft-szamlaportal-demo.netlify.app) as the "Bejövő számlák" tab.
+// "Bejövő számlák": real invoices from the API (T-034) through the /api/erp proxy.
 // State lives outside React: Screen remounts the billing view on every engine render.
+type Load = "idle" | "loading" | "ready" | "error" | "login";
 type PortalState = {
-  portal: InvoicePortal;
-  selected: string;
+  load: Load;
+  error: string;
+  invoices: InvoiceDto[];
+  carriers: CarrierDto[];
+  selected: string | null;
   view: string;
-  filter: LineFilter;
+  filter: { query: string; carrier: string; category: string };
+  uploading: number;
 };
 let state: PortalState = {
-  portal: seedInvoicePortal(),
-  selected: "i1",
+  load: "idle",
+  error: "",
+  invoices: [],
+  carriers: [],
+  selected: null,
   view: "inbox",
   filter: { query: "", carrier: "", category: "" },
+  uploading: 0,
 };
 const listeners = new Set<() => void>();
 function setState(patch: Partial<PortalState>) {
@@ -75,6 +77,65 @@ function usePortal() {
   );
 }
 
+class ApiFailure extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+/** Calls the API through the BFF; errors carry the API's Hungarian message. */
+async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`/api/erp/${path}`, init);
+  const body = (await res.json().catch(() => null)) as {
+    data?: T;
+    error?: { message: string };
+  } | null;
+  if (!res.ok || !body || body.data === undefined)
+    throw new ApiFailure(
+      res.status,
+      body?.error?.message ?? "Váratlan hiba, próbálja újra.",
+    );
+  return body.data;
+}
+
+async function reload() {
+  setState({ load: "loading" });
+  try {
+    const [invoices, carriers] = await Promise.all([
+      api<InvoiceDto[]>("invoices"),
+      api<CarrierDto[]>("carriers"),
+    ]);
+    setState({
+      load: "ready",
+      invoices,
+      carriers,
+      selected: state.selected ?? invoices[0]?.id ?? null,
+    });
+  } catch (e) {
+    if (e instanceof ApiFailure && e.status === 401)
+      setState({ load: "login" });
+    else setState({ load: "error", error: (e as Error).message });
+  }
+}
+
+function replaceInvoice(next: InvoiceDto) {
+  const exists = state.invoices.some((i) => i.id === next.id);
+  setState({
+    invoices: exists
+      ? state.invoices.map((i) => (i.id === next.id ? next : i))
+      : [next, ...state.invoices],
+  });
+}
+
+/** Money arrives as forint strings; it becomes a number only for display (hu-HU). */
+const huf = (s: string | null) => (s == null ? "—" : ft(Number(s)));
+const sumOf = (xs: (string | null)[]) =>
+  xs.reduce((a, s) => a + (s ? Number(s) : 0), 0);
+const date = (d: string | null) => (d ? ds(d) : "—");
+
 const VIEWS: [string, string][] = [
   ["inbox", "Beérkezett számlák"],
   ["items", "Tételek"],
@@ -82,15 +143,9 @@ const VIEWS: [string, string][] = [
   ["upload", "Feltöltés"],
 ];
 
-const qty = (n: number, unit: string) =>
-  `${Number.isInteger(n) ? fmt(n) : fmt(n, 2)} ${unit}`;
-
-function carrierName(p: InvoicePortal, id: string | null) {
-  return p.carriers.find((c) => c.id === id)?.name;
-}
-
-function InvoiceStatusPill({ invoice }: { invoice: IncomingInvoice }) {
-  if (invoice.assigned) return <Pill tone="success">Hozzárendelve</Pill>;
+function InvoiceStatusPill({ invoice }: { invoice: InvoiceDto }) {
+  if (invoice.status === "assigned")
+    return <Pill tone="success">Hozzárendelve</Pill>;
   return invoice.status === "unassigned" ? (
     <Pill tone="destructive">Besorolatlan</Pill>
   ) : (
@@ -99,7 +154,10 @@ function InvoiceStatusPill({ invoice }: { invoice: IncomingInvoice }) {
 }
 
 export function InboundTab() {
-  const { view } = usePortal();
+  const { view, load, error } = usePortal();
+  useEffect(() => {
+    if (state.load === "idle") void reload();
+  }, []);
   return (
     <>
       <TabBar
@@ -107,29 +165,58 @@ export function InboundTab() {
         active={view}
         onSelect={(v) => setState({ view: v })}
       />
-      {view === "inbox" ? <InvoicesView /> : null}
-      {view === "items" ? <ItemsView /> : null}
-      {view === "carriers" ? <CarriersView /> : null}
-      {view === "upload" ? <UploadView /> : null}
+      {load === "idle" || load === "loading" ? (
+        <Small>Betöltés…</Small>
+      ) : load === "login" ? (
+        <Alert lvl="warn">
+          A számlák megtekintéséhez{" "}
+          <Link href="/login" className="font-semibold underline">
+            jelentkezzen be
+          </Link>
+          .
+        </Alert>
+      ) : load === "error" ? (
+        <Alert lvl="bad">
+          {error}{" "}
+          <Btn sm onClick={() => void reload()}>
+            Újra
+          </Btn>
+        </Alert>
+      ) : (
+        <>
+          {view === "inbox" ? <InvoicesView /> : null}
+          {view === "items" ? <ItemsView /> : null}
+          {view === "carriers" ? <CarriersView /> : null}
+          {view === "upload" ? <UploadView /> : null}
+        </>
+      )}
     </>
   );
 }
 
 function InvoicesView() {
-  const { portal, selected } = usePortal();
-  const k = invoiceKpis(portal);
+  const { invoices, selected } = usePortal();
+  if (!invoices.length)
+    return (
+      <EmptyState message="Még nincs feltöltött számla. A Feltöltés fülön adhat hozzá PDF-et vagy fotót." />
+    );
+  const pending = invoices.filter((i) => i.status !== "assigned").length;
   return (
     <>
       <Grid cols={4} className="mb-3.5">
-        <Kpi label="Számla" value={k.count} />
-        <Kpi label="Bruttó összesen" value={ft(k.gross)} />
-        <Kpi label="Automatikusan besorolt" value={k.auto} />
+        <Kpi label="Számla" value={invoices.length} />
         <Kpi
-          label="Jóváhagyásra vár"
+          label="Bruttó összesen"
+          value={ft(sumOf(invoices.map((i) => i.gross)))}
+        />
+        <Kpi
+          label="Hozzárendelve"
+          value={invoices.filter((i) => i.status === "assigned").length}
+        />
+        <Kpi
+          label="Ellenőrzésre vár"
           value={
-            <span className={cn(k.pending > 0 && "text-warning")}>
-              {k.pending}
-            </span>
+            <span className={cn(pending > 0 && "text-warning")}>{pending}</span>
           }
         />
       </Grid>
@@ -137,7 +224,7 @@ function InvoicesView() {
         <Panel className="p-0">
           <h2 className="border-b border-border px-4 py-3">Számlák</h2>
           <ul>
-            {portal.invoices.map((i) => (
+            {invoices.map((i) => (
               <li key={i.id} className="border-b border-border last:border-b-0">
                 <button
                   type="button"
@@ -145,12 +232,14 @@ function InvoicesView() {
                   onClick={() => setState({ selected: i.id })}
                   className="grid w-full cursor-pointer grid-cols-[1fr_auto] gap-x-2.5 gap-y-0.5 px-4 py-2.5 text-left outline-ring hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 aria-[current]:bg-accent"
                 >
-                  <span className="font-semibold">{i.supplier}</span>
+                  <span className="font-semibold">
+                    {i.supplier ?? i.fileName}
+                  </span>
                   <span className="text-right font-semibold tabular-nums">
-                    {ft(i.gross)}
+                    {huf(i.gross)}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {ds(i.date)} · <Mono>{i.number}</Mono>
+                    {date(i.issueDate)} · <Mono>{i.number ?? "—"}</Mono>
                   </span>
                   <span className="text-right">
                     <InvoiceStatusPill invoice={i} />
@@ -166,22 +255,34 @@ function InvoicesView() {
   );
 }
 
+async function assign(id: string, costCarrier: string | null) {
+  try {
+    replaceInvoice(
+      await api<InvoiceDto>(`invoices/${id}/carrier`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ costCarrier }),
+      }),
+    );
+    toast(costCarrier ? `Hozzárendelve: ${costCarrier}` : "Besorolatlan");
+  } catch (e) {
+    toast((e as Error).message);
+  }
+}
+
 function InvoiceDetail() {
-  const { portal, selected } = usePortal();
-  const i = portal.invoices.find((x) => x.id === selected);
+  const { invoices, carriers, selected } = usePortal();
+  const [imageOpen, setImageOpen] = useState(false);
+  const i = invoices.find((x) => x.id === selected);
   if (!i) return null;
-  const assigned = portal.carriers.find((c) => c.id === i.assigned);
-  const pick = (carrierId: string) => {
-    setState({ portal: assignCarrier(portal, i.id, carrierId) });
-    toast(`Hozzárendelve: ${carrierName(portal, carrierId)}`);
-  };
   return (
     <Panel>
       <div className="mb-3.5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2>{i.supplier}</h2>
+          <h2>{i.supplier ?? i.fileName}</h2>
           <Small>
-            Adószám {i.taxNumber} · <Mono>{i.number}</Mono>
+            Adószám {i.supplierTaxNumber ?? "—"} ·{" "}
+            <Mono>{i.number ?? "—"}</Mono>
           </Small>
         </div>
         <InvoiceStatusPill invoice={i} />
@@ -189,14 +290,14 @@ function InvoiceDetail() {
       <dl className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-4 gap-y-2.5">
         {(
           [
-            ["Kelt / teljesítés", ds(i.date)],
-            ["Fizetési határidő", ds(i.due)],
-            ["Fizetési mód", i.payment],
-            ["Kategória", i.category],
+            ["Kelte", date(i.issueDate)],
+            ["Fizetési határidő", date(i.dueDate)],
+            ["Fizetési mód", i.paymentMethod ?? "—"],
+            ["Kategória", i.category ?? "—"],
             [
               "Nettó / ÁFA / bruttó",
               <Mono key="sum">
-                {ft(i.net)} / {ft(i.vat)} / {ft(i.gross)}
+                {huf(i.net)} / {huf(i.vat)} / {huf(i.gross)}
               </Mono>,
             ],
           ] as const
@@ -216,120 +317,160 @@ function InvoiceDetail() {
             <TableHead numeric>Menny.</TableHead>
             <TableHead numeric>Egységár</TableHead>
             <TableHead numeric>Nettó</TableHead>
-            <TableHead numeric>ÁFA</TableHead>
+            <TableHead numeric>ÁFA %</TableHead>
             <TableHead numeric>Bruttó</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {i.lines.map((l, n) => (
-            <TableRow key={n}>
-              <TableCell>{l.name}</TableCell>
-              <TableCell numeric>{qty(l.qty, l.unit)}</TableCell>
-              <TableCell numeric>{ft(l.unitPrice)}</TableCell>
-              <TableCell numeric>{ft(l.net)}</TableCell>
-              <TableCell numeric>{ft(l.vat)}</TableCell>
-              <TableCell numeric>{ft(l.gross)}</TableCell>
+          {i.lines.length ? (
+            i.lines.map((l, n) => (
+              <TableRow key={n}>
+                <TableCell>{l.name}</TableCell>
+                <TableCell numeric>
+                  {l.quantity == null
+                    ? "—"
+                    : `${fmt(Number(l.quantity), Number.isInteger(Number(l.quantity)) ? 0 : 2)} ${l.unit ?? ""}`}
+                </TableCell>
+                <TableCell numeric>{huf(l.unitPrice)}</TableCell>
+                <TableCell numeric>{huf(l.net)}</TableCell>
+                <TableCell numeric>{l.vatRate ?? "—"}</TableCell>
+                <TableCell numeric>{huf(l.gross)}</TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} className="text-muted-foreground">
+                A tételek nem olvashatók.
+              </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
       {i.warning ? <Alert lvl="bad">{i.warning}</Alert> : null}
-      {i.note ? <Alert lvl="ok">{i.note}</Alert> : null}
       <div className="mt-4 rounded-lg border border-dashed border-border bg-muted p-3.5">
-        <div className="text-label tracking-wider text-muted-foreground uppercase">
-          Kézzel írt jelölés a számlán
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-label tracking-wider text-muted-foreground uppercase">
+            Költségviselő
+          </div>
+          <Btn sm onClick={() => setImageOpen(true)}>
+            Számlakép megtekintése
+          </Btn>
         </div>
-        <p className="mt-1 text-lg italic">„{i.handwriting}”</p>
-        <div className="mt-3 text-label tracking-wider text-muted-foreground uppercase">
-          AI-javaslat költségviselőre
-        </div>
-        <ul className="mt-2 flex flex-col gap-1.5">
-          {i.candidates.map((k) => {
-            const c = portal.carriers.find((x) => x.id === k.carrier);
-            if (!c) return null;
-            return (
-              <li
-                key={k.carrier}
-                className="grid grid-cols-[1fr_auto] items-center gap-2.5 rounded-lg border border-border bg-card px-2.5 py-2 sm:grid-cols-[1fr_auto_auto]"
-              >
-                <div className="min-w-0">
-                  <div className="font-semibold">{c.name}</div>
-                  <Small>
-                    {c.type} · {k.why}
-                  </Small>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground tabular-nums max-sm:col-span-2 max-sm:row-start-2">
-                  <ProgressBar
-                    value={k.confidence}
-                    className="w-28"
-                    aria-label={`${c.name} bizonyossága`}
-                  />
-                  {k.confidence}%
-                </div>
-                <Btn sm onClick={() => pick(k.carrier)}>
-                  Ezt
-                </Btn>
-              </li>
-            );
-          })}
-        </ul>
         <Row className="mt-2.5">
           <Sel
-            aria-label="Más költségviselő"
+            aria-label="Költségviselő"
+            key={`${i.id}-${i.costCarrier}`}
             defaultValue=""
-            onCommit={(el) => el.value && pick(el.value)}
+            onCommit={(el) => el.value && void assign(i.id, el.value)}
           >
-            <option value="">Más költségviselő…</option>
-            {portal.carriers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.type})
+            <option value="">Költségviselő választása…</option>
+            {carriers.map((c) => (
+              <option key={`${c.type}-${c.name}`} value={c.name}>
+                {c.name} ({c.type === "vehicle" ? "jármű" : "gép"}
+                {c.detail ? ` · ${c.detail}` : ""})
               </option>
             ))}
           </Sel>
-          <Btn
-            kind="pri"
-            disabled={!assigned}
-            onClick={() => {
-              setState({ portal: approveInvoice(portal, i.id) });
-              toast("Jóváhagyva");
-            }}
-          >
-            {assigned
-              ? `Jóváhagyás: ${assigned.name}`
-              : "Válasszon költségviselőt"}
-          </Btn>
-          <Btn
-            onClick={() => {
-              setState({ portal: unassignInvoice(portal, i.id) });
-              toast("Besorolatlan");
-            }}
-          >
-            Besorolatlan
-          </Btn>
+          <Btn onClick={() => void assign(i.id, null)}>Besorolatlan</Btn>
         </Row>
         <Small className="mt-1.5">
-          {assigned ? (
+          {i.costCarrier ? (
             <>
-              Jelenleg: <b>{assigned.name}</b> ({assigned.type}).
+              Jelenleg: <b>{i.costCarrier}</b>.
             </>
           ) : (
-            "Nincs hozzárendelve – a tétel a „besorolatlan” sorban marad, amíg valaki dönt."
-          )}{" "}
-          {i.status === "review"
-            ? "A bizonyosság 85% alatt van, ezért emberi jóváhagyás kell."
-            : null}
+            "Nincs hozzárendelve: válassza ki, melyik járműhöz vagy géphez tartozik a számla."
+          )}
         </Small>
       </div>
+      <InvoiceImageDialog
+        invoice={i}
+        open={imageOpen}
+        onOpenChange={setImageOpen}
+      />
     </Panel>
   );
 }
 
+/** The stored invoice file, streamed through our origin so the frame can print it. */
+function InvoiceImageDialog({
+  invoice,
+  open,
+  onOpenChange,
+}: {
+  invoice: InvoiceDto;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const frame = useRef<HTMLIFrameElement>(null);
+  const src = `/api/erp/invoices/${invoice.id}/file?raw=1`;
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setLoaded(false);
+        onOpenChange(o);
+      }}
+    >
+      <DialogContent className="sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>
+            Számlakép · {invoice.supplier ?? invoice.fileName}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="relative h-[70vh] overflow-hidden rounded-lg border border-border bg-muted">
+          {!loaded ? <Small className="absolute p-3">Betöltés…</Small> : null}
+          <iframe
+            ref={frame}
+            src={src}
+            title={`Számlakép: ${invoice.supplier ?? invoice.fileName}`}
+            onLoad={() => setLoaded(true)}
+            className="size-full bg-card"
+          />
+        </div>
+        <DialogFooter>
+          <Btn
+            kind="pri"
+            disabled={!loaded}
+            onClick={() => frame.current?.contentWindow?.print()}
+          >
+            Nyomtatás
+          </Btn>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ItemsView() {
-  const { portal, filter } = usePortal();
-  const rows = filterLineRows(portal, filter);
-  const total = sumLines(rows);
-  const setFilter = (patch: Partial<LineFilter>) =>
+  const { invoices, filter } = usePortal();
+  const setFilter = (patch: Partial<PortalState["filter"]>) =>
     setState({ filter: { ...filter, ...patch } });
+  const q = filter.query.trim().toLowerCase();
+  const rows = invoices
+    .filter(
+      (i) =>
+        (!filter.carrier ||
+          (filter.carrier === "none"
+            ? !i.costCarrier
+            : i.costCarrier === filter.carrier)) &&
+        (!filter.category || i.category === filter.category),
+    )
+    .flatMap((i) => i.lines.map((l) => ({ ...l, invoice: i })))
+    .filter(
+      (r) =>
+        !q ||
+        [r.name, r.invoice.supplier, r.invoice.number, r.invoice.costCarrier]
+          .filter(Boolean)
+          .some((s) => s!.toLowerCase().includes(q)),
+    );
+  const carriers = [
+    ...new Set(invoices.map((i) => i.costCarrier).filter(Boolean)),
+  ];
+  const categories = [
+    ...new Set(invoices.map((i) => i.category).filter(Boolean)),
+  ];
   return (
     <>
       <Row className="mb-3">
@@ -347,10 +488,8 @@ function ItemsView() {
           className="max-w-full rounded-lg border border-input bg-card px-2 py-1.5 text-control"
         >
           <option value="">Minden költségviselő</option>
-          {portal.carriers.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
+          {carriers.map((c) => (
+            <option key={c}>{c}</option>
           ))}
           <option value="none">Besorolatlan</option>
         </select>
@@ -361,7 +500,7 @@ function ItemsView() {
           className="max-w-full rounded-lg border border-input bg-card px-2 py-1.5 text-control"
         >
           <option value="">Minden kategória</option>
-          {invoiceCategories(portal).map((k) => (
+          {categories.map((k) => (
             <option key={k}>{k}</option>
           ))}
         </select>
@@ -375,9 +514,7 @@ function ItemsView() {
               <TableHead>Számlaszám</TableHead>
               <TableHead>Tétel</TableHead>
               <TableHead>Kategória</TableHead>
-              <TableHead numeric>Menny.</TableHead>
               <TableHead numeric>Nettó</TableHead>
-              <TableHead numeric>ÁFA</TableHead>
               <TableHead numeric>Bruttó</TableHead>
               <TableHead>Költségviselő</TableHead>
               <TableHead>Állapot</TableHead>
@@ -394,22 +531,18 @@ function ItemsView() {
                   }
                 >
                   <TableCell className="whitespace-nowrap">
-                    {ds(r.invoice.date)}
+                    {date(r.invoice.issueDate)}
                   </TableCell>
-                  <TableCell>{r.invoice.supplier}</TableCell>
+                  <TableCell>{r.invoice.supplier ?? "—"}</TableCell>
                   <TableCell>
-                    <Mono>{r.invoice.number}</Mono>
+                    <Mono>{r.invoice.number ?? "—"}</Mono>
                   </TableCell>
                   <TableCell>{r.name}</TableCell>
-                  <TableCell>{r.invoice.category}</TableCell>
-                  <TableCell numeric>{qty(r.qty, r.unit)}</TableCell>
-                  <TableCell numeric>{ft(r.net)}</TableCell>
-                  <TableCell numeric>{ft(r.vat)}</TableCell>
-                  <TableCell numeric>{ft(r.gross)}</TableCell>
+                  <TableCell>{r.invoice.category ?? "—"}</TableCell>
+                  <TableCell numeric>{huf(r.net)}</TableCell>
+                  <TableCell numeric>{huf(r.gross)}</TableCell>
                   <TableCell>
-                    {carrierName(portal, r.invoice.assigned) ?? (
-                      <i>besorolatlan</i>
-                    )}
+                    {r.invoice.costCarrier ?? <i>besorolatlan</i>}
                   </TableCell>
                   <TableCell>
                     <InvoiceStatusPill invoice={r.invoice} />
@@ -418,7 +551,7 @@ function ItemsView() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={11} className="text-muted-foreground">
+                <TableCell colSpan={9} className="text-muted-foreground">
                   Nincs a szűrésnek megfelelő tétel.
                 </TableCell>
               </TableRow>
@@ -427,14 +560,20 @@ function ItemsView() {
         </Table>
       </Panel>
       <Small className="mt-1.5">
-        {rows.length} tétel · nettó {ft(total.net)} · bruttó {ft(total.gross)}
+        {rows.length} tétel · nettó {ft(sumOf(rows.map((r) => r.net)))} · bruttó{" "}
+        {ft(sumOf(rows.map((r) => r.gross)))}
       </Small>
     </>
   );
 }
 
 function CarriersView() {
-  const { portal } = usePortal();
+  const { invoices, carriers } = usePortal();
+  const total = (name: string | null) => {
+    const own = invoices.filter((i) => i.costCarrier === name);
+    return { count: own.length, gross: sumOf(own.map((i) => i.gross)) };
+  };
+  const unassigned = total(null);
   return (
     <>
       <Panel className="p-0">
@@ -443,86 +582,151 @@ function CarriersView() {
             <TableRow>
               <TableHead>Költségviselő</TableHead>
               <TableHead>Típus</TableHead>
-              <TableHead>Aliasok</TableHead>
-              <TableHead numeric>Tételek</TableHead>
-              <TableHead numeric>Nettó összesen</TableHead>
+              <TableHead>Adatok</TableHead>
+              <TableHead numeric>Számlák</TableHead>
               <TableHead numeric>Bruttó összesen</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {carrierTotals(portal).map(({ carrier: c, lines, net, gross }) => (
-              <TableRow key={c?.id ?? "none"}>
-                <TableCell>
-                  {c ? (
-                    <>
-                      <b>{c.name}</b>
-                      {c.note ? <Small>{c.note}</Small> : null}
-                    </>
-                  ) : (
-                    <i>Besorolatlan</i>
-                  )}
-                </TableCell>
-                <TableCell>{c?.type ?? "—"}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {c?.aliases.join(", ")}
-                </TableCell>
-                <TableCell numeric>{lines}</TableCell>
-                <TableCell numeric>{ft(net)}</TableCell>
-                <TableCell numeric>{ft(gross)}</TableCell>
-              </TableRow>
-            ))}
+            {carriers.map((c) => {
+              const t = total(c.name);
+              return (
+                <TableRow key={`${c.type}-${c.name}`}>
+                  <TableCell>
+                    <b>{c.name}</b>
+                  </TableCell>
+                  <TableCell>
+                    {c.type === "vehicle" ? "Jármű" : "Gép"}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {c.detail ?? "—"}
+                  </TableCell>
+                  <TableCell numeric>{t.count}</TableCell>
+                  <TableCell numeric>{ft(t.gross)}</TableCell>
+                </TableRow>
+              );
+            })}
+            <TableRow>
+              <TableCell>
+                <i>Besorolatlan</i>
+              </TableCell>
+              <TableCell>—</TableCell>
+              <TableCell />
+              <TableCell numeric>{unassigned.count}</TableCell>
+              <TableCell numeric>{ft(unassigned.gross)}</TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </Panel>
       <Small className="mt-1.5">
-        Az élesben a járművek és gépek a Mine ERP jármű- és géptörzséből jönnek;
-        itt a hat számlához elegendő törzset vettünk fel. Az aliasok (becenevek,
-        rövidítések) a kézírás felismerését segítik.
+        A járművek és gépek a jármű- és géptörzsből jönnek ({carriers.length}{" "}
+        tétel).
       </Small>
     </>
   );
 }
 
-const STEPS: [string, string][] = [
-  [
-    "1. Beérkezés",
-    "Szkenner-mappa, e-mail (szamla@…) vagy mobilfotó. Duplikátum-szűrés számlaszám + adószám alapján.",
-  ],
-  [
-    "2. Nyomtatott adat kinyerése",
-    "Szállító, adószám, számlaszám, dátumok, fizetési mód, tételek, nettó/ÁFA/bruttó. Összegellenőrzés: tételek összege = végösszeg.",
-  ],
-  [
-    "3. Kézírás értelmezése",
-    "A kézzel írt jelölést a költségviselő-törzshöz illeszti, bizonyossági pontszámmal. 85% felett automatikus, alatta jóváhagyásra vár.",
-  ],
-  [
-    "4. Nyilvántartás",
-    "Kereshető tételtábla, költségviselőnkénti összesítés, export Excelbe; a gépköltség a rendszerterv 4.6 pontja szerint a termékárba folyik.",
-  ],
-];
+async function uploadFiles(files: File[]) {
+  for (const f of files) {
+    setState({ uploading: state.uploading + 1 });
+    try {
+      const form = new FormData();
+      form.append("file", f);
+      const inv = await api<InvoiceDto>("invoices", {
+        method: "POST",
+        body: form,
+      });
+      replaceInvoice(inv);
+      setState({ selected: inv.id });
+      toast(
+        inv.status === "assigned"
+          ? `${f.name}: feldolgozva, költségviselő ${inv.costCarrier}`
+          : `${f.name}: feldolgozva, ellenőrzésre vár`,
+      );
+    } catch (e) {
+      toast(`${f.name}: ${(e as Error).message}`);
+    } finally {
+      setState({ uploading: state.uploading - 1 });
+    }
+  }
+}
+
+async function resetInvoices() {
+  try {
+    const { removed } = await api<{ removed: number }>("invoices", {
+      method: "DELETE",
+    });
+    setState({ selected: null });
+    await reload();
+    toast(`${removed} számla törölve, a fájlok újra feltölthetők`);
+    return true;
+  } catch (e) {
+    toast((e as Error).message);
+    return false;
+  }
+}
+
+/** Development helper: wipes every invoice after an explicit confirmation. */
+function ResetInvoices() {
+  const { invoices } = usePortal();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  return (
+    <>
+      <Btn kind="bad" disabled={!invoices.length} onClick={() => setOpen(true)}>
+        Összes számla törlése (teszt)
+      </Btn>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Összes számla törlése</DialogTitle>
+          </DialogHeader>
+          <p>
+            {invoices.length} számla, a tételei és a tárolt fájlok véglegesen
+            törlődnek. A járművek és gépek megmaradnak, a törlés bekerül a
+            naplóba. Nem vonható vissza.
+          </p>
+          <DialogFooter>
+            <Btn onClick={() => setOpen(false)}>Mégse</Btn>
+            <Btn
+              kind="bad"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                if (await resetInvoices()) setOpen(false);
+                setBusy(false);
+              }}
+            >
+              {busy ? "Törlés…" : "Végleges törlés"}
+            </Btn>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 function UploadView() {
+  const { uploading } = usePortal();
   const file = useRef<HTMLInputElement>(null);
-  const received = (n: number) =>
-    toast(`${n} fájl fogadva – élesben itt indulna a feldolgozás`);
   return (
     <>
       <button
         type="button"
+        disabled={uploading > 0}
         onClick={() => file.current?.click()}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
-          received(e.dataTransfer.files.length);
+          void uploadFiles([...e.dataTransfer.files]);
         }}
-        className="mb-4 w-full cursor-pointer rounded-lg border-2 border-dashed border-border px-4 py-7 text-center text-muted-foreground outline-ring hover:border-primary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1"
+        className="mb-4 w-full cursor-pointer rounded-lg border-2 border-dashed border-border px-4 py-7 text-center text-muted-foreground outline-ring hover:border-primary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 disabled:cursor-wait"
       >
-        Húzza ide a szkennelt számlát vagy fotót (PDF, JPG, PNG) — vagy
-        kattintson.
+        {uploading > 0
+          ? "Feldolgozás… (fájlonként kb. fél perc)"
+          : "Húzza ide a szkennelt számlát vagy fotót (PDF, JPG, PNG, legfeljebb 10 MB), vagy kattintson."}
         <Small className="mt-1">
-          A demóban a feltöltés nem dolgoz fel új fájlt; a folyamat az alábbi
-          lépésekkel futna.
+          A fájl a tárhelyen a számla kelte szerinti ÉV-HÓNAP mappába kerül.
         </Small>
       </button>
       <input
@@ -530,20 +734,16 @@ function UploadView() {
         type="file"
         hidden
         multiple
-        accept=".pdf,image/*"
+        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
         onChange={(e) => {
-          received(e.currentTarget.files?.length ?? 0);
+          void uploadFiles([...(e.currentTarget.files ?? [])]);
           e.currentTarget.value = "";
         }}
       />
-      <Grid cols={4}>
-        {STEPS.map(([title, text]) => (
-          <Panel key={title}>
-            <b className="mb-1 block">{title}</b>
-            <Small>{text}</Small>
-          </Panel>
-        ))}
-      </Grid>
+      <Row className="mt-2">
+        <ResetInvoices />
+        <Small>Csak fejlesztői környezetben működik.</Small>
+      </Row>
     </>
   );
 }
