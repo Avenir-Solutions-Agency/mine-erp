@@ -6,7 +6,9 @@ test("every prototype screen renders", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {
-    if (m.type() === "error") errors.push(m.text());
+    // Signed out, the real-data screens (Mérleg) get 401 from /api/erp and show the login prompt.
+    if (m.type() === "error" && !m.text().includes("status of 401"))
+      errors.push(m.text());
   });
   await page.goto("/dash");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

@@ -4,7 +4,8 @@ import { accessToken } from "@/lib/session";
 // Backend-for-frontend: the browser calls /api/erp/*, this adds the Supabase token from the
 // httpOnly cookie and forwards to the NestJS API. Only the API's own routes pass through.
 const SAFE_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
-const ALLOWED = /^(invoices(\/[0-9a-f-]{36}(\/(file|carrier))?)?|carriers)$/;
+const ALLOWED =
+  /^(invoices(\/[0-9a-f-]{36}(\/(file|carrier))?)?|carriers|scale\/live|weighings(\/[0-9a-f-]{36}\/(second|void))?)$/;
 
 async function forward(
   request: Request,

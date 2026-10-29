@@ -17,6 +17,13 @@ export interface Actor {
 type AuthedRequest = Request & { actor?: Actor };
 
 /**
+ * Tokens Supabase confirmed in the last 30 s, so the Mérleg screen's live polling does not call
+ * Supabase Auth twice a second. shortcut: a signed-out token stays valid for up to 30 s; the
+ * JWKS check in T-005 removes the round trip and this cache.
+ */
+const verified = new Map<string, { actor: Actor; until: number }>();
+
+/**
  * Checks the Supabase access token by asking Supabase Auth who it belongs to.
  * shortcut: one Auth round trip per request and no `aal2` check; T-005 switches to JWKS
  * verification and requires TOTP for office users before production.
@@ -29,6 +36,11 @@ export class AuthGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest<AuthedRequest>();
     const token = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
     if (!token) throw new ApiError(401, "unauthenticated", "Jelentkezzen be.");
+    const cached = verified.get(token);
+    if (cached && cached.until > Date.now()) {
+      req.actor = cached.actor;
+      return true;
+    }
     const res = await fetch(`${this.env.SUPABASE_URL}/auth/v1/user`, {
       headers: {
         apikey: this.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
@@ -48,6 +60,8 @@ export class AuthGuard implements CanActivate {
       id: user.id,
       email: typeof user.email === "string" ? user.email : null,
     };
+    if (verified.size > 500) verified.clear();
+    verified.set(token, { actor: req.actor, until: Date.now() + 30_000 });
     return true;
   }
 }
