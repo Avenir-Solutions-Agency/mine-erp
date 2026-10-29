@@ -6,8 +6,8 @@ test("every prototype screen renders", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {
-    // Signed out, the real-data screens (Mérleg) get 401 from /api/erp and show the login prompt.
-    if (m.type() === "error" && !m.text().includes("status of 401"))
+    // Real-data screens (Mérleg) get 401 when signed out and 503 when no API is configured (CI); both show a message.
+    if (m.type() === "error" && !/status of (401|503)/.test(m.text()))
       errors.push(m.text());
   });
   await page.goto("/dash");
