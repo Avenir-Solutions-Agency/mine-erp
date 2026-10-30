@@ -56,6 +56,10 @@ export interface ReportInput {
   product: { name: string; vtsz: string | null; ekaerRequired: boolean } | null;
   plannedKg: number;
   valueFiller: bigint;
+  /** Where the load goes when it is not the customer's seat (paper tickets, T-017). */
+  unloadingAddress?: string | null;
+  /** Where it is loaded when it is not our site (the quarries on the paper tickets). */
+  loadingAddress?: string | null;
 }
 
 /** Hungarian reasons a report cannot be filed yet; empty means it can. */
@@ -77,6 +81,10 @@ export function ekaerProblems(r: ReportInput): string[] {
     if (!parseHuAddress(r.customer.address))
       p.push("A vevő címe „irányítószám település, utca” formában kell.");
   }
+  if (r.unloadingAddress && !parseHuAddress(r.unloadingAddress))
+    p.push("A lerakodási cím „irányítószám település, utca” formában kell.");
+  if (r.loadingAddress && !parseHuAddress(r.loadingAddress))
+    p.push("A felrakodási cím „irányítószám település, utca” formában kell.");
   if (
     !Number.isInteger(r.plannedKg) ||
     r.plannedKg <= 0 ||

@@ -39,7 +39,13 @@ export interface ReportView {
   requestedKg: number | null;
   changeReason: string | null;
   arrivalAt: Date | null;
-  weighing: { status: "open" | "completed" | "void"; plate: string };
+  weighing: {
+    status: "open" | "completed" | "void";
+    plate: string;
+    /** Set for paper tickets whose load or unload place is not our site or the customer's seat. */
+    loadingAddress?: string | null;
+    unloadingAddress?: string | null;
+  };
   customer: {
     name: string;
     taxNumber: string | null;
@@ -73,7 +79,11 @@ export interface ReportStore {
 }
 
 function tradeCard(r: ReportView): TradeCard {
-  const unload = parseHuAddress(r.customer!.address)!;
+  const unload = parseHuAddress(
+    r.weighing.unloadingAddress ?? r.customer!.address,
+  )!;
+  const load =
+    parseHuAddress(r.weighing.loadingAddress ?? null) ?? COMPANY.site;
   return {
     orderNumber: r.orderNumber,
     tradeType: "D",
@@ -93,7 +103,7 @@ function tradeCard(r: ReportView): TradeCard {
     vehicle: { plateNumber: r.weighing.plate, country: "HU" },
     deliveryPlans: [
       {
-        loadLocation: { country: "HU", ...COMPANY.site },
+        loadLocation: { country: "HU", ...load },
         unloadLocation: { country: "HU", ...unload },
         items: [
           {
@@ -131,6 +141,8 @@ export async function fileReport(
   const problems = ekaerProblems({
     weighingStatus: r.weighing.status,
     plate: r.weighing.plate,
+    unloadingAddress: r.weighing.unloadingAddress,
+    loadingAddress: r.weighing.loadingAddress,
     customer: r.customer,
     product: r.product,
     plannedKg: r.plannedKg,
@@ -319,7 +331,12 @@ export function dbReportStore(db: Db): ReportStore {
       if (!row) return null;
       return {
         ...row.r,
-        weighing: { status: row.w.status, plate: row.w.plate },
+        weighing: {
+          status: row.w.status,
+          plate: row.w.plate,
+          loadingAddress: row.w.loadingAddress,
+          unloadingAddress: row.w.unloadingAddress,
+        },
         customer: row.c,
         product: row.p,
       };

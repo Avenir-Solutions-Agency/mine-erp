@@ -98,6 +98,32 @@ describe("fileReport", () => {
     expect(nav.cards.size).toBe(1);
   });
 
+  test("a paper ticket is filed with its own load and unload places", async () => {
+    const nav = simulatedNav();
+    const sent: string[] = [];
+    const spy: typeof fetch = async (url, init) => {
+      if (String(url).endsWith("manageTradeCards"))
+        sent.push(String(init?.body));
+      return nav.fetch(url, init);
+    };
+    const m = memoryStore(
+      report({
+        weighing: {
+          status: "completed",
+          plate: "TBJ586",
+          loadingAddress: "8000 Székesfehérvár, 020195/3 hrsz.",
+          unloadingAddress: "2063 Óbarok, 47.495861, 18.561926",
+        },
+      }),
+    );
+
+    await fileReport(m.store, createEkaerClient(cfg, { fetch: spy }), "r1");
+
+    expect(sent[0]).toContain("Székesfehérvár");
+    expect(sent[0]).toContain("Óbarok");
+    expect(sent[0]).not.toContain("Polgárdi");
+  });
+
   test("after a lost response the retry adopts the report NAV already has", async () => {
     const nav = simulatedNav();
     let calls = 0;

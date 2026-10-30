@@ -20,6 +20,7 @@ import {
   ProductDto,
   ProductInput,
   ProductPatch,
+  RegisterDocumentInput,
   ScaleLiveDto,
   ShipmentDto,
   ShipmentReportDto,
@@ -227,6 +228,19 @@ export const ROUTES: Route[] = [
     auth: "user",
     body: "multipart-file",
     reply: DocumentDto,
+  },
+  {
+    method: "post",
+    path: "/documents/:id/register",
+    summary:
+      "Register a reviewed paper ticket: paper weighing P-<number> and its shipment; EKÁER only without a printed number",
+    auth: "user",
+    body: RegisterDocumentInput,
+    reply: z.object({
+      registryNumber: z.string(),
+      ekaer: z.enum(["printed", "filed", "none"]),
+      warning: z.string().nullable(),
+    }),
   },
   {
     method: "get",

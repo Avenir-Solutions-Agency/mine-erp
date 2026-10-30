@@ -64,6 +64,33 @@ describe("ekaerProblems", () => {
     expect(ekaerProblems(ok)).toEqual([]);
   });
 
+  test("accepts paper-ticket load and unload places in address form", () => {
+    const paper: ReportInput = {
+      ...ok,
+      loadingAddress: "8000 Székesfehérvár, 020195/3 hrsz.",
+      unloadingAddress: "2063 Óbarok, 47.495861, 18.561926",
+    };
+
+    const problems = ekaerProblems(paper);
+
+    expect(problems).toEqual([]);
+  });
+
+  test("refuses load and unload places without zip and town", () => {
+    const paper: ReportInput = {
+      ...ok,
+      loadingAddress: "Csúcsoshegy",
+      unloadingAddress: "Óbarok",
+    };
+
+    const problems = ekaerProblems(paper);
+
+    expect(problems).toEqual([
+      "A lerakodási cím „irányítószám település, utca” formában kell.",
+      "A felrakodási cím „irányítószám település, utca” formában kell.",
+    ]);
+  });
+
   test("names every missing piece in Hungarian", () => {
     const bad: ReportInput = {
       ...ok,

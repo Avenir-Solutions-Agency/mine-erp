@@ -92,6 +92,13 @@
       "when": 1793356454876,
       "tag": "0012_document_extraction",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793357692807,
+      "tag": "0013_paper_weighing",
+      "breakpoints": true
     }
   ]
 }

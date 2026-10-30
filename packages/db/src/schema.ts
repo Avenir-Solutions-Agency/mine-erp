@@ -211,10 +211,28 @@ export const weighing = pgTable(
     /** The SZTORNÓ copy, issued when the weighing is voided; the original stays. */
     voidTicketPath: text("void_ticket_path"),
     voidTicketSha256: text("void_ticket_sha256"),
+    /**
+     * scale = weighed on our bridge; paper = typed in from a reviewed photo of a paper ticket of the
+     * temporary period (T-017), numbered P-<printed number> so it never meets our own MJ sequence.
+     */
+    source: text("source")
+      .$type<"scale" | "paper">()
+      .notNull()
+      .default("scale"),
+    documentId: uuid("document_id")
+      .unique()
+      .references(() => document.id),
+    /** An EKÁER number already printed on the paper ticket: reported elsewhere, not filed again. */
+    paperEkaerTcn: text("paper_ekaer_tcn"),
+    deliveryNoteNumber: text("delivery_note_number"),
+    /** EKÁER load and unload places when they differ from our site and the customer's seat. */
+    loadingAddress: text("loading_address"),
+    unloadingAddress: text("unloading_address"),
     ...audit,
   },
   (t) => [
     index("weighing_first_at_idx").on(t.firstAt),
+    check("weighing_source_chk", sql`${t.source} in ('scale', 'paper')`),
     index("weighing_plate_idx").on(t.plate),
     // At most one open weighing per vehicle, even if two first weighings race.
     uniqueIndex("weighing_one_open_per_plate")
@@ -365,7 +383,7 @@ export const policy = pgTable("policy", {
 });
 
 export type DocumentStatus =
-  "received" | "ingested" | "extracted" | "unreadable";
+  "received" | "ingested" | "extracted" | "unreadable" | "registered";
 
 /**
  * A photo or scan of a paper weigh ticket or delivery note (PRD F1, T-010). The file is stored once
@@ -387,7 +405,7 @@ export const document = pgTable(
     index("document_created_at_idx").on(t.createdAt),
     check(
       "document_status_chk",
-      sql`${t.status} in ('received', 'ingested', 'extracted', 'unreadable')`,
+      sql`${t.status} in ('received', 'ingested', 'extracted', 'unreadable', 'registered')`,
     ),
   ],
 );
