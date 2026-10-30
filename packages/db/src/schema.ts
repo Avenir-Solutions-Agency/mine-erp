@@ -3,6 +3,7 @@ import {
   bigint,
   boolean,
   check,
+  customType,
   index,
   date,
   integer,
@@ -122,6 +123,18 @@ export const incomingInvoiceLine = pgTable(
   (t) => [index("incoming_invoice_line_invoice_id_idx").on(t.invoiceId)],
 );
 
+/**
+ * jsonb that also takes bigint (fillér amounts): stored as a decimal string, since JSON has no
+ * bigint and the default serializer throws. Same column type in the database, no migration.
+ */
+export const eventPayload = customType<{ data: unknown; driverData: string }>({
+  dataType: () => "jsonb",
+  toDriver: (v) =>
+    JSON.stringify(v, (_k, x: unknown) =>
+      typeof x === "bigint" ? x.toString() : x,
+    ),
+});
+
 /** Append-only; see the migration for the grants. */
 export const eventLog = pgTable("event_log", {
   id: id(),
@@ -133,7 +146,7 @@ export const eventLog = pgTable("event_log", {
   entity: text("entity").notNull(),
   entityId: uuid("entity_id"),
   action: text("action").notNull(),
-  payload: jsonb("payload"),
+  payload: eventPayload("payload"),
 });
 
 /** Buyers; no delete, inactive ones stay because old weigh tickets point at them. */
