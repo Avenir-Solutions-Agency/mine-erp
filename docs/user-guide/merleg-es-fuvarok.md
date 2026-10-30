@@ -4,6 +4,7 @@
 
 ## Tartalom
 
+0. [A rendszer elindítása (fejlesztői gépen)](#0-a-rendszer-elindítása-fejlesztői-gépen)
 1. [Fiók létrehozása és belépés](#1-fiók-létrehozása-és-belépés)
 2. [Első beállítás: vevők és termékek](#2-első-beállítás-vevők-és-termékek)
 3. [Mérleg: egy szállítás lemérése](#3-mérleg-egy-szállítás-lemérése)
@@ -16,6 +17,83 @@
 10. [Gyakori helyzetek](#10-gyakori-helyzetek)
 
 ---
+
+## 0. A rendszer elindítása (fejlesztői gépen)
+
+Amíg nincs éles szerver, a rendszer a fejlesztői gépen fut, több részből. Mindegyik külön terminálablakban fut, és ablakonként nyitva kell maradnia. Minden parancsot a projekt mappájából (`Meszko-Polgar-ERP`) adjon ki.
+
+| Rész | Mire való | Cím |
+|---|---|---|
+| Temporal és Gotenberg (Docker) | háttérfolyamatok vezérlése, PDF-készítés | Temporal felület: `http://localhost:8233` |
+| API | az üzleti logika, az adatbázis kezelése | `http://localhost:4000` |
+| Worker | háttérmunka: EKÁER-bejelentés, fotók kiolvasása | nincs felülete |
+| Web | a felület, amit böngészőben használ | `http://localhost:3000` |
+| Mérlegszimulátor | a valódi mérlegfej helyett küld súlyt | a terminálban fut |
+
+Előfeltétel: a `.env.local` fájl ki van töltve a `.env.example` alapján, és a Docker Desktop fut.
+
+### Indítás sorrendben
+
+1. **Docker-szolgáltatások** (egyszer, utána a háttérben futnak):
+   ```
+   docker compose -f infra/docker-compose.yml up -d
+   ```
+2. **Adatbázis-migráció**: új verzió letöltése után mindig futtassa le. Ha nincs új migráció, nem csinál semmit.
+   ```
+   cd packages/db && node --env-file=../../.env.local scripts/migrate.ts && cd ../..
+   ```
+3. **API** (1. ablak). Lefordítja a kódot, és változásra magától újraindul:
+   ```
+   pnpm --filter @mine-erp/api dev
+   ```
+   Akkor jó, ha a `http://localhost:4000/health` válasza `{"data":{"status":"ok"}}`.
+4. **Worker** (2. ablak):
+   ```
+   pnpm --filter @mine-erp/worker start
+   ```
+   Akkor jó, ha kiírja: `worker listening on task queue "documents"`. Szimulált NAV-nál előtte ez is megjelenik: `EKÁER: simulated NAV (EKAER_SIMULATE=true)`.
+   - A worker kódváltozásra **nem** indul újra magától. Új verzió után állítsa le (`Ctrl+C`), és indítsa el újra.
+5. **Web** (3. ablak):
+   ```
+   pnpm --filter @mine-erp/web dev
+   ```
+   Utána nyissa meg a `http://localhost:3000` címet.
+6. **Mérlegszimulátor** (4. ablak), lásd lent.
+
+### A mérlegszimulátor használata
+
+Amíg a valódi mérlegfej nincs bekötve, a szimulátor játssza a mérleget. Másodpercenként négyszer küld súlyt az API-nak, és a Mérleg oldal „Élő súly” mezője ezt mutatja.
+
+1. Indítás:
+   ```
+   pnpm --filter @mine-erp/scale-agent simulate
+   ```
+2. A terminálban ez a sor frissül folyamatosan:
+   ```
+     38560 kg · kapcsolódva · [1] üres [2] rakott [0] le [q] kilép
+   ```
+   Ha `az API nem érhető el` látszik, az API nem fut. Ha `API hiba 401`, a `SCALE_AGENT_TOKEN` nem egyezik a `.env.local`-ban.
+3. Billentyűk (a szimulátor ablakában nyomja meg, Enter nem kell):
+   - **1**: üres kamion áll fel (kb. 14 200 kg);
+   - **2**: rakott kamion áll fel (kb. 38 560 kg);
+   - **0**: a kamion lehajt (üres mérleg);
+   - **q**: kilépés.
+4. Felhajtás után a súly kb. 2,5 másodpercig ingadozik. Ilyenkor a Mérleg oldal **Mozgásban** állapotot mutat, utána **Stabil** lesz. Mérni csak Stabil állapotban lehet.
+
+**Egy teljes mérlegelés kipróbálása a szimulátorral:**
+
+1. A szimulátorban nyomja meg az **1**-et (üres kamion behajt), és várja meg a **Stabil** állapotot.
+2. A Mérleg oldalon töltse ki a rendszámot, a terméket és a vevőt, majd kattintson az **Első mérés** gombra.
+3. A szimulátorban nyomja meg a **2**-t (a kamion megrakva visszaáll), és várja meg a **Stabil** állapotot.
+4. A Nyitott mérlegelések listában kattintson a **Második mérés** gombra. Nettó: kb. 24 360 kg.
+5. Nyomja meg a **0**-t (a kamion lehajt).
+
+**EKÁER-hiba kipróbálása:** szimulált NAV-nál a `HIBA` kezdetű rendszámot (pl. `HIBA123`) a NAV elutasítja. Így ki lehet próbálni a **Sikertelen** állapotot és az **Újrapróbálás** gombot.
+
+### Leállítás
+
+- Az API, a worker, a web és a szimulátor ablakában nyomjon `Ctrl+C`-t.
+- A Docker-szolgáltatások leállítása: `docker compose -f infra/docker-compose.yml down`. Nem kötelező, nyugodtan futhatnak tovább.
 
 ## 1. Fiók létrehozása és belépés
 
