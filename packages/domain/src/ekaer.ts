@@ -87,3 +87,44 @@ export function ekaerProblems(r: ReportInput): string[] {
     p.push("Az érték legalább 1 Ft és legfeljebb 9 számjegy legyen.");
   return p;
 }
+
+/** EKÁER value of a load: net tonnes × list price per tonne, in fillér (half up). */
+export const loadValueFiller = (netKg: number, pricePerTonneFiller: bigint) =>
+  (BigInt(netKg) * pricePerTonneFiller + 500n) / 1000n;
+
+export type AutoDecision =
+  { file: true; valueFiller: bigint } | { file: false; reasons: string[] };
+
+/**
+ * Whether the second weighing files the EKÁER report by itself (T-020): only with the switch on,
+ * a priced, EKÁER-required product and complete customer data. Anything missing leaves it to a
+ * person, with the reasons in Hungarian.
+ */
+export function autoEkaerDecision(input: {
+  enabled: boolean;
+  netKg: number;
+  pricePerTonneFiller: bigint | null;
+  report: Omit<ReportInput, "plannedKg" | "valueFiller">;
+}): AutoDecision {
+  if (!input.enabled)
+    return {
+      file: false,
+      reasons: ["Az automatikus EKÁER-bejelentés ki van kapcsolva."],
+    };
+  const reasons: string[] = [];
+  if (!input.pricePerTonneFiller || input.pricePerTonneFiller <= 0n)
+    reasons.push("A termékhez nincs ár (Ft/t), ezért az érték nem számolható.");
+  const valueFiller = input.pricePerTonneFiller
+    ? loadValueFiller(input.netKg, input.pricePerTonneFiller)
+    : 0n;
+  reasons.push(
+    ...ekaerProblems({
+      ...input.report,
+      plannedKg: input.netKg,
+      valueFiller: valueFiller || 100n,
+    }),
+  );
+  return reasons.length
+    ? { file: false, reasons }
+    : { file: true, valueFiller };
+}

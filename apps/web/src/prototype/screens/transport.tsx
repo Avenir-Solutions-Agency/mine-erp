@@ -27,6 +27,7 @@ import {
   Small,
   TabBar,
 } from "@/prototype/ui";
+import { TransportRules } from "@/prototype/screens/transport-rules";
 import { TransportSummary } from "@/prototype/screens/transport-summary";
 
 // Fuvarok és EKÁER: the real shipment register (PRD F4, T-018). Every completed weighing with a
@@ -106,11 +107,14 @@ export function TransportScreen() {
             items={[
               ["list", "Szállítások"],
               ["summary", "Összesítő és Excel"],
+              ["rules", "Szabályok"],
             ]}
             active={view}
             onSelect={setView}
           />
-          {view === "summary" ? (
+          {view === "rules" ? (
+            <TransportRules />
+          ) : view === "summary" ? (
             <TransportSummary />
           ) : (
             <>

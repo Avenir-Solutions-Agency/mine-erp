@@ -157,6 +157,7 @@ const PRODUCT_FIELDS: MasterField[] = [
   },
   { key: "fractionCode", label: "Frakció", placeholder: "22/63" },
   { key: "vtsz", label: "VTSZ", placeholder: "25171010" },
+  { key: "pricePerTonneHuf", label: "Ár (Ft/t)", placeholder: "pl. 9500" },
   { key: "ekaerRequired", label: "EKÁER-köteles", type: "checkbox" },
   { key: "note", label: "Megjegyzés" },
 ];

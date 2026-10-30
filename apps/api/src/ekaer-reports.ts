@@ -75,6 +75,8 @@ export class EkaerReports {
     plannedKg: number,
     valueHuf: number,
     actor: Actor,
+    /** Started by the automatic rule at the second weighing (T-020), not by a click. */
+    auto = false,
   ) {
     const [row] = await this.db
       .select({ w: weighing, c: customer, p: product })
@@ -115,7 +117,7 @@ export class EkaerReports {
           entity: "ekaer_report",
           entityId: r!.id,
           action: "requested",
-          payload: { weighingId, plannedKg, valueHuf },
+          payload: { weighingId, plannedKg, valueHuf, auto },
         });
         return r!.id;
       })

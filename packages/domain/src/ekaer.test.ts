@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
+  autoEkaerDecision,
   ekaerProblems,
   fillerToHuf,
+  loadValueFiller,
   parseHuAddress,
   type ReportInput,
   vatNumber8,
@@ -76,5 +78,69 @@ describe("ekaerProblems", () => {
 
     expect(problems).toHaveLength(7);
     expect(problems[0]).toMatch(/Sztornózott/);
+  });
+});
+
+describe("autoEkaerDecision", () => {
+  const report = {
+    weighingStatus: "completed" as const,
+    plate: "AACG971",
+    customer: {
+      name: "Út Kft.",
+      taxNumber: "12345678-2-42",
+      address: "1111 Budapest, Fő utca 1",
+    },
+    product: { name: "Zúzottkő 22/63", vtsz: "25171010", ekaerRequired: true },
+  };
+
+  test("files with net tonnes × price when everything is there", () => {
+    const d = autoEkaerDecision({
+      enabled: true,
+      netKg: 24_360,
+      pricePerTonneFiller: 1_000_000n,
+      report,
+    });
+
+    expect(d).toEqual({ file: true, valueFiller: 24_360_000n });
+  });
+
+  test("stays manual when switched off, unpriced or incomplete, and says why", () => {
+    const off = autoEkaerDecision({
+      enabled: false,
+      netKg: 24_360,
+      pricePerTonneFiller: 1_000_000n,
+      report,
+    });
+    const unpriced = autoEkaerDecision({
+      enabled: true,
+      netKg: 24_360,
+      pricePerTonneFiller: null,
+      report,
+    });
+    const noCustomer = autoEkaerDecision({
+      enabled: true,
+      netKg: 24_360,
+      pricePerTonneFiller: 1_000_000n,
+      report: { ...report, customer: null },
+    });
+
+    expect(off).toEqual({
+      file: false,
+      reasons: ["Az automatikus EKÁER-bejelentés ki van kapcsolva."],
+    });
+    expect(unpriced).toMatchObject({
+      file: false,
+      reasons: [expect.stringMatching(/nincs ár/)],
+    });
+    expect(noCustomer).toMatchObject({
+      file: false,
+      reasons: [expect.stringMatching(/vevőt/)],
+    });
+  });
+
+  test("loadValueFiller rounds half up to the fillér", () => {
+    const v = loadValueFiller(1, 1_500n);
+
+    expect(v).toBe(2n);
   });
 });

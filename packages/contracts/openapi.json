@@ -2982,6 +2982,131 @@
         }
       }
     },
+    "/policy": {
+      "get": {
+        "summary": "Office switches (automatic EKÁER at the second weighing)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "ekaerAuto": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["ekaerAuto"],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Hungarian, safe to show"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Change office switches; logged with the person",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ekaerAuto": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "ekaerAuto": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["ekaerAuto"],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Hungarian, safe to show"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/customers": {
       "get": {
         "summary": "Customers",
@@ -3388,6 +3513,18 @@
                           "ekaerRequired": {
                             "type": "boolean"
                           },
+                          "pricePerTonneHuf": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "note": {
                             "type": ["string", "null"]
                           },
@@ -3401,6 +3538,7 @@
                           "fractionCode",
                           "vtsz",
                           "ekaerRequired",
+                          "pricePerTonneHuf",
                           "note",
                           "active"
                         ],
@@ -3487,6 +3625,18 @@
                   "ekaerRequired": {
                     "type": "boolean"
                   },
+                  "pricePerTonneHuf": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 999999999
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "note": {
                     "anyOf": [
                       {
@@ -3533,6 +3683,18 @@
                         "ekaerRequired": {
                           "type": "boolean"
                         },
+                        "pricePerTonneHuf": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "note": {
                           "type": ["string", "null"]
                         },
@@ -3546,6 +3708,7 @@
                         "fractionCode",
                         "vtsz",
                         "ekaerRequired",
+                        "pricePerTonneHuf",
                         "note",
                         "active"
                       ],
@@ -3644,6 +3807,18 @@
                   "ekaerRequired": {
                     "type": "boolean"
                   },
+                  "pricePerTonneHuf": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 999999999
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "note": {
                     "anyOf": [
                       {
@@ -3692,6 +3867,18 @@
                         "ekaerRequired": {
                           "type": "boolean"
                         },
+                        "pricePerTonneHuf": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "note": {
                           "type": ["string", "null"]
                         },
@@ -3705,6 +3892,7 @@
                         "fractionCode",
                         "vtsz",
                         "ekaerRequired",
+                        "pricePerTonneHuf",
                         "note",
                         "active"
                       ],

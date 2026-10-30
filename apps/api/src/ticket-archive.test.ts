@@ -45,6 +45,7 @@ function service(r: WeighingRow, putOnce = true) {
     none as never,
     none as never,
     storage as never,
+    {} as never,
     { WEIGH_TICKET_BUCKET: "weigh-tickets" } as never,
   );
   return { svc, storage, tickets, repo };

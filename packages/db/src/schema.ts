@@ -155,6 +155,8 @@ export const product = pgTable("product", {
   vtsz: text("vtsz"),
   /** Set by hand until the accountant's rule (VTSZ + threshold) is known (PRD §08). */
   ekaerRequired: boolean("ekaer_required").notNull().default(false),
+  /** List price per tonne in fillér; the EKÁER value of an automatic report (T-020). */
+  pricePerTonne: money("price_per_tonne"),
   note: text("note"),
   active: boolean("active").notNull().default(true),
   ...audit,
@@ -328,4 +330,17 @@ export const shipment = pgTable(
 export const shipmentRegistryCounter = pgTable("shipment_registry_counter", {
   year: integer("year").primaryKey(),
   last: integer("last").notNull(),
+});
+
+/**
+ * Switches the office can change (T-020), one row per key, e.g. ekaer.auto = { enabled: false }.
+ * Every change is written to event_log with the person who made it.
+ */
+export const policy = pgTable("policy", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedBy: uuid("updated_by"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
