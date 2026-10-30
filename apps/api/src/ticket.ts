@@ -7,7 +7,7 @@ import { ENV, type Env } from "./env.ts";
 // shortcut: one issuer; the three firms sharing the scale need a per-weighing seller later (T-035).
 const ISSUER = COMPANY;
 
-const esc = (s: string) =>
+export const esc = (s: string) =>
   s.replace(
     /[&<>"']/g,
     (c) =>
@@ -15,9 +15,9 @@ const esc = (s: string) =>
         c
       ]!,
   );
-const kg = (n: number | null) =>
+export const kg = (n: number | null) =>
   n == null ? "—" : `${new Intl.NumberFormat("hu-HU").format(n)} kg`;
-const when = (iso: string | null) =>
+export const when = (iso: string | null) =>
   iso
     ? new Intl.DateTimeFormat("hu-HU", {
         dateStyle: "short",
@@ -78,13 +78,14 @@ ${w.status === "void" ? `<div class="void">SZTORNÓ</div>` : ""}
 export class TicketPdf {
   constructor(@Inject(ENV) private readonly env: Env) {}
 
-  async render(w: WeighingDto): Promise<Buffer> {
+  render(w: WeighingDto): Promise<Buffer> {
+    return this.fromHtml(renderTicketHtml(w));
+  }
+
+  /** Any printable page (weigh ticket, delivery note) → A4 PDF. */
+  async fromHtml(html: string): Promise<Buffer> {
     const form = new FormData();
-    form.append(
-      "files",
-      new Blob([renderTicketHtml(w)], { type: "text/html" }),
-      "index.html",
-    );
+    form.append("files", new Blob([html], { type: "text/html" }), "index.html");
     form.append("paperWidth", "8.27");
     form.append("paperHeight", "11.7");
     form.append("preferCssPageSize", "true");

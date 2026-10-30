@@ -191,6 +191,14 @@ export function TransportScreen() {
                               className="rounded-lg border border-border px-2 py-1 text-xs whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2"
                             >
                               Mérlegjegy
+                            </a>{" "}
+                            <a
+                              href={`/api/erp/shipments/${s.id}/delivery-note`}
+                              target="_blank"
+                              rel="noopener"
+                              className="rounded-lg border border-border px-2 py-1 text-xs whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2"
+                            >
+                              Szállítólevél
                             </a>
                           </TableCell>
                         </TableRow>

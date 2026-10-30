@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import { ENV, type Env } from "./env.ts";
 
@@ -114,4 +115,30 @@ export class Storage {
     if (!res.ok) throw new Error(`Storage download: HTTP ${res.status}`);
     return Buffer.from(await res.arrayBuffer());
   }
+}
+
+/** "YYYY-MM" of an instant in Hungarian time, for archive folders. */
+export const budapestMonth = (d: Date) =>
+  d.toLocaleString("sv-SE", { timeZone: "Europe/Budapest" }).slice(0, 7);
+
+/**
+ * An issued document (weigh ticket, delivery note) as stored once: the known copy if there is one,
+ * otherwise rendered, written without upsert (if another request wrote it first, that copy wins)
+ * and recorded with its SHA-256 as evidence.
+ */
+export async function archiveOnce(
+  storage: Pick<Storage, "putOnce" | "download">,
+  bucket: string,
+  known: string | null,
+  path: string,
+  render: () => Promise<Buffer>,
+  record: (path: string, sha256: string) => Promise<void>,
+): Promise<Buffer> {
+  if (known) return storage.download(bucket, known);
+  const pdf = await render();
+  const stored = (await storage.putOnce(bucket, path, pdf, "application/pdf"))
+    ? pdf
+    : await storage.download(bucket, path);
+  await record(path, createHash("sha256").update(stored).digest("hex"));
+  return stored;
 }

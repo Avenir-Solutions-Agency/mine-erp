@@ -6,11 +6,13 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  StreamableFile,
   UseGuards,
 } from "@nestjs/common";
 import type { ShipmentDto, WeighingDto } from "@mine-erp/contracts";
 import {
   and,
+  customer,
   type Db,
   desc,
   ekaerReport,
@@ -19,7 +21,9 @@ import {
   gte,
   lt,
   inArray,
+  isNull,
   nextShipmentRegistrySeq,
+  product,
   shipment,
   type Tx,
   weighing,
@@ -30,7 +34,11 @@ import {
 } from "@mine-erp/domain/shipment";
 import { type Actor, AuthGuard, CurrentActor } from "./auth.ts";
 import { ApiError } from "./http.ts";
+import { renderDeliveryNoteHtml } from "./delivery-note.ts";
+import { ENV, type Env } from "./env.ts";
 import { DB } from "./invoices.repository.ts";
+import { archiveOnce, budapestMonth, Storage } from "./storage.ts";
+import { TicketPdf } from "./ticket.ts";
 
 type WeighingRow = typeof weighing.$inferSelect;
 
@@ -50,7 +58,105 @@ const budapestYear = (d: Date) =>
  */
 @Injectable()
 export class Shipments {
-  constructor(@Inject(DB) private readonly db: Db) {}
+  constructor(
+    @Inject(DB) private readonly db: Db,
+    private readonly pdf: TicketPdf,
+    private readonly storage: Storage,
+    @Inject(ENV) private readonly env: Env,
+  ) {}
+
+  /**
+   * The delivery note (szállítólevél, number = registry number) as issued: rendered and archived
+   * once in the weigh-tickets bucket, every later download returns that file. A cancelled
+   * shipment gets its own SZTORNÓ copy; the original stays.
+   */
+  async deliveryNote(id: string): Promise<{ number: string; pdf: Buffer }> {
+    const [row] = await this.db
+      .select({ s: shipment, w: weighing, c: customer, p: product })
+      .from(shipment)
+      .innerJoin(weighing, eq(weighing.id, shipment.weighingId))
+      .leftJoin(customer, eq(customer.id, shipment.customerId))
+      .leftJoin(product, eq(product.id, shipment.productId))
+      .where(eq(shipment.id, id));
+    if (!row)
+      throw new ApiError(404, "not_found", "A szállítás nem található.");
+    const { s, w, c, p } = row;
+    const cancelled = s.status === "cancelled";
+    const pdf = await archiveOnce(
+      this.storage,
+      this.env.WEIGH_TICKET_BUCKET,
+      cancelled ? s.cancelledNotePath : s.deliveryNotePath,
+      `delivery-notes/${budapestMonth(s.shippedAt)}/${s.registryNumber}${cancelled ? "-sztorno" : ""}.pdf`,
+      async () => {
+        const [r] = await this.db
+          .select({ tcn: ekaerReport.tcn, status: ekaerReport.status })
+          .from(ekaerReport)
+          .where(eq(ekaerReport.weighingId, s.weighingId))
+          .orderBy(desc(ekaerReport.createdAt))
+          .limit(1);
+        return this.pdf.fromHtml(
+          renderDeliveryNoteHtml({
+            number: s.registryNumber,
+            cancelled,
+            shippedAt: s.shippedAt.toISOString(),
+            plate: s.plate,
+            trailerPlate: w.trailerPlate,
+            // Names as registered; tax number and address from master data.
+            customer: {
+              name: s.customer,
+              taxNumber: c?.taxNumber ?? null,
+              address: c?.address ?? null,
+            },
+            product: { name: s.product, vtsz: p?.vtsz ?? null },
+            netKg: s.netKg,
+            ticketNumber: w.ticketNumber,
+            ekaerTcn:
+              r && !["deleted", "failed"].includes(r.status) ? r.tcn : null,
+          }),
+        );
+      },
+      (path, sha256) => this.recordNote(id, cancelled, path, sha256),
+    );
+    return { number: s.registryNumber, pdf };
+  }
+
+  private async recordNote(
+    id: string,
+    cancelled: boolean,
+    path: string,
+    sha256: string,
+  ) {
+    await this.db.transaction(async (tx) => {
+      const [s] = await tx
+        .update(shipment)
+        .set(
+          cancelled
+            ? { cancelledNotePath: path, cancelledNoteSha256: sha256 }
+            : { deliveryNotePath: path, deliveryNoteSha256: sha256 },
+        )
+        .where(
+          and(
+            eq(shipment.id, id),
+            isNull(
+              cancelled
+                ? shipment.cancelledNotePath
+                : shipment.deliveryNotePath,
+            ),
+          ),
+        )
+        .returning({ id: shipment.id });
+      if (s)
+        await tx.insert(eventLog).values({
+          actorType: "system",
+          entity: "shipment",
+          entityId: id,
+          action: cancelled
+            ? "cancelled_note_archived"
+            : "delivery_note_archived",
+          payload: { path, sha256 },
+        });
+    });
+  }
 
   private async existing(tx: Tx | Db, weighingId: string) {
     const [s] = await tx
@@ -223,6 +329,15 @@ export class ShipmentsController {
   @Get("shipments")
   async list() {
     return { data: await this.shipments.list() };
+  }
+
+  @Get("shipments/:id/delivery-note")
+  async deliveryNote(@Param("id", new ParseUUIDPipe()) id: string) {
+    const { number, pdf } = await this.shipments.deliveryNote(id);
+    return new StreamableFile(pdf, {
+      type: "application/pdf",
+      disposition: `inline; filename="${number}.pdf"`,
+    });
   }
 
   @Post("weighings/:id/register")
