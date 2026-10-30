@@ -350,13 +350,56 @@ export type PaperExtraction = z.infer<typeof PaperExtraction>;
 /** An uploaded photo or scan of a paper weigh ticket or delivery note (T-010), with what was read (T-011). */
 export const DocumentDto = z.object({
   id: z.uuid(),
-  status: z.enum(["received", "ingested", "extracted", "unreadable"]),
+  status: z.enum([
+    "received",
+    "ingested",
+    "extracted",
+    "unreadable",
+    "registered",
+  ]),
   extraction: PaperExtraction.nullable(),
+  /** The shipment made from it after review (T-017). */
+  registryNumber: z.string().nullable(),
   fileName: z.string(),
   fileMime: z.string(),
   createdAt: z.string(),
 });
 export type DocumentDto = z.infer<typeof DocumentDto>;
+
+const Kilos = z.number().int().positive().max(200_000);
+
+/**
+ * A reviewed paper ticket (T-017): what a person confirmed against the photo. It becomes a
+ * completed paper weighing and its shipment; EKÁER is filed only when the ticket carries no number.
+ */
+export const RegisterDocumentInput = z
+  .object({
+    paperTicketNumber: z.string().trim().min(3).max(40),
+    weighedAt: z.iso
+      .datetime({ offset: true })
+      .refine(
+        (v) => new Date(v).getTime() <= Date.now() + 5 * 60_000,
+        "A mérés ideje nem lehet a jövőben.",
+      ),
+    plate: z.string().trim().min(2).max(20),
+    trailerPlate: Text(20),
+    customerId: z.uuid(),
+    productId: z.uuid(),
+    grossKg: Kilos,
+    tareKg: Kilos,
+    loadingAddress: Text(200),
+    unloadingAddress: Text(200),
+    deliveryNoteNumber: Text(40),
+    /** The EKÁER number printed on the ticket; then nothing is filed. */
+    ekaerNumber: Text(40),
+    /** Value to report when the ticket has no EKÁER number; null = do not file now. */
+    ekaerValueHuf: z.number().int().positive().max(999_999_999).nullable(),
+  })
+  .refine((v) => v.grossKg > v.tareKg, {
+    message: "A bruttó legyen nagyobb a táránál.",
+    path: ["tareKg"],
+  });
+export type RegisterDocumentInput = z.infer<typeof RegisterDocumentInput>;
 
 const Total = z.object({
   key: z.string(),

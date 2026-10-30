@@ -15,13 +15,11 @@ import {
 import { toast } from "@/components/ui/toast";
 import { formatKg } from "@/lib/format";
 import { api } from "@/prototype/api";
-import { Alert, Panel, Small } from "@/prototype/ui";
+import { Alert, Btn, Panel, Row, Small } from "@/prototype/ui";
+import { PaperReview, SURE } from "@/prototype/screens/transport-paper-review";
 
 // Papír jegyek (T-010, T-011, T-016): photos of the paper weigh tickets and delivery notes of the
-// temporary period. Each file is stored once and read by AI; the review form comes with T-017.
-
-// Below this the reading is shown as uncertain; the review queue (T-017) will ask for a check.
-const SURE = 0.8;
+// temporary period. Each file is stored once, read by AI and reviewed by a person (T-017).
 
 type Field = { value: string | number | null; confidence: number };
 
@@ -46,10 +44,13 @@ const pending = (d: DocumentDto) =>
   d.status === "received" || d.status === "ingested";
 
 function Status({ d }: { d: DocumentDto }) {
-  if (d.status === "extracted") return <Pill tone="success">Kiolvasva</Pill>;
+  if (d.status === "registered")
+    return <Pill tone="success">Rögzítve · {d.registryNumber}</Pill>;
+  if (d.status === "extracted")
+    return <Pill tone="warning">Ellenőrzésre vár</Pill>;
   if (d.status === "unreadable")
-    return <Pill tone="destructive">Nem olvasható</Pill>;
-  return <Pill tone="warning">Feldolgozás…</Pill>;
+    return <Pill tone="destructive">Nem olvasható, kézzel töltendő</Pill>;
+  return <Pill tone="neutral">Feldolgozás…</Pill>;
 }
 
 const plates = (x: PaperExtraction) =>
@@ -62,6 +63,8 @@ export function TransportPaper() {
   const [rows, setRows] = useState<DocumentDto[] | null>(null);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(0);
+  const [reviewing, setReviewing] = useState<DocumentDto | null>(null);
+  const [reloads, setReloads] = useState(0);
   const file = useRef<HTMLInputElement>(null);
 
   const waiting = (rows ?? []).some(pending);
@@ -81,7 +84,7 @@ export function TransportPaper() {
       live = false;
       clearInterval(timer);
     };
-  }, [waiting]);
+  }, [waiting, reloads]);
 
   const upload = async (files: File[]) => {
     for (const f of files) {
@@ -201,14 +204,22 @@ export function TransportPaper() {
                       <Status d={d} />
                     </TableCell>
                     <TableCell>
-                      <a
-                        href={`/api/erp/documents/${d.id}/file?raw=1`}
-                        target="_blank"
-                        rel="noopener"
-                        className={linkClass}
-                      >
-                        Fotó
-                      </a>
+                      <Row className="flex-nowrap">
+                        {d.status === "extracted" ||
+                        d.status === "unreadable" ? (
+                          <Btn sm kind="pri" onClick={() => setReviewing(d)}>
+                            Ellenőrzés
+                          </Btn>
+                        ) : null}
+                        <a
+                          href={`/api/erp/documents/${d.id}/file?raw=1`}
+                          target="_blank"
+                          rel="noopener"
+                          className={linkClass}
+                        >
+                          Fotó
+                        </a>
+                      </Row>
                     </TableCell>
                   </TableRow>
                 );
@@ -217,6 +228,16 @@ export function TransportPaper() {
           </Table>
         </Panel>
       )}
+      {reviewing ? (
+        <PaperReview
+          doc={reviewing}
+          onClose={() => setReviewing(null)}
+          onDone={() => {
+            setReviewing(null);
+            setReloads((n) => n + 1);
+          }}
+        />
+      ) : null}
     </>
   );
 }

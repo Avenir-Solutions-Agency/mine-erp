@@ -43,7 +43,7 @@ import { TicketPdf } from "./ticket.ts";
 type WeighingRow = typeof weighing.$inferSelect;
 
 /** Registry numbers restart each calendar year in Hungarian time. */
-const budapestYear = (d: Date) =>
+export const budapestYear = (d: Date) =>
   Number(
     new Intl.DateTimeFormat("en", {
       year: "numeric",
@@ -111,7 +111,8 @@ export class Shipments {
             netKg: s.netKg,
             ticketNumber: w.ticketNumber,
             ekaerTcn:
-              r && !["deleted", "failed"].includes(r.status) ? r.tcn : null,
+              (r && !["deleted", "failed"].includes(r.status) ? r.tcn : null) ??
+              w.paperEkaerTcn,
           }),
         );
       },
@@ -274,8 +275,9 @@ export class Shipments {
   /** Newest first (500, or all in an instant range), with the EKÁER number of a live report. */
   async list(range?: { from: Date; to: Date }): Promise<ShipmentDto[]> {
     const rows = await this.db
-      .select()
+      .select({ s: shipment, paperTcn: weighing.paperEkaerTcn })
       .from(shipment)
+      .innerJoin(weighing, eq(weighing.id, shipment.weighingId))
       .where(
         range
           ? and(
@@ -297,7 +299,7 @@ export class Shipments {
           .where(
             inArray(
               ekaerReport.weighingId,
-              rows.map((r) => r.weighingId),
+              rows.map((r) => r.s.weighingId),
             ),
           )
           .orderBy(desc(ekaerReport.createdAt))
@@ -306,7 +308,7 @@ export class Shipments {
     for (const r of reports)
       if (!tcn.has(r.weighingId) && !["deleted", "failed"].includes(r.status))
         tcn.set(r.weighingId, r.tcn);
-    return rows.map((s) => ({
+    return rows.map(({ s, paperTcn }) => ({
       id: s.id,
       registryNumber: s.registryNumber,
       status: s.status,
@@ -316,7 +318,8 @@ export class Shipments {
       product: s.product,
       netKg: s.netKg,
       shippedAt: s.shippedAt.toISOString(),
-      ekaerTcn: tcn.get(s.weighingId) ?? null,
+      // A paper ticket's printed EKÁER number was reported elsewhere; ours wins if we filed one.
+      ekaerTcn: tcn.get(s.weighingId) ?? paperTcn,
     }));
   }
 }

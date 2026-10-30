@@ -94,6 +94,8 @@ export class EkaerReports {
       product: row.p,
       plannedKg,
       valueFiller: value,
+      unloadingAddress: row.w.unloadingAddress,
+      loadingAddress: row.w.loadingAddress,
     });
     if (problems.length)
       throw new ApiError(422, "ekaer_not_ready", problems.join(" "));

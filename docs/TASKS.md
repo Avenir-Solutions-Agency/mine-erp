@@ -40,7 +40,7 @@ Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-in
 - [ ] T-014 (F5) `EkaerReportWorkflow`: obligation decision, create with query-before-resend, finalize, human-approved modify/delete/correction
 - [ ] T-015 (F1, F6) `apps/bot`: grammY webhook with secret token, allow-listed chats, photo/document/album intake, reply-and-edit confirmations, `/allapot`, `/ma`, `/segitseg`
 - [ ] T-016 (F1) Web upload page. Partial (2026-10-30): Fuvarok és EKÁER › Papír jegyek uploads and lists the photos; open: Telegram intake (T-015)
-- [ ] T-017 (F3) Web review queue: zoomable photo next to the extracted form, low-confidence fields highlighted, resume via signal
+- [x] T-017 (F3) Web review queue. Done (2026-10-30) for paper tickets: Papír jegyek › Ellenőrzés shows the photo (rotate, zoom) next to the AI reading with uncertain fields marked; saving makes a completed paper weighing `P-<printed number>` and its shipment in one transaction, keeps a printed EKÁER number or files EKÁER with the separate load/unload places. Open: Telegram intake, workflow signal instead of the direct API call
 - [x] T-018 (F4) Web shipment register list and detail (Fuvarok és EKÁER: list, search, ticket; detail via the weigh ticket)
 - [ ] T-019 (F1) `apps/scale-agent`: adapter interface, SQLite buffer, heartbeat, `POST /scale/tickets` (first adapter after the scale survey)
 - [ ] T-020 Policy engine minimum: auto-EKÁER switch, agent modes. Done (2026-10-30): `policy` table, auto-EKÁER switch on Fuvarok és EKÁER › Szabályok (files at the second weighing with net × product price when all data is there). Open: agent modes, role check for who may switch
