@@ -13,8 +13,17 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import type { Client } from "@temporalio/client";
-import type { DocumentDto } from "@mine-erp/contracts";
-import { type Db, desc, document, eq, eventLog } from "@mine-erp/db";
+import { type DocumentDto, PaperExtraction } from "@mine-erp/contracts";
+import {
+  asc,
+  type Db,
+  desc,
+  document,
+  eq,
+  eventLog,
+  extraction,
+  inArray,
+} from "@mine-erp/db";
 import { type Actor, AuthGuard, CurrentActor, RateLimit } from "./auth.ts";
 import { TEMPORAL } from "./ekaer-reports.ts";
 import { ENV, type Env } from "./env.ts";
@@ -25,9 +34,11 @@ import { budapestMonth, Storage } from "./storage.ts";
 
 type DocumentRow = typeof document.$inferSelect;
 
-const toDto = (d: DocumentRow): DocumentDto => ({
+const toDto = (d: DocumentRow, read: unknown = null): DocumentDto => ({
   id: d.id,
   status: d.status,
+  // Stored by the worker after Zod validation; parsed again so an old prompt's shape cannot leak.
+  extraction: PaperExtraction.safeParse(read).data ?? null,
   fileName: d.fileName,
   fileMime: d.fileMime,
   createdAt: d.createdAt.toISOString(),
@@ -130,7 +141,24 @@ export class Documents {
       .from(document)
       .orderBy(desc(document.createdAt))
       .limit(200);
-    return rows.map(toDto);
+    const reads = rows.length
+      ? await this.db
+          .select({
+            documentId: extraction.documentId,
+            result: extraction.result,
+          })
+          .from(extraction)
+          .where(
+            inArray(
+              extraction.documentId,
+              rows.map((r) => r.id),
+            ),
+          )
+          .orderBy(asc(extraction.createdAt))
+      : [];
+    // Ascending, so the newest prompt version's reading wins.
+    const latest = new Map(reads.map((x) => [x.documentId, x.result]));
+    return rows.map((r) => toDto(r, latest.get(r.id)));
   }
 
   async fileUrl(id: string): Promise<string> {

@@ -364,12 +364,12 @@ export const policy = pgTable("policy", {
     .defaultNow(),
 });
 
-export type DocumentStatus = "received" | "ingested";
+export type DocumentStatus =
+  "received" | "ingested" | "extracted" | "unreadable";
 
 /**
  * A photo or scan of a paper weigh ticket or delivery note (PRD F1, T-010). The file is stored once
- * under its SHA-256; the same file again is refused (409), so one file is one document. The
- * extracted fields come with T-011.
+ * under its SHA-256; the same file again is refused (409), so one file is one document.
  */
 export const document = pgTable(
   "document",
@@ -385,6 +385,33 @@ export const document = pgTable(
   },
   (t) => [
     index("document_created_at_idx").on(t.createdAt),
-    check("document_status_chk", sql`${t.status} in ('received', 'ingested')`),
+    check(
+      "document_status_chk",
+      sql`${t.status} in ('received', 'ingested', 'extracted', 'unreadable')`,
+    ),
+  ],
+);
+
+/**
+ * What AI read from a document (PRD F2, T-011): one row per document and prompt version, so a new
+ * prompt can re-read old photos. result null = the model refused or could not read it.
+ */
+export const extraction = pgTable(
+  "extraction",
+  {
+    id: id(),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => document.id),
+    model: text("model").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    result: jsonb("result"),
+    ...audit,
+  },
+  (t) => [
+    uniqueIndex("extraction_document_prompt_uq").on(
+      t.documentId,
+      t.promptVersion,
+    ),
   ],
 );

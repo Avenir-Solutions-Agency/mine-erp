@@ -12,8 +12,10 @@ import {
   createDocumentActivities,
   createEkaerActivities,
   dbDocumentStore,
+  type Reader,
 } from "./activities.ts";
 import { dbReportStore } from "./ekaer.ts";
+import { openAiExtractor, storageDownload } from "./extract.ts";
 
 const TASK_QUEUE = "documents";
 
@@ -42,6 +44,27 @@ function ekaerClient(): () => EkaerClient {
   };
 }
 
+/** Storage and OpenAI from the same names the API uses; missing ones fail the extract step only. */
+function reader(): () => Reader {
+  let r: Reader | undefined;
+  return () => {
+    if (r) return r;
+    const env = (name: string) => {
+      const v = process.env[name];
+      if (!v) throw new Error(`${name} is not set`);
+      return v;
+    };
+    return (r = {
+      download: storageDownload(
+        env("SUPABASE_URL"),
+        env("SUPABASE_SECRET_KEY"),
+        process.env.WEIGH_TICKET_BUCKET ?? "weigh-tickets",
+      ),
+      extract: openAiExtractor(env("OPENAI_API_KEY"), env("OPENAI_MODEL")),
+    });
+  };
+}
+
 const { db } = createDb();
 const connection = await NativeConnection.connect({
   address: process.env.TEMPORAL_ADDRESS ?? "localhost:7233",
@@ -55,6 +78,7 @@ const worker = await Worker.create({
     ...createDocumentActivities(
       (e) => console.log(`${e.at} ${e.documentId} ${e.step}`),
       dbDocumentStore(db),
+      reader(),
     ),
     ...createEkaerActivities(dbReportStore(db), ekaerClient()),
   },

@@ -34,7 +34,7 @@ Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-in
 - [ ] T-008 (F3) Validation rules in `packages/domain` as pure functions with codes and Hungarian messages (≥ 90% coverage)
 - [x] T-009 `apps/worker` Temporal skeleton; `ProcessDocumentWorkflow` with ingest → notify steps as stubs
 - [x] T-010 (F1) Ingest activity: object store upload, SHA-256, `document` record, duplicate detection. Done (2026-10-30): `POST /documents` stores the file once in the weigh-ticket archive (`scans/YYYY-MM/<sha256>`), the same file again is refused with 409, `document` + event in one transaction, then `processDocument`; its ingest step marks the document `ingested`
-- [ ] T-011 (F2) `packages/extraction`: Claude vision tool-use schema, prompt versioning, evaluation script on the labelled set
+- [x] T-011 (F2) Extraction of paper weigh tickets and delivery notes. Done (2026-10-30) with OpenAI instead of Claude (already the invoice sub-processor): the worker's extract step reads every field with a 0–1 confidence into `extraction` (model, prompt version `paper-v1`, once per version); Papír jegyek lists the readings and marks uncertain ones. Open: labelled evaluation set and script
 - [ ] T-012 (F4) Normalize, link and register activities; gapless registry number sequence. Done for weighings (2026-10-30): `shipment` with gapless SZ-YYYY-NNNNNN, registered when a weighing completes with customer and product, cancelled with it. Open: linking uploaded documents (T-010/T-011)
 - [x] T-013 (F5) `packages/ekaer`: XML builder, SHA-512 request signature, XSD validation (unit-tested against the NAV FAQ example)
 - [ ] T-014 (F5) `EkaerReportWorkflow`: obligation decision, create with query-before-resend, finalize, human-approved modify/delete/correction

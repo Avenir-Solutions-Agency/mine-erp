@@ -286,10 +286,72 @@ export const ShipmentDto = z.object({
 });
 export type ShipmentDto = z.infer<typeof ShipmentDto>;
 
-/** An uploaded photo or scan of a paper weigh ticket or delivery note (T-010). */
+/** One field read from a photo: the value as printed or written (null when absent) and how sure the model is. */
+const read = <T extends z.ZodType>(value: T, description: string) =>
+  z
+    .object({
+      value: value.nullable(),
+      confidence: z.number().min(0).max(1),
+    })
+    .describe(description);
+const Kg = z.number().int();
+
+/**
+ * What AI extraction reads from a photo of a paper weigh ticket and/or delivery note (T-011).
+ * The photos usually show both side by side; fields of the missing one are null.
+ */
+export const PaperExtraction = z.object({
+  kind: z
+    .enum(["weigh_ticket", "delivery_note", "both", "other"])
+    .describe("Mi van a képen: mérlegjegy, szállítólevél, mindkettő vagy más"),
+  ticketNumber: read(z.string(), "Mérlegjegy száma, pl. MJ-2026-003277"),
+  weighedAt: read(
+    z.string().regex(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/),
+    "Mérés időpontja a mérlegjegyen, helyi idő, YYYY-MM-DD HH:MM",
+  ),
+  plate: read(
+    z.string(),
+    "Vontató rendszáma kötőjel és szóköz nélkül, pl. TBJ586",
+  ),
+  trailerPlate: read(z.string(), "Pótkocsi rendszáma kötőjel és szóköz nélkül"),
+  grossKg: read(Kg, "Bruttó tömeg kg-ban"),
+  tareKg: read(Kg, "Tára kg-ban"),
+  netKg: read(Kg, "Nettó tömeg kg-ban"),
+  customer: read(z.string(), "Ügyfél (vevő) neve"),
+  customerAddress: read(z.string(), "Ügyfél címe"),
+  product: read(z.string(), "Anyag, termék megnevezése"),
+  loadingAddress: read(
+    z.string(),
+    "Felrakodási cím (hrsz-szel, ha az áll ott)",
+  ),
+  unloadingAddress: read(
+    z.string(),
+    "Lerakodási cím; GPS-koordináta is, ha az áll ott",
+  ),
+  ekaerNumber: read(
+    z.string(),
+    "EKÁER-szám, pl. E2610267233595 1; '-' esetén null",
+  ),
+  deliveryNoteNumber: read(
+    z.string(),
+    "Szállítólevél sorszáma a betűjellel, pl. Cs 0096867",
+  ),
+  site: read(
+    z.string(),
+    "Telephely a szállítólevélen: 'Szállítva ... telephelyről (raktárból)'",
+  ),
+  noteTonnes: read(
+    z.number(),
+    "A szállítólevélre kézzel írt mennyiség tonnában, pl. 26,98 → 26.98",
+  ),
+});
+export type PaperExtraction = z.infer<typeof PaperExtraction>;
+
+/** An uploaded photo or scan of a paper weigh ticket or delivery note (T-010), with what was read (T-011). */
 export const DocumentDto = z.object({
   id: z.uuid(),
-  status: z.enum(["received", "ingested"]),
+  status: z.enum(["received", "ingested", "extracted", "unreadable"]),
+  extraction: PaperExtraction.nullable(),
   fileName: z.string(),
   fileMime: z.string(),
   createdAt: z.string(),
