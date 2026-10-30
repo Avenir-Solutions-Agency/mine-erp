@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import type { FirstWeighingInput, WeighingDto } from "@mine-erp/contracts";
 import {
@@ -21,7 +20,7 @@ import { MasterData } from "./master-data.ts";
 import { ScaleLive } from "./scale.ts";
 import { ENV, type Env } from "./env.ts";
 import { Policies } from "./policy.ts";
-import { Storage } from "./storage.ts";
+import { archiveOnce, budapestMonth, Storage } from "./storage.ts";
 import { TicketPdf } from "./ticket.ts";
 import {
   type WeighingRow,
@@ -293,29 +292,16 @@ export class WeighingsService {
    * written once; every later download returns the stored file, so an issued ticket never changes
    * when master data does. The file's SHA-256 is kept as evidence.
    */
-  private async archive(row: WeighingRow): Promise<Buffer> {
-    const bucket = this.env.WEIGH_TICKET_BUCKET;
+  private archive(row: WeighingRow): Promise<Buffer> {
     const isVoid = row.status === "void";
-    const known = isVoid ? row.voidTicketPath : row.ticketPath;
-    if (known) return this.storage.download(bucket, known);
-    // YYYY-MM in Hungarian time, so a ticket issued just after midnight lands in the right month.
-    const month = (row.secondAt ?? row.firstAt)
-      .toLocaleString("sv-SE", { timeZone: "Europe/Budapest" })
-      .slice(0, 7);
-    const path = `${month}/${row.ticketNumber}${isVoid ? "-sztorno" : ""}.pdf`;
-    const pdf = await this.tickets.render(await this.dto(row));
-    // Another request may have archived it first; then its file is the issued one.
-    const stored = (await this.storage.putOnce(
-      bucket,
-      path,
-      pdf,
-      "application/pdf",
-    ))
-      ? pdf
-      : await this.storage.download(bucket, path);
-    const sha256 = createHash("sha256").update(stored).digest("hex");
-    await this.repo.setTicketFile(row.id, isVoid, path, sha256);
-    return stored;
+    return archiveOnce(
+      this.storage,
+      this.env.WEIGH_TICKET_BUCKET,
+      isVoid ? row.voidTicketPath : row.ticketPath,
+      `${budapestMonth(row.secondAt ?? row.firstAt)}/${row.ticketNumber}${isVoid ? "-sztorno" : ""}.pdf`,
+      async () => this.tickets.render(await this.dto(row)),
+      (path, sha256) => this.repo.setTicketFile(row.id, isVoid, path, sha256),
+    );
   }
 
   /**

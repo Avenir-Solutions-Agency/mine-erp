@@ -327,6 +327,12 @@ export const shipment = pgTable(
     netKg: integer("net_kg").notNull(),
     shippedAt: timestamp("shipped_at", { withTimezone: true }).notNull(),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    /** The delivery note PDF (number = registry number), written once, with its SHA-256. */
+    deliveryNotePath: text("delivery_note_path"),
+    deliveryNoteSha256: text("delivery_note_sha256"),
+    /** The SZTORNÓ copy issued after cancellation; the original stays. */
+    cancelledNotePath: text("cancelled_note_path"),
+    cancelledNoteSha256: text("cancelled_note_sha256"),
     ...audit,
   },
   (t) => [

@@ -218,6 +218,15 @@ export const ROUTES: Route[] = [
     reply: z.array(ShipmentDto),
   },
   {
+    method: "get",
+    path: "/shipments/:id/delivery-note",
+    summary:
+      "Delivery note PDF (number = registry number), archived once; SZTORNÓ copy when cancelled",
+    auth: "user",
+    body: null,
+    reply: "pdf",
+  },
+  {
     method: "post",
     path: "/weighings/:id/register",
     summary:
