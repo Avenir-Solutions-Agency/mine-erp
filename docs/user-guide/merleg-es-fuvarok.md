@@ -4,7 +4,7 @@
 
 ## Tartalom
 
-1. [Belépés](#1-belépés)
+1. [Fiók létrehozása és belépés](#1-fiók-létrehozása-és-belépés)
 2. [Első beállítás: vevők és termékek](#2-első-beállítás-vevők-és-termékek)
 3. [Mérleg: egy szállítás lemérése](#3-mérleg-egy-szállítás-lemérése)
 4. [Mérleg: EKÁER kézzel](#4-mérleg-ekáer-kézzel)
@@ -17,13 +17,39 @@
 
 ---
 
-## 1. Belépés
+## 1. Fiók létrehozása és belépés
+
+### Fiók létrehozása (rendszergazda végzi)
+
+Az ERP-ben nincs nyilvános regisztráció: biztonsági okból csak a rendszergazda hozhat létre fiókot (docs/SECURITY.md). Új kolléga fiókja így készül:
+
+1. Lépjen be a Supabase felületére (`https://supabase.com/dashboard`), és nyissa meg a projektet.
+2. Bal menü: **Authentication**, majd **Users**.
+3. Kattintson az **Add user** gombra, és válassza a **Create new user** lehetőséget.
+4. Töltse ki:
+   - **Email address**: a kolléga munkahelyi e-mail-címe.
+   - **Password**: ideiglenes jelszó, legalább 12 karakter.
+   - Pipálja be az **Auto Confirm User** mezőt. Így nem kell megerősítő e-mail.
+5. Kattintson a **Create user** gombra.
+6. Az e-mail-címet és az ideiglenes jelszót **külön csatornán** adja át: a jelszót például jelszókezelőben vagy szóban, ne ugyanabban az e-mailben.
+
+A fiók megszüntetése: ugyanitt a felhasználó sorában **Delete user**. A naplóban a korábbi műveletei megmaradnak.
+
+### Első belépés
+
+1. Nyissa meg a `http://localhost:3000` címet.
+2. Adja meg az e-mail-címét és az ideiglenes jelszót.
+3. A rendszer QR-kódot mutat. Telepítsen hitelesítő alkalmazást a telefonjára (pl. Google Authenticator vagy Microsoft Authenticator), és olvassa be vele a kódot.
+4. Írja be az alkalmazás által mutatott 6 jegyű kódot. Ezzel kész a kétlépcsős azonosítás (2FA), ami minden irodai fióknál kötelező.
+
+### Későbbi belépés
 
 1. Nyissa meg a `http://localhost:3000` címet.
 2. Adja meg az e-mail-címét és a jelszavát.
-3. Írja be a hitelesítő alkalmazás (pl. Google Authenticator) 6 jegyű kódját.
-   - Első belépéskor a rendszer QR-kódot mutat: olvassa be az alkalmazással, majd írja be a kódot.
+3. Írja be a hitelesítő alkalmazás aktuális 6 jegyű kódját.
 4. Ha egy oldalon a „jelentkezzen be” üzenet jelenik meg, a belépés lejárt: lépjen be újra.
+
+Ha elvesztette a telefonját, vagy elfelejtette a jelszavát, szóljon a rendszergazdának.
 
 ## 2. Első beállítás: vevők és termékek
 
