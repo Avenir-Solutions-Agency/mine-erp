@@ -42,7 +42,7 @@ Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-in
 - [ ] T-017 (F3) Web review queue: zoomable photo next to the extracted form, low-confidence fields highlighted, resume via signal
 - [x] T-018 (F4) Web shipment register list and detail (Fuvarok és EKÁER: list, search, ticket; detail via the weigh ticket)
 - [ ] T-019 (F1) `apps/scale-agent`: adapter interface, SQLite buffer, heartbeat, `POST /scale/tickets` (first adapter after the scale survey)
-- [ ] T-020 Policy engine minimum: auto-EKÁER switch, agent modes
+- [ ] T-020 Policy engine minimum: auto-EKÁER switch, agent modes. Done (2026-10-30): `policy` table, auto-EKÁER switch on Fuvarok és EKÁER › Szabályok (files at the second weighing with net × product price when all data is there). Open: agent modes, role check for who may switch
 - [ ] T-021 E2E: photo upload → review queue → register → EKÁER number (against the EKÁER test environment)
 
 ## Later (after v1)

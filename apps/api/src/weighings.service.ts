@@ -12,6 +12,7 @@ import {
   weighingWithSavedTare,
 } from "@mine-erp/domain/weighing";
 import { customer, product } from "@mine-erp/db";
+import { autoEkaerDecision } from "@mine-erp/domain/ekaer";
 import type { Actor } from "./auth.ts";
 import { ApiError, isUniqueViolation } from "./http.ts";
 import { EkaerReports } from "./ekaer-reports.ts";
@@ -19,6 +20,7 @@ import { Shipments } from "./shipments.ts";
 import { MasterData } from "./master-data.ts";
 import { ScaleLive } from "./scale.ts";
 import { ENV, type Env } from "./env.ts";
+import { Policies } from "./policy.ts";
 import { Storage } from "./storage.ts";
 import { TicketPdf } from "./ticket.ts";
 import {
@@ -104,6 +106,7 @@ export class WeighingsService {
     private readonly ekaer: EkaerReports,
     private readonly shipments: Shipments,
     private readonly storage: Storage,
+    private readonly policies: Policies,
     @Inject(ENV) private readonly env: Env,
   ) {}
 
@@ -212,7 +215,8 @@ export class WeighingsService {
           );
         throw e;
       });
-    if (row.status === "completed") this.archiveSoon(row);
+    if (row.status === "completed" && !(await this.autoEkaer(row, actor)))
+      this.archiveSoon(row);
     return await this.dto(row);
   }
 
@@ -245,7 +249,8 @@ export class WeighingsService {
         "changed",
         "A mérlegelést közben lezárták vagy sztornózták.",
       );
-    this.archiveSoon(saved);
+    // With an automatic report the ticket is archived on first download, so it carries the EKÁER number.
+    if (!(await this.autoEkaer(saved, actor))) this.archiveSoon(saved);
     return await this.dto(saved);
   }
 
@@ -311,6 +316,51 @@ export class WeighingsService {
     const sha256 = createHash("sha256").update(stored).digest("hex");
     await this.repo.setTicketFile(row.id, isVoid, path, sha256);
     return stored;
+  }
+
+  /**
+   * T-020: with the switch on and every piece of data present, the second weighing files the
+   * EKÁER report itself with the real net weight. Anything missing leaves it to a person; a
+   * failure here never fails the weighing. Returns whether a report was started.
+   */
+  private async autoEkaer(w: WeighingRow, actor: Actor): Promise<boolean> {
+    try {
+      if (!(await this.policies.ekaerAuto())) return false;
+      const [c, p] = await Promise.all([
+        this.masterData.customerById(w.customerId),
+        this.masterData.productById(w.productId),
+      ]);
+      const d = autoEkaerDecision({
+        enabled: true,
+        netKg: w.netKg ?? 0,
+        pricePerTonneFiller: p?.pricePerTonne ?? null,
+        report: {
+          weighingStatus: w.status,
+          plate: w.plate,
+          customer: c,
+          product: p,
+        },
+      });
+      if (!d.file) {
+        this.log.log(
+          `${w.ticketNumber}: no automatic EKÁER: ${d.reasons.join(" ")}`,
+        );
+        return false;
+      }
+      await this.ekaer.file(
+        w.id,
+        w.netKg!,
+        Number((d.valueFiller + 50n) / 100n),
+        actor,
+        true,
+      );
+      return true;
+    } catch (e) {
+      this.log.warn(
+        `${w.ticketNumber}: automatic EKÁER not started: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      return false;
+    }
   }
 
   /** Right after completion or void; if Gotenberg or Storage is down, the first download archives it. */

@@ -43,6 +43,32 @@ const ENTITY = new Map<Table, { name: string; duplicate: [string, string] }>([
   ],
 ]);
 
+type ProductRow = typeof product.$inferSelect;
+
+/** Money leaves the API as whole forints, never as a bigint (JSON has none). */
+export const productDto = ({
+  pricePerTonne,
+  createdBy: _c,
+  createdAt: _a,
+  updatedAt: _u,
+  ...p
+}: ProductRow) => ({
+  ...p,
+  pricePerTonneHuf: pricePerTonne == null ? null : Number(pricePerTonne / 100n),
+});
+
+/** Whole forints per tonne from the form → fillér in the database. */
+const withPrice = ({ pricePerTonneHuf, ...v }: Record<string, unknown>) =>
+  pricePerTonneHuf === undefined
+    ? v
+    : {
+        ...v,
+        pricePerTonne:
+          pricePerTonneHuf == null
+            ? null
+            : BigInt(pricePerTonneHuf as number) * 100n,
+      };
+
 /** Customers and products: list, create, change; never delete (old weigh tickets point at them). */
 @Injectable()
 export class MasterData {
@@ -52,8 +78,29 @@ export class MasterData {
     return this.db.select().from(customer).orderBy(asc(customer.name));
   }
 
-  products() {
-    return this.db.select().from(product).orderBy(asc(product.name));
+  async products() {
+    return (
+      await this.db.select().from(product).orderBy(asc(product.name))
+    ).map(productDto);
+  }
+
+  /** Records by id, active or not, for the automatic EKÁER check; null if unknown. */
+  async customerById(id: string | null) {
+    if (!id) return null;
+    const [row] = await this.db
+      .select()
+      .from(customer)
+      .where(eq(customer.id, id));
+    return row ?? null;
+  }
+
+  async productById(id: string | null) {
+    if (!id) return null;
+    const [row] = await this.db
+      .select()
+      .from(product)
+      .where(eq(product.id, id));
+    return row ?? null;
   }
 
   /** Active record by id, for linking a weighing; inactive or unknown ids are refused. */
@@ -164,11 +211,13 @@ export class MasterDataController {
   @Post("products")
   async createProduct(@Body() body: unknown, @CurrentActor() actor: Actor) {
     return {
-      data: await this.data.save(
-        product,
-        null,
-        parse(ProductInput, body),
-        actor,
+      data: productDto(
+        (await this.data.save(
+          product,
+          null,
+          withPrice(parse(ProductInput, body)),
+          actor,
+        )) as ProductRow,
       ),
     };
   }
@@ -180,7 +229,14 @@ export class MasterDataController {
     @CurrentActor() actor: Actor,
   ) {
     return {
-      data: await this.data.save(product, id, parse(ProductPatch, body), actor),
+      data: productDto(
+        (await this.data.save(
+          product,
+          id,
+          withPrice(parse(ProductPatch, body)),
+          actor,
+        )) as ProductRow,
+      ),
     };
   }
 }

@@ -222,6 +222,13 @@ export const ProductInput = z.object({
     .optional()
     .or(z.literal("").transform(() => null)),
   ekaerRequired: z.boolean().optional(),
+  /** List price, whole forints per tonne; the value of an automatic EKÁER report (T-020). */
+  pricePerTonneHuf: z
+    .preprocess(
+      (v) => (v === "" || v == null ? null : Number(v)),
+      z.number().int().min(0).max(999_999_999).nullable(),
+    )
+    .optional(),
   note: Opt(500),
 });
 export const ProductPatch = ProductInput.partial().extend({
@@ -233,6 +240,7 @@ export const ProductDto = z.object({
   fractionCode: z.string().nullable(),
   vtsz: z.string().nullable(),
   ekaerRequired: z.boolean(),
+  pricePerTonneHuf: z.number().int().nullable(),
   note: z.string().nullable(),
   active: z.boolean(),
 });
@@ -295,3 +303,11 @@ export const ShipmentReportDto = z.object({
   byCustomerProduct: z.array(Total),
 });
 export type ShipmentReportDto = z.infer<typeof ShipmentReportDto>;
+
+/** Office switches (T-020). */
+export const PolicyDto = z.object({
+  /** File the EKÁER report by itself at the second weighing when all data is there. */
+  ekaerAuto: z.boolean(),
+});
+export type PolicyDto = z.infer<typeof PolicyDto>;
+export const PolicyPatch = PolicyDto.partial();
