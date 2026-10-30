@@ -67,13 +67,16 @@ export function TransportPaper() {
   const waiting = (rows ?? []).some(pending);
   useEffect(() => {
     let live = true;
-    const load = () =>
-      api<DocumentDto[]>("documents")
+    const load = () => {
+      if (document.hidden) return;
+      void api<DocumentDto[]>("documents", { cache: "no-store" })
         .then((r) => live && setRows(r))
         .catch((e: Error) => live && setError(e.message));
-    void load();
-    // Reading a photo takes up to a minute; poll only while something is still in progress.
-    const timer = waiting ? setInterval(() => void load(), 5000) : undefined;
+    };
+    load();
+    // Reading a photo takes up to a minute. Always poll (a stale answer racing an upload could
+    // otherwise stop it early), but slowly when nothing is in progress.
+    const timer = setInterval(load, waiting ? 3000 : 15_000);
     return () => {
       live = false;
       clearInterval(timer);
