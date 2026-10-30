@@ -55,16 +55,17 @@ export class Storage {
     if (!res.ok) throw new Error(`Storage upload: HTTP ${res.status}`);
   }
 
-  /** Short-lived link for the invoice image modal. */
-  async signedUrl(path: string, expiresIn = 300): Promise<string> {
-    const res = await fetch(
-      this.url(`object/sign/${this.env.INVOICE_BUCKET}/${path}`),
-      {
-        method: "POST",
-        headers: this.headers({ "content-type": "application/json" }),
-        body: JSON.stringify({ expiresIn }),
-      },
-    );
+  /** Short-lived link for the invoice and document image modals. */
+  async signedUrl(
+    path: string,
+    expiresIn = 300,
+    bucket = this.env.INVOICE_BUCKET,
+  ): Promise<string> {
+    const res = await fetch(this.url(`object/sign/${bucket}/${path}`), {
+      method: "POST",
+      headers: this.headers({ "content-type": "application/json" }),
+      body: JSON.stringify({ expiresIn }),
+    });
     if (!res.ok) throw new Error(`Storage sign: HTTP ${res.status}`);
     const { signedURL } = (await res.json()) as { signedURL: string };
     return `${this.env.SUPABASE_URL}/storage/v1${signedURL}`;

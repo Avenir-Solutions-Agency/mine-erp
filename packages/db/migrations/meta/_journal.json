@@ -78,6 +78,13 @@
       "when": 1793354351822,
       "tag": "0010_delivery_note",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793355754060,
+      "tag": "0011_document_intake",
+      "breakpoints": true
     }
   ]
 }

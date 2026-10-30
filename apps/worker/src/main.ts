@@ -11,6 +11,7 @@ import { NativeConnection, Worker } from "@temporalio/worker";
 import {
   createDocumentActivities,
   createEkaerActivities,
+  dbDocumentStore,
 } from "./activities.ts";
 import { dbReportStore } from "./ekaer.ts";
 
@@ -51,8 +52,9 @@ const worker = await Worker.create({
   taskQueue: TASK_QUEUE,
   workflowsPath: new URL("./workflows.ts", import.meta.url).pathname,
   activities: {
-    ...createDocumentActivities((e) =>
-      console.log(`${e.at} ${e.documentId} ${e.step}`),
+    ...createDocumentActivities(
+      (e) => console.log(`${e.at} ${e.documentId} ${e.step}`),
+      dbDocumentStore(db),
     ),
     ...createEkaerActivities(dbReportStore(db), ekaerClient()),
   },

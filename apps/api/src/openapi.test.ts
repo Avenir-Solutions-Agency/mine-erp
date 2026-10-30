@@ -3,6 +3,7 @@ import { METHOD_METADATA, PATH_METADATA } from "@nestjs/common/constants";
 import { RequestMethod } from "@nestjs/common";
 import { ROUTES } from "@mine-erp/contracts/openapi";
 import { expect, test } from "vitest";
+import { DocumentsController } from "./documents.ts";
 import { EkaerReportsController } from "./ekaer-reports.ts";
 import { HealthController } from "./health.ts";
 import { InvoicesController } from "./invoices.controller.ts";
@@ -23,6 +24,7 @@ const CONTROLLERS = [
   ShipmentsController,
   ReportsController,
   PolicyController,
+  DocumentsController,
 ];
 
 /** "METHOD /path" for every route Nest would map, read from the decorators. */

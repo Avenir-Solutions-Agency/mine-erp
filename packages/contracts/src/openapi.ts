@@ -8,6 +8,7 @@ import {
   CustomerDto,
   CustomerInput,
   CustomerPatch,
+  DocumentDto,
   DeleteEkaerInput,
   FileEkaerInput,
   FinalizeEkaerInput,
@@ -209,6 +210,32 @@ export const ROUTES: Route[] = [
     reply: Ok,
   },
 
+  {
+    method: "get",
+    path: "/documents",
+    summary:
+      "Uploaded weigh-ticket and delivery-note photos, newest first (200)",
+    auth: "user",
+    body: null,
+    reply: z.array(DocumentDto),
+  },
+  {
+    method: "post",
+    path: "/documents",
+    summary:
+      "Upload a photo or scan (PDF, JPG, PNG, max 10 MB); stored once by SHA-256, 409 for the same file; starts processDocument",
+    auth: "user",
+    body: "multipart-file",
+    reply: DocumentDto,
+  },
+  {
+    method: "get",
+    path: "/documents/:id/file",
+    summary: "Short-lived link to the uploaded file",
+    auth: "user",
+    body: null,
+    reply: z.object({ url: z.url() }),
+  },
   {
     method: "get",
     path: "/shipments",

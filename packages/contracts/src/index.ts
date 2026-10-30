@@ -286,6 +286,16 @@ export const ShipmentDto = z.object({
 });
 export type ShipmentDto = z.infer<typeof ShipmentDto>;
 
+/** An uploaded photo or scan of a paper weigh ticket or delivery note (T-010). */
+export const DocumentDto = z.object({
+  id: z.uuid(),
+  status: z.enum(["received", "ingested"]),
+  fileName: z.string(),
+  fileMime: z.string(),
+  createdAt: z.string(),
+});
+export type DocumentDto = z.infer<typeof DocumentDto>;
+
 const Total = z.object({
   key: z.string(),
   count: z.number().int(),
