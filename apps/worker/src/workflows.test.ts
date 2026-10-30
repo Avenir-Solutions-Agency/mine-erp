@@ -19,13 +19,31 @@ afterAll(async () => {
 
 test("processDocument runs every step once, in the documented order", async () => {
   const events: StepEvent[] = [];
+  const saved: string[] = [];
   const worker = await Worker.create({
     connection: env.nativeConnection,
     taskQueue: "test-documents",
     workflowsPath: new URL("./workflows.ts", import.meta.url).pathname,
-    activities: createDocumentActivities((e) => events.push(e), {
-      ingest: async () => true,
-    }),
+    activities: createDocumentActivities(
+      (e) => events.push(e),
+      {
+        ingest: async () => true,
+        toExtract: async () => ({
+          path: "scans/2026-10/a.jpg",
+          name: "a.jpg",
+          mime: "image/jpeg",
+        }),
+        extracted: async (_id, x) => void saved.push(x.promptVersion),
+      },
+      () => ({
+        download: async () => Buffer.from("photo"),
+        extract: async () => ({
+          result: null,
+          model: "test",
+          promptVersion: "paper-v1",
+        }),
+      }),
+    ),
   });
 
   const result = await worker.runUntil(
@@ -39,6 +57,7 @@ test("processDocument runs every step once, in the documented order", async () =
   expect(result).toEqual([...DOCUMENT_STEPS]);
   expect(events.map((e) => e.step)).toEqual([...DOCUMENT_STEPS]);
   expect(new Set(events.map((e) => e.documentId))).toEqual(new Set(["doc-1"]));
+  expect(saved).toEqual(["paper-v1"]);
 }, 120_000);
 
 test("an unknown document stops at ingest without retrying", async () => {
@@ -48,9 +67,17 @@ test("an unknown document stops at ingest without retrying", async () => {
     connection: env.nativeConnection,
     taskQueue: "test-documents-missing",
     workflowsPath: new URL("./workflows.ts", import.meta.url).pathname,
-    activities: createDocumentActivities((e) => events.push(e), {
-      ingest: async () => (ingests++, false),
-    }),
+    activities: createDocumentActivities(
+      (e) => events.push(e),
+      {
+        ingest: async () => (ingests++, false),
+        toExtract: async () => null,
+        extracted: async () => {},
+      },
+      () => {
+        throw new Error("not reached");
+      },
+    ),
   });
 
   const run = worker.runUntil(

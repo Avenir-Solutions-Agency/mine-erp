@@ -1,6 +1,6 @@
 "use client";
 
-import type { DocumentDto } from "@mine-erp/contracts";
+import type { DocumentDto, PaperExtraction } from "@mine-erp/contracts";
 import { useEffect, useRef, useState } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pill } from "@/components/ui/pill";
@@ -13,11 +13,47 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/toast";
+import { formatKg } from "@/lib/format";
 import { api } from "@/prototype/api";
 import { Alert, Panel, Small } from "@/prototype/ui";
 
-// Papír jegyek (T-010, T-016): photos of the paper weigh tickets and delivery notes of the
-// temporary period. Each file is stored once; reading them out comes with T-011.
+// Papír jegyek (T-010, T-011, T-016): photos of the paper weigh tickets and delivery notes of the
+// temporary period. Each file is stored once and read by AI; the review form comes with T-017.
+
+// Below this the reading is shown as uncertain; the review queue (T-017) will ask for a check.
+const SURE = 0.8;
+
+type Field = { value: string | number | null; confidence: number };
+
+/** One read value; an uncertain one is marked so nobody takes it at face value. */
+function Read({ f, show }: { f: Field; show?: (v: number) => string }) {
+  if (f.value === null) return <span className="text-muted-foreground">—</span>;
+  const text =
+    typeof f.value === "number" && show ? show(f.value) : String(f.value);
+  return f.confidence < SURE ? (
+    <span
+      className="rounded bg-warning-soft px-1 text-warning"
+      title={`Bizonytalan olvasat (${Math.round(f.confidence * 100)}%)`}
+    >
+      {text}?
+    </span>
+  ) : (
+    <span>{text}</span>
+  );
+}
+
+const pending = (d: DocumentDto) =>
+  d.status === "received" || d.status === "ingested";
+
+function Status({ d }: { d: DocumentDto }) {
+  if (d.status === "extracted") return <Pill tone="success">Kiolvasva</Pill>;
+  if (d.status === "unreadable")
+    return <Pill tone="destructive">Nem olvasható</Pill>;
+  return <Pill tone="warning">Feldolgozás…</Pill>;
+}
+
+const plates = (x: PaperExtraction) =>
+  [x.plate.value, x.trailerPlate.value].filter(Boolean).join(" / ") || null;
 
 const linkClass =
   "rounded-lg border border-border px-2 py-1 text-xs whitespace-nowrap outline-ring hover:bg-muted focus-visible:outline-2";
@@ -28,15 +64,21 @@ export function TransportPaper() {
   const [uploading, setUploading] = useState(0);
   const file = useRef<HTMLInputElement>(null);
 
+  const waiting = (rows ?? []).some(pending);
   useEffect(() => {
     let live = true;
-    api<DocumentDto[]>("documents")
-      .then((r) => live && setRows(r))
-      .catch((e: Error) => live && setError(e.message));
+    const load = () =>
+      api<DocumentDto[]>("documents")
+        .then((r) => live && setRows(r))
+        .catch((e: Error) => live && setError(e.message));
+    void load();
+    // Reading a photo takes up to a minute; poll only while something is still in progress.
+    const timer = waiting ? setInterval(() => void load(), 5000) : undefined;
     return () => {
       live = false;
+      clearInterval(timer);
     };
-  }, []);
+  }, [waiting]);
 
   const upload = async (files: File[]) => {
     for (const f of files) {
@@ -99,38 +141,75 @@ export function TransportPaper() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Feltöltve</TableHead>
-                <TableHead>Fájl</TableHead>
+                <TableHead>Mérlegjegy</TableHead>
+                <TableHead>Rendszám</TableHead>
+                <TableHead>Vevő · anyag</TableHead>
+                <TableHead numeric>Nettó</TableHead>
+                <TableHead>EKÁER</TableHead>
+                <TableHead>Szállítólevél</TableHead>
                 <TableHead>Állapot</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((d) => (
-                <TableRow key={d.id}>
-                  <TableCell className="whitespace-nowrap">
-                    {new Date(d.createdAt).toLocaleString("hu-HU")}
-                  </TableCell>
-                  <TableCell className="break-all">{d.fileName}</TableCell>
-                  <TableCell>
-                    {d.status === "ingested" ? (
-                      <Pill tone="success">Átvéve</Pill>
-                    ) : (
-                      <Pill tone="warning">Feldolgozásra vár</Pill>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <a
-                      href={`/api/erp/documents/${d.id}/file?raw=1`}
-                      target="_blank"
-                      rel="noopener"
-                      className={linkClass}
-                    >
-                      Megnyitás
-                    </a>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {rows.map((d) => {
+                const x = d.extraction;
+                return (
+                  <TableRow key={d.id}>
+                    <TableCell className="whitespace-nowrap">
+                      {x ? <Read f={x.ticketNumber} /> : null}
+                      <Small className="break-all">
+                        {x?.weighedAt.value ?? d.fileName}
+                      </Small>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {x ? (
+                        <Read
+                          f={{
+                            value: plates(x),
+                            confidence: Math.min(
+                              x.plate.confidence,
+                              x.trailerPlate.confidence,
+                            ),
+                          }}
+                        />
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      {x ? (
+                        <>
+                          <Read f={x.customer} />
+                          <Small>
+                            <Read f={x.product} />
+                          </Small>
+                        </>
+                      ) : null}
+                    </TableCell>
+                    <TableCell numeric>
+                      {x ? <Read f={x.netKg} show={formatKg} /> : null}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {x ? <Read f={x.ekaerNumber} /> : null}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {x ? <Read f={x.deliveryNoteNumber} /> : null}
+                    </TableCell>
+                    <TableCell>
+                      <Status d={d} />
+                    </TableCell>
+                    <TableCell>
+                      <a
+                        href={`/api/erp/documents/${d.id}/file?raw=1`}
+                        target="_blank"
+                        rel="noopener"
+                        className={linkClass}
+                      >
+                        Fotó
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Panel>
