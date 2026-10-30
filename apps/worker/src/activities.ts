@@ -1,5 +1,6 @@
 // Activities: the only place in the worker that does I/O (database, storage, EKÁER, Telegram).
 import { ApplicationFailure } from "@temporalio/activity";
+import { type Db, document, eq, eventLog } from "@mine-erp/db";
 import type { EkaerClient } from "@mine-erp/ekaer";
 import {
   deleteReport,
@@ -17,13 +18,54 @@ export interface StepEvent {
   at: string;
 }
 
+/** The document rows the steps change; every change writes its event in the same transaction. */
+export interface DocumentStore {
+  /** received → ingested; false when there is no such document. A second call changes nothing. */
+  ingest(documentId: string): Promise<boolean>;
+}
+
+export function dbDocumentStore(db: Db): DocumentStore {
+  return {
+    ingest: (id) =>
+      db.transaction(async (tx) => {
+        const [d] = await tx
+          .select({ status: document.status })
+          .from(document)
+          .where(eq(document.id, id))
+          .for("update");
+        if (!d) return false;
+        if (d.status !== "received") return true;
+        await tx
+          .update(document)
+          .set({ status: "ingested", updatedAt: new Date() })
+          .where(eq(document.id, id));
+        await tx.insert(eventLog).values({
+          actorType: "system",
+          entity: "document",
+          entityId: id,
+          action: "ingested",
+          payload: null,
+        });
+        return true;
+      }),
+  };
+}
+
 /**
- * Stub steps that only report what ran. shortcut: they write to the given sink instead of
- * event_log; each becomes a real activity in T-010 (ingest) … T-014 (ekaer).
+ * Document steps. ingest (T-010) checks the stored document and marks it ingested; the others
+ * only report what ran. shortcut: extract … ekaer stay stubs until T-011 … T-014 fill them.
  */
-export function createDocumentActivities(record: (e: StepEvent) => void) {
+export function createDocumentActivities(
+  record: (e: StepEvent) => void,
+  store: DocumentStore,
+) {
   return {
     async runStep(documentId: string, step: DocumentStep): Promise<void> {
+      if (step === "ingest" && !(await store.ingest(documentId)))
+        throw ApplicationFailure.nonRetryable(
+          `document ${documentId} not found`,
+          "DocumentNotFound",
+        );
       record({ documentId, step, at: new Date().toISOString() });
     },
   };

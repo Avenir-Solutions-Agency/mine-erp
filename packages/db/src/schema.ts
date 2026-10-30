@@ -363,3 +363,28 @@ export const policy = pgTable("policy", {
     .notNull()
     .defaultNow(),
 });
+
+export type DocumentStatus = "received" | "ingested";
+
+/**
+ * A photo or scan of a paper weigh ticket or delivery note (PRD F1, T-010). The file is stored once
+ * under its SHA-256; the same file again is refused (409), so one file is one document. The
+ * extracted fields come with T-011.
+ */
+export const document = pgTable(
+  "document",
+  {
+    id: id(),
+    status: text("status").$type<DocumentStatus>().notNull(),
+    source: text("source").$type<"web">().notNull(),
+    fileSha256: text("file_sha256").notNull().unique(),
+    filePath: text("file_path").notNull(),
+    fileName: text("file_name").notNull(),
+    fileMime: text("file_mime").notNull(),
+    ...audit,
+  },
+  (t) => [
+    index("document_created_at_idx").on(t.createdAt),
+    check("document_status_chk", sql`${t.status} in ('received', 'ingested')`),
+  ],
+);

@@ -27,6 +27,7 @@ import {
   Small,
   TabBar,
 } from "@/prototype/ui";
+import { TransportPaper } from "@/prototype/screens/transport-paper";
 import { TransportRules } from "@/prototype/screens/transport-rules";
 import { TransportSummary } from "@/prototype/screens/transport-summary";
 
@@ -107,6 +108,7 @@ export function TransportScreen() {
             items={[
               ["list", "Szállítások"],
               ["summary", "Összesítő és Excel"],
+              ["paper", "Papír jegyek"],
               ["rules", "Szabályok"],
             ]}
             active={view}
@@ -114,6 +116,8 @@ export function TransportScreen() {
           />
           {view === "rules" ? (
             <TransportRules />
+          ) : view === "paper" ? (
+            <TransportPaper />
           ) : view === "summary" ? (
             <TransportSummary />
           ) : (
