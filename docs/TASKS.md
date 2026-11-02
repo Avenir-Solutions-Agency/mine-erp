@@ -48,7 +48,7 @@ Port of `docs/reference/demo.html`; the checklist per screen is in `docs/demo-in
 
 ## Later (after v1)
 - [ ] Observability: OpenTelemetry, Grafana dashboards, alerts (spec §12)
-- [ ] Terraform for test and production on Hetzner; CD pipeline
+- [ ] Terraform for test and production on Hetzner; CD pipeline. Test part done 2026-11-02 without Terraform: Compose on a shared netcup server, CD from `main` (docs/kitelepites-teszt.md)
 - [ ] Phase 2: quotes, orders, contracts, delivery signature, Billingo invoicing
 
 ## Done
