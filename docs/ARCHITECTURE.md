@@ -42,7 +42,7 @@ AI agents -----> MCP (inside api) -----+          v                             
 | Telegram | grammY, webhook mode | TypeScript-native, stateless |
 | PDF | HTML template → Gotenberg | Delivery note, quote, TIG |
 | Payments / Email | none in v1 | Out of scope |
-| Hosting | Docker on Hetzner (EU), Terraform; Compose or k3s per ADR | EU data residency; not Vercel (several long-running services) |
+| Hosting | Docker on Hetzner (EU), Terraform; Compose or k3s per ADR. Test (decided 2026-11-02): Docker Compose on a shared netcup VPS (EU), behind that server's existing Caddy | EU data residency; not Vercel (several long-running services) |
 | CI | GitHub Actions | Lint, typecheck, tests, migration check, image build per PR |
 | Observability | OpenTelemetry, Grafana, Loki, Sentry | Pipeline, EKÁER and AI cost dashboards |
 | Testing | Vitest (+ Testcontainers, Temporal test env), Playwright | Pure domain rules ≥ 90% unit coverage; e2e for the photo → EKÁER flow |
@@ -160,7 +160,7 @@ If a task needs any of the following, stop, name the conflict, and propose the s
 | Environment | URL | Deployed from | Data |
 | --- | --- | --- | --- |
 | Local | http://localhost:3000 (web) | your machine, `docker compose -f infra/docker-compose.yml up -d` + `pnpm dev` | hosted Supabase dev project (EU); local Temporal dev server (UI :8233) and Gotenberg (:3001) |
-| Test | not set yet | `main`, automatically | test database; EKÁER test environment |
+| Test | https://erp.94-16-109-232.sslip.io | `main` after green CI (`.github/workflows/deploy-test.yml` → `infra/deploy-test.sh` → `infra/docker-compose.test.yml`) | the hosted Supabase dev project for now; simulated EKÁER (`EKAER_SIMULATE=true`) |
 | Production | not set yet | tagged release, manual approval | production database |
 
 Environment variables (names only; values live in the secret store and `.env.local`):

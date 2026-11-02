@@ -1,92 +1,157 @@
-# Online tesztkörnyezet: mi kell a kitelepítéshez
+# Online tesztkörnyezet
 
-Készült: 2026-10-30. Címzett: a Mészkő-Polgár ERP 2.0 megrendelője.
+Frissítve: 2026-11-02. Döntés: a teszt a meglévő netcup szerveren fut, a már ott futó „alfred-black” rendszer mellett.
 
 ## Röviden
 
-Az ERP most csak a fejlesztő gépén fut. Hogy bárki böngészőből kipróbálhassa, kell egy **online tesztkörnyezet**: egy bérelt szerver az EU-ban, amire minden jóváhagyott fejlesztés után magától felkerül az új verzió.
+- **Cím:** https://erp.94-16-109-232.sslip.io (domain nélkül, a `sslip.io` az IP-címből ad nevet; HTTPS-tanúsítvány magától)
+- **Szerver:** netcup VPS, EU, Debian 13, 12 mag, 31 GB RAM. Az ERP kb. 3 GB-ot használ.
+- **Frissítés:** minden mergelt fejlesztés után magától. A GitHub lefuttatja az ellenőrzéseket (CI), és ha zöld, kitelepít.
+- **Plusz költség:** nincs. A szerver már elő van fizetve, a Supabase és az OpenAI a meglévő.
+- **EKÁER:** szimulált NAV, valódi bejelentés nem megy ki.
 
-- **Költség:** kb. 5–7 € + ÁFA havonta (1 szerver a Hetznernél, mentéssel). A mostani Supabase-, OpenAI- és GitHub-előfizetés mellett nincs más díj.
-- **Átfutás:** a szerver létrehozása után kb. 1 munkanap fejlesztés.
-- **Tőletek kell:** egy Hetzner-fiók és benne egy szerver (fizetési adatokkal), opcionálisan egy aldomain, és kb. 30 perc a titkos kulcsok beállítására.
+## Hogyan épül fel
 
-A tesztkörnyezet **nem éles**: a NAV felé szimulált EKÁER megy, valódi bejelentés nem történik.
-
-## Mit kapunk
-
-| | |
+| Rész | Hol fut |
 |---|---|
-| Cím | elsőre `https://teszt.<szerver-IP>.sslip.io` (nem kell hozzá domain), később pl. `https://teszt.meszkopolgar.hu` |
-| Belépés | ugyanúgy, mint most: e-mail, jelszó és kétlépcsős kód (2FA) |
-| Frissítés | minden jóváhagyott (mergelt) fejlesztés után magától, kb. 5 percen belül |
-| Mi működik | Mérleg (szimulált mérleggel), Fuvarok és EKÁER, Papír jegyek AI-kiolvasással, Számlák, Excel |
-| EKÁER | szimulált NAV; a valódi NAV-hoz nem kapcsolódik |
-| Mérleg | a mérlegszimulátor bármelyik gépről küldhet súlyt az online rendszernek |
+| Webfelület, API, háttérfolyamat (worker), adatbázis-frissítés | a mi Docker-konténereinkben (`infra/docker-compose.test.yml`, projektnév `mine-erp-test`) |
+| Temporal, Gotenberg (PDF) | szintén a mi konténereinkben, kívülről nem érhetők el |
+| HTTPS | a szerver meglévő Caddyje (az alfred-black rendszeré); ebbe kerül egy új bejegyzés |
+| Adatbázis, belépés, fájlok | a meglévő Supabase-projekt (ugyanaz, mint fejlesztéskor) |
 
-## Mire van szükség tőletek
+Kívülről csak a webfelület és a mérlegszimulátor végpontja (`/scale/readings`, tokennel védve) érhető el. Az API többi része csak a webfelületen keresztül.
 
-### 1. Hetzner-fiók és szerver (kötelező)
+A kitelepítés útja: GitHub Actions → `git archive` SSH-n a szerverre → `infra/deploy-test.sh` → `docker compose up --build`. A GitHub kulcsa a szerveren csak ezt az egy scriptet futtathatja, shellt nem nyithat.
 
-A Hetzner német szolgáltató, a szerver az EU-ban van. Az architektúra ezzel számol, és a személyes adatok miatt is az EU-s tárolás kell.
+## Egyszeri beállítás
 
-1. Regisztráció: https://console.hetzner.com. A cég adataival és fizetési móddal (bankkártya vagy SEPA) a cég nevére.
-2. Új projekt: „Meszko-Polgar ERP”.
-3. Új szerver:
-   - **Típus:** CX23 (2 vCPU, 4 GB RAM, 40 GB SSD; a régebbi CX22 utódja), kb. 4–5 € + ÁFA havonta. A pontos árat a Hetzner oldalán nézzük meg, mert 2026-ban többször változott.
-   - **Hely:** Falkenstein vagy Nürnberg (Németország).
-   - **Rendszer:** Ubuntu 24.04.
-   - **SSH-kulcs:** a fejlesztő küldi meg a nyilvános kulcsát (ez nem titkos), azt kell hozzáadni.
-   - **Mentés (Backups):** bekapcsolva, a szerverdíj +20%-a (kb. 1 €).
-4. A fejlesztőnek elküldendő: a szerver **IP-címe**. Jelszót nem kell küldeni.
-5. Ajánlott: hozzáférés a fejlesztőnek a Hetzner-projekthez „Member” szerepkörrel. A fiók és a számlázás a cégnél marad.
+Ezt egyszer kell elvégezni, kb. 45 perc. Jelszót, kulcsot ne másolj be a chatbe.
 
-### 2. Aldomain (ajánlott, de nem kötelező)
+### 1. Engedély (a főnök)
 
-Ha van a cégnek domainje (pl. `meszkopolgar.hu`), annak kezelőjénél egy DNS-bejegyzés kell:
+A Caddy az alfred-black rendszerhez tartozik. A módosításhoz a gazdája engedélye kell, mert ha a beállítás hibás, az ő oldalai is leállhatnak.
 
-- **Típus:** A
-- **Név:** `teszt`
-- **Érték:** a szerver IP-címe
+### 2. Szerver: felhasználó és mappák (rootként)
 
-Domain nélkül is működik a `sslip.io` címmel, csak az kevésbé szép.
+```
+adduser --disabled-password --gecos "" deploy
+usermod -aG docker deploy
+mkdir -p /opt/mine-erp /etc/mine-erp
+chown deploy:deploy /opt/mine-erp
+```
 
-### 3. Titkos kulcsok (kötelező, a fejlesztővel együtt)
+A Macről másold fel a kitelepítő scriptet (a repó gyökeréből):
 
-A kulcsok a GitHubon, a projekt titkos beállításai közé kerülnek (Settings › Secrets). Onnan csak a kitelepítés olvassa őket, a kódba és a chatbe nem kerülnek. Ezek a kulcsok már megvannak, csak be kell őket másolni:
+```
+scp infra/deploy-test.sh root@94.16.109.232:/usr/local/bin/mine-erp-deploy-test
+ssh root@94.16.109.232 chmod 755 /usr/local/bin/mine-erp-deploy-test
+```
 
-- Supabase: projektcím, nyilvános kulcs, titkos kulcs, adatbázis-kapcsolat
-- OpenAI API-kulcs (a számlák és a papír jegyek kiolvasásához)
-- a mérlegszimulátor tokenje
-- a szerver SSH-kulcsa a kitelepítéshez
+### 3. Szerver: titkos beállítások
 
-Ezt a fejlesztő vezeti végig, kb. 30 perc.
+```
+nano /etc/mine-erp/test.env
+chown root:deploy /etc/mine-erp/test.env
+chmod 640 /etc/mine-erp/test.env
+```
 
-### 4. Döntések
+A fájlba ugyanazok a nevek kellenek, mint a `.env.example`-ben, az értékek a jelszókezelőből. Ami eltér a fejlesztői beállítástól:
 
-| Kérdés | Javaslat |
+| Név | Érték |
 |---|---|
-| Legyen-e külön adatbázis a tesztkörnyezetnek? | Most nem kell, a meglévő Supabase-t használja. Élesítés előtt viszont külön éles adatbázis kell. |
-| Kik kapjanak hozzáférést? | Akinek fiókot hoz létre a rendszergazda. Nyilvános regisztráció nincs. |
-| A Vercel maradjon? | Nem kell. A webfelület is a Hetzner-szerverre kerül, mert a többi rész is ott fut. |
+| `WEB_ORIGIN` | `https://erp.94-16-109-232.sslip.io` |
+| `AUTH_REQUIRE_AAL2` | `true` |
+| `ALLOW_DATA_RESET` | `false` |
+| `EKAER_SIMULATE` | `true` |
+| `SCALE_AGENT_TOKEN` | új érték: `openssl rand -hex 32` |
 
-## Mit csinál a fejlesztő
+Kötelező még: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `OPENAI_API_KEY`, `OPENAI_MODEL`. A `TEMPORAL_ADDRESS`, a `GOTENBERG_URL` és az `API_BASE_URL` értékét a Compose-fájl adja, ezeket ne írd bele.
 
-1. Csomagolja a rendszer részeit (webfelület, API, háttérfolyamatok, PDF-készítő) Docker-konténerekbe.
-2. Beállítja a szervert: tűzfal, HTTPS-tanúsítvány, automatikus újraindítás.
-3. Beállítja az automatikus kitelepítést a GitHubon: jóváhagyott fejlesztés után ellenőrzés, építés, kitelepítés, adatbázis-frissítés.
-4. Kitelepítés után ellenőrzi a működést (állapotellenőrzés, belépés, mérlegelés szimulátorral).
-5. Kiegészíti a felhasználói útmutatót az online használattal.
+### 4. Kitelepítő kulcs
+
+A Macen:
+
+```
+ssh-keygen -t ed25519 -f ~/.ssh/mine-erp-deploy -N "" -C github-deploy-test
+ssh-keyscan -t ed25519 94.16.109.232
+```
+
+A szerveren rootként (a `<publikus kulcs>` helyére a `~/.ssh/mine-erp-deploy.pub` tartalma kerül):
+
+```
+mkdir -p /home/deploy/.ssh
+echo 'command="/usr/local/bin/mine-erp-deploy-test",restrict <publikus kulcs>' >> /home/deploy/.ssh/authorized_keys
+chown -R deploy:deploy /home/deploy/.ssh
+chmod 700 /home/deploy/.ssh
+chmod 600 /home/deploy/.ssh/authorized_keys
+```
+
+### 5. GitHub
+
+Settings › Environments › új környezet: `test`.
+
+| Típus | Név | Érték |
+|---|---|---|
+| Secret | `DEPLOY_SSH_KEY` | a `~/.ssh/mine-erp-deploy` (privát kulcs) teljes tartalma |
+| Secret | `DEPLOY_KNOWN_HOSTS` | az `ssh-keyscan` kimenete |
+| Variable | `DEPLOY_USER` | `deploy` |
+| Variable | `DEPLOY_HOST` | `94.16.109.232` |
+| Variable | `TEST_URL` | `https://erp.94-16-109-232.sslip.io` |
+
+A privát kulcsot a GitHubra feltöltés után törölheted a Macről.
+
+### 6. Caddy (az 1. pont engedélyével)
+
+A `/opt/nova/caddy/Caddyfile` végére:
+
+```
+erp.94-16-109-232.sslip.io {
+	handle /scale/readings {
+		reverse_proxy mine-erp-api:4000
+	}
+	handle {
+		reverse_proxy mine-erp-web:3000
+	}
+}
+```
+
+Előbb mentés és ellenőrzés, csak utána újratöltés:
+
+```
+cp /opt/nova/caddy/Caddyfile /opt/nova/caddy/Caddyfile.bak
+docker exec alfred-black-caddy-1 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+docker exec alfred-black-caddy-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+```
+
+Ha a `validate` hibát ír, ne töltsd újra: állítsd vissza a `.bak` fájlt.
+
+### 7. Első kitelepítés
+
+A merge után a `main` CI-ja zöld lesz, és a „Deploy test” workflow magától elindul. Kézzel: GitHub › Actions › Deploy test › Run workflow. Az első építés kb. 5–10 perc.
+
+Ellenőrzés: `https://erp.94-16-109-232.sslip.io/api/health` → `{"status":"ok"}`, majd belépés a meglévő fiókkal.
+
+## Mérlegszimulátor az online rendszerrel
+
+Bármelyik gépről, ahol a repó megvan:
+
+```
+API_BASE_URL=https://erp.94-16-109-232.sslip.io SCALE_AGENT_TOKEN=<a test.env-beli érték> pnpm --filter @mine-erp/scale-agent simulate
+```
+
+## Hibakeresés a szerveren
+
+```
+cd /opt/mine-erp/app
+docker compose -f infra/docker-compose.test.yml ps
+docker compose -f infra/docker-compose.test.yml logs --tail 100 api worker web
+```
 
 ## Kockázatok és korlátok
 
-- **Közös adatok:** a tesztkörnyezet és a fejlesztő gépe ugyanazt az adatbázist használja, ezért az adatok keverednek. Tesztre ez elfogadható.
-- **Egy szerver:** ha leáll, a tesztkörnyezet sem érhető el. Tesztre elég, élesre külön tervezünk.
-- **Nem éles EKÁER:** a NAV tesztrendszeréhez külön tesztfelhasználó kell. Ez külön kérés, még nyitott.
-- **Valódi mérleg:** online is csak a szimulátor működik, amíg a mérlegfej adatai nincsenek meg (lásd a `docs/ugyfel-keresek.md` 3. pontját).
-
-## Összefoglalva: a teendők
-
-1. Hetzner-fiók és CX23-szerver létrehozása, a fejlesztő SSH-kulcsával. Utána az IP-cím elküldése.
-2. Opcionális: DNS-bejegyzés a `teszt` aldomainhez.
-3. 30 perc a fejlesztővel a titkos kulcsok beállítására.
-4. Ezután kb. 1 munkanap, és az online tesztkörnyezet elérhető.
+- **Közös szerver:** aki rootként hozzáfér, az mindkét rendszer adataihoz hozzáfér, és ha az egyiket feltörik, a másik is veszélyben van. Tesztre elfogadható. Élesre külön szerver kell.
+- **Közös adatbázis:** a teszt és a fejlesztő gépe ugyanazt a Supabase-t használja, az adatok keverednek. Élesítés előtt külön éles adatbázis kell.
+- **Root jelszó:** a szerver root jelszava egy chatbe is bekerült. Ajánlott lecserélni (`passwd`), és a jelszavas SSH-belépést kikapcsolni.
+- **Nem éles EKÁER:** a NAV tesztrendszeréhez külön tesztfelhasználó kell, ez még nyitott.
+- **Valódi mérleg:** online is csak a szimulátor működik, amíg a mérlegfej adatai nincsenek meg (`docs/ugyfel-keresek.md` 3. pont).
+- **Mentés:** a Temporal-adatok egy Docker-kötetben vannak a szerveren, mentés nélkül. Tesztre elég; az üzleti adatok a Supabase-ben vannak.
