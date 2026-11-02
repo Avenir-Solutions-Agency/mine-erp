@@ -104,8 +104,15 @@ export const ScaleLiveDto = z.object({
   online: z.boolean(),
   /** Below the minimum weight: no vehicle on the bridge (not the same as moving). */
   empty: z.boolean(),
+  /** The API runs a pretend indicator (SCALE_SIMULATOR=true): test and local only. */
+  simulator: z.boolean(),
 });
 export type ScaleLiveDto = z.infer<typeof ScaleLiveDto>;
+
+/** Puts a demo load on the simulated scale (test environment only). */
+export const ScaleSimulateInput = z.object({
+  load: z.enum(["off", "empty", "loaded"]),
+});
 
 const Text = (max: number) => z.string().trim().max(max).nullable().optional();
 

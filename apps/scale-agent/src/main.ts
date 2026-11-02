@@ -1,7 +1,11 @@
 // Simulated scale agent: sends the pretend indicator's weight to the API four times a second.
 // Keys: 1 = empty truck on (~14 t), 2 = loaded truck on (~38.5 t), 0 = truck off, q = quit.
 import { emitKeypressEvents } from "node:readline";
-import { indicatorKg, type Load } from "./simulator.ts";
+import {
+  indicatorKg,
+  type Load,
+  SIM_LOADS,
+} from "@mine-erp/domain/scale-simulator";
 
 const api = process.env.API_BASE_URL ?? "http://localhost:4000";
 const token = process.env.SCALE_AGENT_TOKEN;
@@ -10,7 +14,11 @@ if (!token) {
   process.exit(1);
 }
 
-const LOADS: Record<string, number> = { "0": 0, "1": 14200, "2": 38560 };
+const LOADS: Record<string, number> = {
+  "0": SIM_LOADS.off,
+  "1": SIM_LOADS.empty,
+  "2": SIM_LOADS.loaded,
+};
 let load: Load = { kg: 0, since: Date.now() };
 let status = "indul";
 

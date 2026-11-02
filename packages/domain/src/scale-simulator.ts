@@ -7,6 +7,10 @@ export const SETTLE_MS = 2500;
 /** Weighbridge display division, kg. */
 export const DIVISION_KG = 20;
 
+/** The three demo loads: bridge empty, empty truck (tare), loaded truck (gross). */
+export const SIM_LOADS = { off: 0, empty: 14200, loaded: 38560 } as const;
+export type SimLoad = keyof typeof SIM_LOADS;
+
 export interface Load {
   kg: number;
   /** When the load changed, epoch ms. */

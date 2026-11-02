@@ -10,7 +10,12 @@ import { ErrorFilter } from "./http.ts";
 import { InvoicesController } from "./invoices.controller.ts";
 import { DB, InvoicesRepository } from "./invoices.repository.ts";
 import { InvoicesService } from "./invoices.service.ts";
-import { AgentGuard, ScaleController, ScaleLive } from "./scale.ts";
+import {
+  AgentGuard,
+  ScaleController,
+  ScaleLive,
+  ScaleSimulator,
+} from "./scale.ts";
 import { MasterData, MasterDataController } from "./master-data.ts";
 import { Client, Connection } from "@temporalio/client";
 import {
@@ -54,6 +59,7 @@ const { db } = createDb(env.DATABASE_URL);
     InvoicesService,
     AgentGuard,
     ScaleLive,
+    ScaleSimulator,
     WeighingsRepository,
     WeighingsService,
     TicketPdf,

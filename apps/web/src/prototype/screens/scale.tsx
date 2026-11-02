@@ -330,7 +330,36 @@ function LiveWeight({ live }: { live: ScaleLiveDto | null }) {
               ? "Mérni csak stabil súlynál lehet (3 mp nyugalom)."
               : "A súly rögzíthető."}
       </Small>
+      {live?.simulator && <SimulatorButtons />}
     </Panel>
+  );
+}
+
+const SIM_BUTTONS: ["empty" | "loaded" | "off", string][] = [
+  ["empty", "Üres kamion fel"],
+  ["loaded", "Rakott kamion fel"],
+  ["off", "Le a mérlegről"],
+];
+
+/** Test environment only (SCALE_SIMULATOR=true): drives the API's pretend indicator. */
+function SimulatorButtons() {
+  const put = (load: string) =>
+    api<void>("scale/simulate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ load }),
+    }).catch((e: Error) => toast(e.message));
+  return (
+    <div className="mt-3 border-t pt-3">
+      <Small>Szimulált mérleg (csak tesztkörnyezet)</Small>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {SIM_BUTTONS.map(([load, label]) => (
+          <Btn key={load} sm onClick={() => void put(load)}>
+            {label}
+          </Btn>
+        ))}
+      </div>
+    </div>
   );
 }
 
