@@ -926,6 +926,10 @@
                         },
                         "simulator": {
                           "type": "boolean"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": ["scale", "simulator"]
                         }
                       },
                       "required": [
@@ -933,7 +937,8 @@
                         "stableKg",
                         "online",
                         "empty",
-                        "simulator"
+                        "simulator",
+                        "source"
                       ],
                       "additionalProperties": false
                     }
@@ -987,6 +992,59 @@
                   }
                 },
                 "required": ["load"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Accepted"
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Hungarian, safe to show"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scale/source": {
+      "post": {
+        "summary": "Switch the live weight between the real scale and the simulator; 404 unless SCALE_SIMULATOR=true",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "enum": ["scale", "simulator"]
+                  }
+                },
+                "required": ["source"]
               }
             }
           }

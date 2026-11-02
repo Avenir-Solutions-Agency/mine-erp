@@ -96,6 +96,10 @@ export const ScaleReadingInput = z.object({
   kg: z.number().finite().min(-1000).max(200_000),
 });
 
+/** The real scale (agent readings) or the API's simulated indicator. */
+export const ScaleSource = z.enum(["scale", "simulator"]);
+export type ScaleSource = z.infer<typeof ScaleSource>;
+
 export const ScaleLiveDto = z.object({
   /** Latest value, or null when the agent has not reported for a while. */
   kg: z.number().nullable(),
@@ -106,6 +110,8 @@ export const ScaleLiveDto = z.object({
   empty: z.boolean(),
   /** The API runs a pretend indicator (SCALE_SIMULATOR=true): test and local only. */
   simulator: z.boolean(),
+  /** Where the live weight comes from now; always "scale" without SCALE_SIMULATOR. */
+  source: ScaleSource,
 });
 export type ScaleLiveDto = z.infer<typeof ScaleLiveDto>;
 
@@ -113,6 +119,9 @@ export type ScaleLiveDto = z.infer<typeof ScaleLiveDto>;
 export const ScaleSimulateInput = z.object({
   load: z.enum(["off", "empty", "loaded"]),
 });
+
+/** Switches the live weight between the real scale and the simulator (test environment only). */
+export const ScaleSourceInput = z.object({ source: ScaleSource });
 
 const Text = (max: number) => z.string().trim().max(max).nullable().optional();
 

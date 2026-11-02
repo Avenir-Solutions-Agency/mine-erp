@@ -5,6 +5,7 @@ import type {
   CustomerDto,
   ProductDto,
   ScaleLiveDto,
+  ScaleSource,
   WeighingDto,
 } from "@mine-erp/contracts";
 import Link from "next/link";
@@ -330,7 +331,7 @@ function LiveWeight({ live }: { live: ScaleLiveDto | null }) {
               ? "Mérni csak stabil súlynál lehet (3 mp nyugalom)."
               : "A súly rögzíthető."}
       </Small>
-      {live?.simulator && <SimulatorButtons />}
+      {live?.simulator && <TestScale source={live.source} />}
     </Panel>
   );
 }
@@ -340,25 +341,58 @@ const SIM_BUTTONS: ["empty" | "loaded" | "off", string][] = [
   ["loaded", "Rakott kamion fel"],
   ["off", "Le a mérlegről"],
 ];
+const SOURCES: [ScaleSource, string][] = [
+  ["simulator", "Szimulált"],
+  ["scale", "Valódi mérleg"],
+];
 
-/** Test environment only (SCALE_SIMULATOR=true): drives the API's pretend indicator. */
-function SimulatorButtons() {
-  const put = (load: string) =>
-    api<void>("scale/simulate", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ load }),
-    }).catch((e: Error) => toast(e.message));
+const post = (path: string, body: object) =>
+  api<void>(path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((e: Error) => toast(e.message));
+
+/**
+ * Test environment only (SCALE_SIMULATOR=true): picks the weight source and, on the simulator,
+ * drives the API's pretend indicator. The real scale is fed by apps/scale-agent (PORTAL AI bridge).
+ */
+function TestScale({ source }: { source: ScaleSource }) {
   return (
     <div className="mt-3 border-t pt-3">
-      <Small>Szimulált mérleg (csak tesztkörnyezet)</Small>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {SIM_BUTTONS.map(([load, label]) => (
-          <Btn key={load} sm onClick={() => void put(load)}>
+      <Small>Mérleg forrása (csak tesztkörnyezet)</Small>
+      <div className="mt-2 flex flex-wrap gap-2" role="group">
+        {SOURCES.map(([value, label]) => (
+          <Btn
+            key={value}
+            sm
+            kind={source === value ? "pri" : "default"}
+            aria-pressed={source === value}
+            onClick={() => void post("scale/source", { source: value })}
+          >
             {label}
           </Btn>
         ))}
       </div>
+      {source === "simulator" ? (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {SIM_BUTTONS.map(([load, label]) => (
+            <Btn
+              key={load}
+              sm
+              onClick={() => void post("scale/simulate", { load })}
+            >
+              {label}
+            </Btn>
+          ))}
+        </div>
+      ) : (
+        <Small className="mt-2">
+          A súly a bányai PORTAL AI mérlegprogramból jön: a bánya hálózatán
+          futtassa a <Mono>pnpm --filter @mine-erp/scale-agent portal</Mono>{" "}
+          parancsot.
+        </Small>
+      )}
     </div>
   );
 }
