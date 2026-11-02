@@ -34,10 +34,10 @@ A Caddy az alfred-black rendszerhez tartozik. A módosításhoz a gazdája enged
 ### 2. Szerver: felhasználó és mappák (rootként)
 
 ```
-adduser --disabled-password --gecos "" deploy
-usermod -aG docker deploy
+adduser --disabled-password --gecos "" mineerp
+usermod -aG docker mineerp
 mkdir -p /opt/mine-erp /etc/mine-erp
-chown deploy:deploy /opt/mine-erp
+chown mineerp:mineerp /opt/mine-erp
 ```
 
 A Macről másold fel a kitelepítő scriptet (a repó gyökeréből):
@@ -51,7 +51,7 @@ ssh root@94.16.109.232 chmod 755 /usr/local/bin/mine-erp-deploy-test
 
 ```
 nano /etc/mine-erp/test.env
-chown root:deploy /etc/mine-erp/test.env
+chown root:mineerp /etc/mine-erp/test.env
 chmod 640 /etc/mine-erp/test.env
 ```
 
@@ -79,11 +79,11 @@ ssh-keyscan -t ed25519 94.16.109.232
 A szerveren rootként (a `<publikus kulcs>` helyére a `~/.ssh/mine-erp-deploy.pub` tartalma kerül):
 
 ```
-mkdir -p /home/deploy/.ssh
-echo 'command="/usr/local/bin/mine-erp-deploy-test",restrict <publikus kulcs>' >> /home/deploy/.ssh/authorized_keys
-chown -R deploy:deploy /home/deploy/.ssh
-chmod 700 /home/deploy/.ssh
-chmod 600 /home/deploy/.ssh/authorized_keys
+mkdir -p /home/mineerp/.ssh
+echo 'command="/usr/local/bin/mine-erp-deploy-test",restrict <publikus kulcs>' >> /home/mineerp/.ssh/authorized_keys
+chown -R mineerp:mineerp /home/mineerp/.ssh
+chmod 700 /home/mineerp/.ssh
+chmod 600 /home/mineerp/.ssh/authorized_keys
 ```
 
 ### 5. GitHub
@@ -94,7 +94,7 @@ Settings › Environments › új környezet: `test`.
 |---|---|---|
 | Secret | `DEPLOY_SSH_KEY` | a `~/.ssh/mine-erp-deploy` (privát kulcs) teljes tartalma |
 | Secret | `DEPLOY_KNOWN_HOSTS` | az `ssh-keyscan` kimenete |
-| Variable | `DEPLOY_USER` | `deploy` |
+| Variable | `DEPLOY_USER` | `mineerp` (a szerveren már volt egy `deploy` felhasználó, azt nem használjuk) |
 | Variable | `DEPLOY_HOST` | `94.16.109.232` |
 | Variable | `TEST_URL` | `https://erp.94-16-109-232.sslip.io` |
 
