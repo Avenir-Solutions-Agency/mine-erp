@@ -1,6 +1,8 @@
 # Online test environment on the shared netcup server (docs/kitelepites-teszt.md).
 # Started by infra/deploy-test.sh; secrets come from /etc/mine-erp/test.env on the server, never from git.
 # HTTPS is the server's existing Caddy (alfred-black stack): it reaches web and api over its network "edge".
+# Service names carry the mine-erp- prefix: Compose registers them as DNS names on every attached network,
+# and the alfred stack has its own "web" and "temporal" there.
 name: mine-erp-test
 
 x-app: &app
@@ -10,8 +12,8 @@ x-app: &app
   env_file: /etc/mine-erp/test.env
   environment:
     NODE_ENV: production
-    TEMPORAL_ADDRESS: temporal:7233
-    GOTENBERG_URL: http://gotenberg:3000
+    TEMPORAL_ADDRESS: mine-erp-temporal:7233
+    GOTENBERG_URL: http://mine-erp-gotenberg:3000
   restart: unless-stopped
   logging: &logging
     driver: json-file
@@ -20,7 +22,7 @@ x-app: &app
       max-file: "3"
 
 services:
-  temporal:
+  mine-erp-temporal:
     # Same dev server as local development: one SQLite file in a volume, enough for a test environment.
     image: temporalio/temporal:1.9.1
     user: root
@@ -30,53 +32,51 @@ services:
     restart: unless-stopped
     logging: *logging
 
-  gotenberg:
+  mine-erp-gotenberg:
     image: gotenberg/gotenberg:8.39.0
     restart: unless-stopped
     logging: *logging
 
-  migrate:
+  mine-erp-migrate:
     <<: *app
     working_dir: /app/packages/db
     command: [node, scripts/migrate.ts]
     restart: "no"
 
-  api:
+  mine-erp-api:
     <<: *app
     working_dir: /app/apps/api
     command: [node, dist/main.js]
     depends_on:
-      migrate:
+      mine-erp-migrate:
         condition: service_completed_successfully
-      temporal:
+      mine-erp-temporal:
         condition: service_started
     networks:
       default:
       edge:
-        aliases: [mine-erp-api]
 
-  worker:
+  mine-erp-worker:
     <<: *app
     working_dir: /app/apps/worker
     command: [node, src/main.ts]
     depends_on:
-      migrate:
+      mine-erp-migrate:
         condition: service_completed_successfully
-      temporal:
+      mine-erp-temporal:
         condition: service_started
 
-  web:
+  mine-erp-web:
     <<: *app
     working_dir: /app/apps/web
     command: [node_modules/.bin/next, start, --port, "3000"]
     environment:
       NODE_ENV: production
-      API_BASE_URL: http://api:4000
-    depends_on: [api]
+      API_BASE_URL: http://mine-erp-api:4000
+    depends_on: [mine-erp-api]
     networks:
       default:
       edge:
-        aliases: [mine-erp-web]
 
 networks:
   edge:

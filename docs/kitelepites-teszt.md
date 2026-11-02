@@ -144,7 +144,7 @@ API_BASE_URL=https://erp.94-16-109-232.sslip.io SCALE_AGENT_TOKEN=<a test.env-be
 ```
 cd /opt/mine-erp/app
 docker compose -f infra/docker-compose.test.yml ps
-docker compose -f infra/docker-compose.test.yml logs --tail 100 api worker web
+docker compose -f infra/docker-compose.test.yml logs --tail 100 mine-erp-api mine-erp-worker mine-erp-web
 ```
 
 ## Kockázatok és korlátok
