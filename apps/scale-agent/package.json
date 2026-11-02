@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "simulate": "node --env-file-if-exists=../../.env.local src/main.ts",
-    "portal": "node --env-file-if-exists=../../.env.local src/portal.ts",
+    "portal": "node src/portal.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

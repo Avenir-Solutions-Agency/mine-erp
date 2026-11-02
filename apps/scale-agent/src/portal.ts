@@ -1,24 +1,33 @@
 // PORTAL AI bridge: runs on a machine on the quarry LAN, reads the live weight from the PORTAL AI
 // ERP API (GET /status, read only: this program never writes to PORTAL AI) and forwards it to the
 // ERP API like the simulator does. `--probe` prints /health and /status once and exits.
+// Settings come from the shell environment, otherwise it asks; it does not read .env.local, whose
+// API_BASE_URL and SCALE_AGENT_TOKEN belong to the local development API, not the test server.
 import { setTimeout as sleep } from "node:timers/promises";
 import { portalWeightKg } from "./portal-weight.ts";
 import { postReading } from "./post.ts";
+import { ask, askSecret, loadSaved, save } from "./prompt.ts";
 
-function need(name: string): string {
-  const v = process.env[name];
-  if (!v) {
-    console.error(`${name} is not set (see .env.example).`);
-    process.exit(1);
-  }
-  return v;
-}
-
-const api = process.env.API_BASE_URL ?? "http://localhost:4000";
-const token = need("SCALE_AGENT_TOKEN");
-const base = need("PORTAL_BASE_URL").replace(/\/+$/, "");
-const key = need("PORTAL_API_KEY");
-const field = process.env.PORTAL_WEIGHT_FIELD || undefined;
+const saved = loadSaved();
+const env = (name: string) => process.env[name] || undefined;
+const api = (
+  env("API_BASE_URL") ??
+  (await ask("ERP címe", saved.apiUrl ?? "https://erp.94-16-109-232.sslip.io"))
+).replace(/\/+$/, "");
+const base = (
+  env("PORTAL_BASE_URL") ??
+  (await ask(
+    "PORTAL AI címe",
+    saved.portalUrl ?? "http://192.168.1.50:8000/api/v1",
+  ))
+).replace(/\/+$/, "");
+const key =
+  env("PORTAL_API_KEY") ??
+  (await askSecret("PORTAL AI API-kulcs (portal_erp_…)"));
+const token =
+  env("SCALE_AGENT_TOKEN") ??
+  (await askSecret("ERP mérleg-token (SCALE_AGENT_TOKEN)"));
+const field = env("PORTAL_WEIGHT_FIELD");
 
 async function portal(path: string): Promise<unknown> {
   const res = await fetch(`${base}${path}`, {
@@ -40,6 +49,7 @@ try {
   console.error(`A PORTAL AI nem érhető el (${base}): ${(e as Error).message}`);
   process.exit(1);
 }
+save({ apiUrl: api, portalUrl: base });
 if (process.argv.includes("--probe")) process.exit(0);
 
 for (;;) {
