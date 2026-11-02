@@ -14,6 +14,8 @@ export class ApiFailure extends Error {
 /** Calls the API through the BFF; errors carry the API's Hungarian message. */
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api/erp/${path}`, init);
+  // 204: the action succeeded and has nothing to return.
+  if (res.status === 204) return undefined as T;
   const body = (await res.json().catch(() => null)) as {
     data?: T;
     error?: { message: string };

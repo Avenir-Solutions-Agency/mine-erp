@@ -8,11 +8,22 @@ import {
   HttpCode,
   Inject,
   Injectable,
+  type OnModuleDestroy,
   Post,
   UseGuards,
 } from "@nestjs/common";
 import type { Request } from "express";
-import { ScaleReadingInput, type ScaleLiveDto } from "@mine-erp/contracts";
+import {
+  ScaleReadingInput,
+  type ScaleLiveDto,
+  ScaleSimulateInput,
+} from "@mine-erp/contracts";
+import {
+  indicatorKg,
+  type Load,
+  SIM_LOADS,
+  type SimLoad,
+} from "@mine-erp/domain/scale-simulator";
 import {
   DEFAULT_STABILITY,
   type Reading,
@@ -40,7 +51,7 @@ export class ScaleLive {
     this.readings = this.readings.filter((r) => r.at >= at - KEEP_MS);
   }
 
-  live(now = Date.now()): ScaleLiveDto {
+  live(now = Date.now()): Omit<ScaleLiveDto, "simulator"> {
     const last = this.readings.at(-1);
     const online = !!last && now - last.at <= OFFLINE_MS;
     return {
@@ -59,6 +70,43 @@ export class ScaleLive {
     if (stableKg == null)
       throw new ApiError(409, "not_stable", "A súly még nem stabil, várjon.");
     return stableKg;
+  }
+}
+
+/**
+ * A pretend indicator inside the API (SCALE_SIMULATOR=true), so the test environment can be
+ * weighed from the browser without running apps/scale-agent. Feeds ScaleLive like the agent does.
+ */
+@Injectable()
+export class ScaleSimulator implements OnModuleDestroy {
+  private load: Load = { kg: 0, since: 0 };
+  private timer: ReturnType<typeof setInterval> | undefined;
+
+  constructor(
+    @Inject(ENV) private readonly env: Env,
+    private readonly scale: ScaleLive,
+  ) {}
+
+  get enabled(): boolean {
+    return this.env.SCALE_SIMULATOR === "true";
+  }
+
+  put(load: SimLoad, now = Date.now()) {
+    if (!this.enabled)
+      throw new ApiError(
+        404,
+        "not_found",
+        "A mérlegszimulátor ki van kapcsolva.",
+      );
+    this.load = { kg: SIM_LOADS[load], since: now };
+    this.timer ??= setInterval(
+      () => this.scale.add(indicatorKg(this.load, Date.now())),
+      250,
+    );
+  }
+
+  onModuleDestroy() {
+    clearInterval(this.timer);
   }
 }
 
@@ -93,7 +141,10 @@ export function sameSecret(a: string, b: string): boolean {
 
 @Controller("scale")
 export class ScaleController {
-  constructor(private readonly scale: ScaleLive) {}
+  constructor(
+    private readonly scale: ScaleLive,
+    private readonly simulator: ScaleSimulator,
+  ) {}
 
   @Post("readings")
   @HttpCode(204)
@@ -108,6 +159,18 @@ export class ScaleController {
   @Get("live")
   @UseGuards(AuthGuard)
   live() {
-    return { data: this.scale.live() };
+    return {
+      data: { ...this.scale.live(), simulator: this.simulator.enabled },
+    };
+  }
+
+  @Post("simulate")
+  @HttpCode(204)
+  @UseGuards(AuthGuard)
+  simulate(@Body() body: unknown) {
+    const input = ScaleSimulateInput.safeParse(body);
+    if (!input.success)
+      throw new ApiError(400, "invalid_input", "Hibás szimulált terhelés.");
+    this.simulator.put(input.data.load);
   }
 }

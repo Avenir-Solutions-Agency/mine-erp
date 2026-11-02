@@ -8,6 +8,7 @@
     "./demo": "./src/demo/index.ts",
     "./invoices": "./src/invoices.ts",
     "./weighing": "./src/weighing.ts",
+    "./scale-simulator": "./src/scale-simulator.ts",
     "./ekaer": "./src/ekaer.ts",
     "./shipment": "./src/shipment.ts",
     "./report": "./src/report.ts"

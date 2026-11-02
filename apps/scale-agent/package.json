@@ -6,7 +6,7 @@
   "scripts": {
     "simulate": "node --env-file-if-exists=../../.env.local src/main.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "devDependencies": {
     "@mine-erp/domain": "workspace:*",

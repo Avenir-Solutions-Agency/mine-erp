@@ -20,6 +20,8 @@ const Env = z.object({
   ALLOW_DATA_RESET: z.enum(["true", "false"]).default("false"),
   // Shared secret of the local scale agent; without it the API refuses scale readings.
   SCALE_AGENT_TOKEN: z.string().min(32).optional(),
+  // Test and local only: the Mérleg screen gets buttons that drive a simulated indicator in the API.
+  SCALE_SIMULATOR: z.enum(["true", "false"]).default("false"),
 });
 export type Env = z.infer<typeof Env>;
 

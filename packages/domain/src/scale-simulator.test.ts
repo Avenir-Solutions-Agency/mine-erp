@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { stableWeight } from "@mine-erp/domain/weighing";
-import { DIVISION_KG, indicatorKg, SETTLE_MS } from "./simulator.ts";
+import { stableWeight } from "./weighing";
+import { DIVISION_KG, indicatorKg, SETTLE_MS } from "./scale-simulator";
 
 const readings = (
   load: { kg: number; since: number },

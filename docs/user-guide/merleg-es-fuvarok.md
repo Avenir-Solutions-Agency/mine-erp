@@ -88,6 +88,8 @@ Amíg a valódi mérlegfej nincs bekötve, a szimulátor játssza a mérleget. M
 4. A Nyitott mérlegelések listában kattintson a **Második mérés** gombra. Nettó: kb. 24 360 kg.
 5. Nyomja meg a **0**-t (a kamion lehajt).
 
+**Szimulátor gombokkal (tesztkörnyezet, terminál nélkül):** ha az API-nál `SCALE_SIMULATOR=true` van beállítva (az online teszten igen, élesben soha), a Mérleg oldal „Élő súly” paneljén három gomb jelenik meg: **Üres kamion fel** (= 1-es billentyű), **Rakott kamion fel** (= 2-es) és **Le a mérlegről** (= 0-s). Ugyanúgy működnek, mint a billentyűk, a terminálos szimulátort ilyenkor nem kell elindítani.
+
 **EKÁER-hiba kipróbálása:** szimulált NAV-nál a `HIBA` kezdetű rendszámot (pl. `HIBA123`) a NAV elutasítja. Így ki lehet próbálni a **Sikertelen** állapotot és az **Újrapróbálás** gombot.
 
 ### Leállítás

@@ -22,6 +22,7 @@ import {
   ProductPatch,
   RegisterDocumentInput,
   ScaleLiveDto,
+  ScaleSimulateInput,
   ShipmentDto,
   ShipmentReportDto,
   ScaleReadingInput,
@@ -124,6 +125,15 @@ export const ROUTES: Route[] = [
     auth: "user",
     body: null,
     reply: ScaleLiveDto,
+  },
+  {
+    method: "post",
+    path: "/scale/simulate",
+    summary:
+      "Put a demo load on the simulated scale; 404 unless SCALE_SIMULATOR=true",
+    auth: "user",
+    body: ScaleSimulateInput,
+    reply: null,
   },
 
   {

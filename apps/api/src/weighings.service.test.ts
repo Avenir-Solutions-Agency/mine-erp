@@ -1,11 +1,41 @@
-import { describe, expect, test } from "vitest";
-import { ScaleLive, sameSecret } from "./scale.ts";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import type { Env } from "./env.ts";
+import { ScaleLive, ScaleSimulator, sameSecret } from "./scale.ts";
 import { isUniqueViolation } from "./http.ts";
 import { toDomain } from "./weighings.service.ts";
 import type { WeighingRow } from "./weighings.repository.ts";
 
 const feed = (scale: ScaleLive, kgs: number[], start = 0, stepMs = 500) =>
   kgs.forEach((kg, i) => scale.add(kg, start + i * stepMs));
+
+describe("ScaleSimulator", () => {
+  afterEach(() => vi.useRealTimers());
+  const env = (on: boolean) =>
+    ({ SCALE_SIMULATOR: on ? "true" : "false" }) as Env;
+
+  test("refuses when SCALE_SIMULATOR is off", () => {
+    const sim = new ScaleSimulator(env(false), new ScaleLive());
+
+    expect(() => sim.put("loaded")).toThrow(
+      expect.objectContaining({ status: 404 }),
+    );
+  });
+
+  test("a loaded truck settles to a stable weight", () => {
+    vi.useFakeTimers({ now: 0 });
+    const scale = new ScaleLive();
+    const sim = new ScaleSimulator(env(true), scale);
+
+    sim.put("loaded");
+    vi.advanceTimersByTime(7000);
+
+    const { stableKg, online } = scale.live(Date.now());
+    sim.onModuleDestroy();
+    expect(online).toBe(true);
+    expect(stableKg).toBeGreaterThanOrEqual(38560);
+    expect(stableKg).toBeLessThanOrEqual(38580);
+  });
+});
 
 describe("ScaleLive", () => {
   test("an empty bridge is reported as empty, not as moving", () => {
