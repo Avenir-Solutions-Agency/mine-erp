@@ -6,6 +6,7 @@ import {
   type Load,
   SIM_LOADS,
 } from "@mine-erp/domain/scale-simulator";
+import { postReading } from "./post.ts";
 
 const api = process.env.API_BASE_URL ?? "http://localhost:4000";
 const token = process.env.SCALE_AGENT_TOKEN;
@@ -24,20 +25,7 @@ let status = "indul";
 
 async function send() {
   const kg = indicatorKg(load, Date.now());
-  try {
-    const res = await fetch(`${api}/scale/readings`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ kg }),
-      signal: AbortSignal.timeout(1000),
-    });
-    status = res.ok ? "kapcsolódva" : `API hiba ${res.status}`;
-  } catch {
-    status = "az API nem érhető el";
-  }
+  status = await postReading(api, token!, kg);
   process.stdout.write(
     `\r${String(kg).padStart(7)} kg · ${status} · [1] üres [2] rakott [0] le [q] kilép   `,
   );

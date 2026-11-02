@@ -90,6 +90,15 @@ Amíg a valódi mérlegfej nincs bekötve, a szimulátor játssza a mérleget. M
 
 **Szimulátor gombokkal (tesztkörnyezet, terminál nélkül):** ha az API-nál `SCALE_SIMULATOR=true` van beállítva (az online teszten igen, élesben soha), a Mérleg oldal „Élő súly” paneljén három gomb jelenik meg: **Üres kamion fel** (= 1-es billentyű), **Rakott kamion fel** (= 2-es) és **Le a mérlegről** (= 0-s). Ugyanúgy működnek, mint a billentyűk, a terminálos szimulátort ilyenkor nem kell elindítani.
 
+**Valódi mérleg a bányában (PORTAL AI híd):** a Mérleg oldalon a „Mérleg forrása” kapcsolóval válasszon a **Szimulált** és a **Valódi mérleg** között (csak tesztkörnyezetben látszik). Valódi mérlegnél a súlyt a bányai PORTAL AI mérlegprogramtól egy kis híd veszi át, és továbbküldi az ERP-nek. A híd csak olvas a PORTAL AI-ból, oda soha nem ír.
+
+1. A PORTAL AI-ban (2026 fix2149 vagy újabb): **Program › ERP API kapcsolat**: ERP API bekapcsolva, módosító parancsok **kikapcsolva**, hálózati / tablet elérés bekapcsolva (ehhez a program újraindítása kell). Hozzon létre API-kulcsot (`portal_erp_…`), és tegye a jelszókezelőbe.
+2. A laptop legyen a bánya hálózatán (ugyanazon, mint a mérleges gép), és legyen internete is.
+3. Próba a repó gyökeréből: `pnpm --filter @mine-erp/scale-agent portal --probe`. Megkérdezi az ERP címét (Enter: az online teszt), a PORTAL AI címét (`http://<mérleges gép IP-címe>:8000/api/v1`), az API-kulcsot és az ERP mérleg-tokenjét (a szerveren a `/etc/mine-erp/test.env` `SCALE_AGENT_TOKEN` értéke). A kulcs és a token gépelés közben nem látszik, és sehova nem mentődik; a két címet megjegyzi. Végül kiírja a PORTAL AI `/health` és `/status` válaszát.
+4. Ha a próba rendben van, ugyanez `--probe` nélkül: folyamatosan küldi a súlyt. A Mérleg oldalon kapcsoljon **Valódi mérleg**-re.
+5. A mérleges gép IP-címe: a PORTAL AI ERP API kapcsolat lapján, vagy a mérleges gépen `cmd` › `ipconfig` › IPv4 Address. Gyors próba a böngészőből: `http://<IP>:8000/api/v1/health` (401-es válasz = elérhető, csak kulcs kell).
+6. Ha a híd azt írja, hogy „nem találom a súlyt”, a kiírt mezők közül válassza ki az élő súlyt, és adja meg: `PORTAL_WEIGHT_FIELD=<mező>` (pl. `scale.weight_kg`).
+
 **EKÁER-hiba kipróbálása:** szimulált NAV-nál a `HIBA` kezdetű rendszámot (pl. `HIBA123`) a NAV elutasítja. Így ki lehet próbálni a **Sikertelen** állapotot és az **Újrapróbálás** gombot.
 
 ### Leállítás

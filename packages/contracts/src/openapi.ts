@@ -23,6 +23,7 @@ import {
   RegisterDocumentInput,
   ScaleLiveDto,
   ScaleSimulateInput,
+  ScaleSourceInput,
   ShipmentDto,
   ShipmentReportDto,
   ScaleReadingInput,
@@ -133,6 +134,15 @@ export const ROUTES: Route[] = [
       "Put a demo load on the simulated scale; 404 unless SCALE_SIMULATOR=true",
     auth: "user",
     body: ScaleSimulateInput,
+    reply: null,
+  },
+  {
+    method: "post",
+    path: "/scale/source",
+    summary:
+      "Switch the live weight between the real scale and the simulator; 404 unless SCALE_SIMULATOR=true",
+    auth: "user",
+    body: ScaleSourceInput,
     reply: null,
   },
 

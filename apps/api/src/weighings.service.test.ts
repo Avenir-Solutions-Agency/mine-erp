@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { Env } from "./env.ts";
-import { ScaleLive, ScaleSimulator, sameSecret } from "./scale.ts";
+import {
+  ScaleController,
+  ScaleLive,
+  ScaleSimulator,
+  sameSecret,
+} from "./scale.ts";
 import { isUniqueViolation } from "./http.ts";
 import { toDomain } from "./weighings.service.ts";
 import type { WeighingRow } from "./weighings.repository.ts";
@@ -34,6 +39,55 @@ describe("ScaleSimulator", () => {
     expect(online).toBe(true);
     expect(stableKg).toBeGreaterThanOrEqual(38560);
     expect(stableKg).toBeLessThanOrEqual(38580);
+  });
+
+  test("without SCALE_SIMULATOR the source is always the real scale", () => {
+    const sim = new ScaleSimulator(env(false), new ScaleLive());
+
+    const source = sim.source;
+
+    expect(source).toBe("scale");
+    expect(() => sim.use("simulator")).toThrow(
+      expect.objectContaining({ status: 404 }),
+    );
+  });
+
+  test("on the real scale, agent readings count and the buttons are refused", () => {
+    vi.useFakeTimers({ now: 0 });
+    const scale = new ScaleLive();
+    const sim = new ScaleSimulator(env(true), scale);
+    const controller = new ScaleController(scale, sim);
+    sim.use("scale");
+
+    controller.reading({ kg: 24360 });
+
+    expect(scale.live(Date.now()).kg).toBe(24360);
+    expect(() => sim.put("loaded")).toThrow(
+      expect.objectContaining({ status: 409 }),
+    );
+  });
+
+  test("on the simulator, agent readings are dropped", () => {
+    const scale = new ScaleLive();
+    const sim = new ScaleSimulator(env(true), scale);
+    const controller = new ScaleController(scale, sim);
+
+    controller.reading({ kg: 24360 });
+
+    expect(scale.live().online).toBe(false);
+  });
+
+  test("switching the source forgets the previous weights", () => {
+    vi.useFakeTimers({ now: 0 });
+    const scale = new ScaleLive();
+    const sim = new ScaleSimulator(env(true), scale);
+    sim.put("loaded");
+    vi.advanceTimersByTime(4000);
+
+    sim.use("scale");
+    vi.advanceTimersByTime(1000);
+
+    expect(scale.live(Date.now()).online).toBe(false);
   });
 });
 
