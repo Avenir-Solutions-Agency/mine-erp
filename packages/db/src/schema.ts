@@ -450,3 +450,39 @@ export const appUser = pgTable("app_user", {
   active: boolean("active").notNull().default(true),
   ...audit,
 });
+
+export type PortalWeighingStatus = "open" | "completed" | "void";
+
+/**
+ * Weighings copied from the PORTAL AI scale program (portal.db) by the Windows agent, as PORTAL
+ * stored them: a read-only mirror for the temporary period (PRD §08), not the ERP's own weighing.
+ */
+export const portalWeighing = pgTable(
+  "portal_weighing",
+  {
+    id: id(),
+    /** weighings.id in portal.db. */
+    portalId: integer("portal_id").notNull().unique(),
+    ticketNumber: text("ticket_number"),
+    direction: text("direction").$type<"inbound" | "outbound">(),
+    status: text("status").$type<PortalWeighingStatus>().notNull(),
+    licensePlate: text("license_plate"),
+    trailerPlate: text("trailer_plate"),
+    customerName: text("customer_name"),
+    customerTaxNumber: text("customer_tax_number"),
+    materialName: text("material_name"),
+    grossKg: integer("gross_kg"),
+    tareKg: integer("tare_kg"),
+    netKg: integer("net_kg"),
+    firstWeightKg: integer("first_weight_kg"),
+    firstMeasuredAt: timestamp("first_measured_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    driverName: text("driver_name"),
+    carrierName: text("carrier_name"),
+    ekaerNumber: text("ekaer_number"),
+    syncedAt: timestamp("synced_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("portal_weighing_completed_at_idx").on(t.completedAt)],
+);

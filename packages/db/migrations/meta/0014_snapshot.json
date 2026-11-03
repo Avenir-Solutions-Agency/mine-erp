@@ -68,9 +68,7 @@
         "app_user_email_unique": {
           "name": "app_user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -146,9 +144,7 @@
         "customer_tax_number_unique": {
           "name": "customer_tax_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "tax_number"
-          ]
+          "columns": ["tax_number"]
         }
       },
       "policies": {},
@@ -245,9 +241,7 @@
         "document_file_sha256_unique": {
           "name": "document_file_sha256_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "file_sha256"
-          ]
+          "columns": ["file_sha256"]
         }
       },
       "policies": {},
@@ -397,12 +391,8 @@
           "name": "ekaer_report_weighing_id_weighing_id_fk",
           "tableFrom": "ekaer_report",
           "tableTo": "weighing",
-          "columnsFrom": [
-            "weighing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["weighing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -571,12 +561,8 @@
           "name": "extraction_document_id_document_id_fk",
           "tableFrom": "extraction",
           "tableTo": "document",
-          "columnsFrom": [
-            "document_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["document_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -762,9 +748,7 @@
         "incoming_invoice_file_sha256_unique": {
           "name": "incoming_invoice_file_sha256_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "file_sha256"
-          ]
+          "columns": ["file_sha256"]
         }
       },
       "policies": {},
@@ -878,12 +862,8 @@
           "name": "incoming_invoice_line_invoice_id_incoming_invoice_id_fk",
           "tableFrom": "incoming_invoice_line",
           "tableTo": "incoming_invoice",
-          "columnsFrom": [
-            "invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invoice_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -974,9 +954,7 @@
         "machine_name_unique": {
           "name": "machine_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -1103,9 +1081,7 @@
         "product_name_unique": {
           "name": "product_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -1267,12 +1243,8 @@
           "name": "shipment_weighing_id_weighing_id_fk",
           "tableFrom": "shipment",
           "tableTo": "weighing",
-          "columnsFrom": [
-            "weighing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["weighing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1280,12 +1252,8 @@
           "name": "shipment_customer_id_customer_id_fk",
           "tableFrom": "shipment",
           "tableTo": "customer",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1293,12 +1261,8 @@
           "name": "shipment_product_id_product_id_fk",
           "tableFrom": "shipment",
           "tableTo": "product",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1308,16 +1272,12 @@
         "shipment_registry_number_unique": {
           "name": "shipment_registry_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "registry_number"
-          ]
+          "columns": ["registry_number"]
         },
         "shipment_weighing_id_unique": {
           "name": "shipment_weighing_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "weighing_id"
-          ]
+          "columns": ["weighing_id"]
         }
       },
       "policies": {},
@@ -1498,9 +1458,7 @@
         "vehicle_plate_unique": {
           "name": "vehicle_plate_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "plate"
-          ]
+          "columns": ["plate"]
         }
       },
       "policies": {},
@@ -1785,12 +1743,8 @@
           "name": "weighing_vehicle_id_vehicle_id_fk",
           "tableFrom": "weighing",
           "tableTo": "vehicle",
-          "columnsFrom": [
-            "vehicle_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vehicle_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1798,12 +1752,8 @@
           "name": "weighing_customer_id_customer_id_fk",
           "tableFrom": "weighing",
           "tableTo": "customer",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1811,12 +1761,8 @@
           "name": "weighing_product_id_product_id_fk",
           "tableFrom": "weighing",
           "tableTo": "product",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1824,12 +1770,8 @@
           "name": "weighing_document_id_document_id_fk",
           "tableFrom": "weighing",
           "tableTo": "document",
-          "columnsFrom": [
-            "document_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["document_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1839,16 +1781,12 @@
         "weighing_ticket_number_unique": {
           "name": "weighing_ticket_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "ticket_number"
-          ]
+          "columns": ["ticket_number"]
         },
         "weighing_document_id_unique": {
           "name": "weighing_document_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "document_id"
-          ]
+          "columns": ["document_id"]
         }
       },
       "policies": {},

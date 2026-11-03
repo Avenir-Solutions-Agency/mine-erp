@@ -27,6 +27,10 @@ import { Documents, DocumentsController } from "./documents.ts";
 import { Policies, PolicyController } from "./policy.ts";
 import { Reports, ReportsController } from "./reports.ts";
 import { Shipments, ShipmentsController } from "./shipments.ts";
+import {
+  PortalWeighings,
+  PortalWeighingsController,
+} from "./portal-weighings.ts";
 import { Storage } from "./storage.ts";
 import { Users, UsersController } from "./users.ts";
 import { TicketPdf } from "./ticket.ts";
@@ -50,6 +54,7 @@ const { db } = createDb(env.DATABASE_URL);
     PolicyController,
     DocumentsController,
     UsersController,
+    PortalWeighingsController,
   ],
   providers: [
     { provide: ENV, useValue: env },
@@ -72,6 +77,7 @@ const { db } = createDb(env.DATABASE_URL);
     Policies,
     Documents,
     Users,
+    PortalWeighings,
     {
       provide: TEMPORAL,
       // Lazy: the API starts without Temporal; only starting a workflow needs it.

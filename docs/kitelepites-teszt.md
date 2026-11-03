@@ -19,7 +19,7 @@ Frissítve: 2026-11-02. Döntés: a teszt a meglévő netcup szerveren fut, a m�
 | HTTPS | a szerver meglévő Caddyje (az alfred-black rendszeré); ebbe kerül egy új bejegyzés |
 | Adatbázis, belépés, fájlok | a meglévő Supabase-projekt (ugyanaz, mint fejlesztéskor) |
 
-Kívülről csak a webfelület és a mérlegszimulátor végpontja (`/scale/readings`, tokennel védve) érhető el. Az API többi része csak a webfelületen keresztül.
+Kívülről csak a webfelület és a mérleg-ügynök két végpontja (`/scale/readings` és `/scale/portal-weighings`, tokennel védve) érhető el. Az API többi része csak a webfelületen keresztül.
 
 A kitelepítés útja: GitHub Actions → `git archive` SSH-n a szerverre → `infra/deploy-test.sh` → `docker compose up --build`. A GitHub kulcsa a szerveren csak ezt az egy scriptet futtathatja, shellt nem nyithat.
 
@@ -106,7 +106,9 @@ A `/opt/nova/caddy/Caddyfile` végére:
 
 ```
 erp.94-16-109-232.sslip.io {
-	handle /scale/readings {
+	# The scale agents' two token-protected endpoints: live weight and PORTAL AI weighings.
+	@agent path /scale/readings /scale/portal-weighings
+	handle @agent {
 		reverse_proxy mine-erp-api:4000
 	}
 	handle {

@@ -1,9 +1,26 @@
 import { expect, test } from "@playwright/test";
 import { NAV, ROUTE_IDS } from "../src/prototype/nav";
 
+// Menus come from GET /me since T-038; CI has no API, so every test signs in as a user with
+// write access to every menu.
+test.beforeEach(async ({ page }) => {
+  const access = Object.fromEntries(ROUTE_IDS.map((id) => [id, "write"]));
+  await page.route("**/api/erp/me", (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          id: "00000000-0000-7000-8000-000000000000",
+          email: "e2e@example.com",
+          access,
+        },
+      },
+    }),
+  );
+});
+
 // Every demo screen renders on an empty database in the browser, without errors or horizontal page scroll (desktop and 375px).
 test("every prototype screen renders", async ({ page }) => {
-  // Visits all 30 routes one by one; the default 30 s budget is too tight on a busy machine.
+  // Visits every route one by one; the default 30 s budget is too tight on a busy machine.
   test.setTimeout(120_000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));

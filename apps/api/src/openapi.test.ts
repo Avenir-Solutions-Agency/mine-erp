@@ -12,6 +12,7 @@ import { ScaleController } from "./scale.ts";
 import { PolicyController } from "./policy.ts";
 import { ReportsController } from "./reports.ts";
 import { ShipmentsController } from "./shipments.ts";
+import { PortalWeighingsController } from "./portal-weighings.ts";
 import { UsersController } from "./users.ts";
 import { WeighingsController } from "./weighings.controller.ts";
 
@@ -27,6 +28,7 @@ export const CONTROLLERS = [
   PolicyController,
   DocumentsController,
   UsersController,
+  PortalWeighingsController,
 ];
 
 /** "METHOD /path" for every route Nest would map, read from the decorators. */

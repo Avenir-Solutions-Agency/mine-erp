@@ -30,6 +30,9 @@ import {
   VoidWeighingInput,
   WeighingDto,
   MeDto,
+  PortalSyncInput,
+  PortalSyncResult,
+  PortalWeighingDto,
   UserCreate,
   UserDto,
   UserPatch,
@@ -351,6 +354,24 @@ export const ROUTES: Route[] = [
     reply: PolicyDto,
   },
   {
+    method: "post",
+    path: "/scale/portal-weighings",
+    summary:
+      "Windows agent: weighings read from PORTAL AI's portal.db; only changed rows are written",
+    auth: "agent",
+    body: PortalSyncInput,
+    reply: PortalSyncResult,
+  },
+  {
+    method: "get",
+    path: "/portal-weighings",
+    summary:
+      "PORTAL AI weighings, open ones first, then the latest 300 (menu scale: read)",
+    auth: "user",
+    body: null,
+    reply: z.array(PortalWeighingDto),
+  },
+  {
     method: "get",
     path: "/me",
     summary: "The signed-in user's menu access",
@@ -378,7 +399,8 @@ export const ROUTES: Route[] = [
   {
     method: "patch",
     path: "/users/:id",
-    summary: "Change a user's name, menu access or active flag; logged (menu users: write)",
+    summary:
+      "Change a user's name, menu access or active flag; logged (menu users: write)",
     auth: "user",
     body: UserPatch,
     reply: UserDto,

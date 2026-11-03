@@ -32,8 +32,14 @@ export interface AccessRule {
  * refused, so a new endpoint cannot slip through unchecked. No menus: any active ERP user.
  */
 export const Access = Reflector.createDecorator<AccessRule>();
-export const read = (...menus: MenuId[]): AccessRule => ({ level: "read", menus });
-export const write = (...menus: MenuId[]): AccessRule => ({ level: "write", menus });
+export const read = (...menus: MenuId[]): AccessRule => ({
+  level: "read",
+  menus,
+});
+export const write = (...menus: MenuId[]): AccessRule => ({
+  level: "write",
+  menus,
+});
 
 /** "write" includes "read". */
 export function hasAccess(access: MenuAccess, rule: AccessRule): boolean {
@@ -102,7 +108,11 @@ export class AuthGuard implements CanActivate {
         "A fiókja nincs engedélyezve az ERP-ben. Kérjen hozzáférést egy kollégától.",
       );
     if (!hasAccess(user.access, rule))
-      throw new ApiError(403, "forbidden", "Nincs jogosultsága ehhez a menühöz.");
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Nincs jogosultsága ehhez a menühöz.",
+      );
     req.actor = {
       id: result.claims.sub,
       email: result.claims.email ?? null,
