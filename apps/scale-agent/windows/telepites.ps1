@@ -18,7 +18,9 @@ if (-not $admin) {
 
 try {
   if (-not (Test-Path $PortalDb)) { Write-Host "Figyelem: nem található a PORTAL AI adatbázis: $PortalDb" }
-  Set-Content -Encoding ASCII -Path (Join-Path $here 'portal-db.cmd') -Value "set `"PORTAL_DB=$PortalDb`""
+  # UTF-8 without BOM: start.cmd switches to code page 65001 before it calls this file, and an
+  # ASCII file would turn accented user names (C:\Users\Mérleges) into "?".
+  [IO.File]::WriteAllText((Join-Path $here 'portal-db.cmd'), "set `"PORTAL_DB=$PortalDb`"`r`n", (New-Object Text.UTF8Encoding $false))
   Remove-Item -ErrorAction SilentlyContinue (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Startup\mine-erp-merleg-hid.cmd')
 
   $start = Join-Path $here 'start.cmd'

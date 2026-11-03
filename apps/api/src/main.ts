@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { Module } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { createDb } from "@mine-erp/db";
 import { AuthGuard } from "./auth.ts";
 import { HealthController } from "./health.ts";
@@ -89,7 +90,9 @@ const { db } = createDb(env.DATABASE_URL);
 })
 class AppModule {}
 
-const app = await NestFactory.create(AppModule);
+const app = await NestFactory.create<NestExpressApplication>(AppModule);
+// The PORTAL AI bridge sends up to 500 weighings in one request (~250 KB); Express allows 100 KB.
+app.useBodyParser("json", { limit: "1mb" });
 app.enableCors({
   origin: env.WEB_ORIGIN,
   allowedHeaders: ["authorization", "content-type"],

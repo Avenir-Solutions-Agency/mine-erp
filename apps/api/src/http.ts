@@ -24,11 +24,20 @@ export class ErrorFilter implements ExceptionFilter {
     const res = host.switchToHttp().getResponse<Response>();
     if (err instanceof ApiError)
       return res.status(err.getStatus()).json(err.getResponse());
-    if (err instanceof HttpException) {
-      const status = err.getStatus();
+    // Express body-parser errors (too large, broken JSON) carry their own 4xx status.
+    const parserStatus =
+      err instanceof Error && "status" in err && typeof err.status === "number"
+        ? err.status
+        : 0;
+    if (
+      err instanceof HttpException ||
+      (parserStatus >= 400 && parserStatus < 500)
+    ) {
+      const status =
+        err instanceof HttpException ? err.getStatus() : parserStatus;
       const message =
         status === 413
-          ? "A fájl túl nagy (legfeljebb 10 MB)."
+          ? "A kérés vagy a fájl túl nagy."
           : status === 404
             ? "Nincs ilyen végpont."
             : "Hibás kérés.";
