@@ -119,7 +119,7 @@ describe("ScaleLive", () => {
     const scale = new ScaleLive();
     feed(scale, [24360, 24360, 24360, 24360, 24360, 24360, 24360]);
 
-    const live = scale.live(3000 + 2500);
+    const live = scale.live(3000 + 7500);
 
     expect(live).toEqual({
       kg: null,

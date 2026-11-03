@@ -7,7 +7,7 @@ import { stdin, stdout } from "node:process";
 import { createInterface } from "node:readline/promises";
 
 const SAVED = join(homedir(), ".mine-erp-portal.json");
-type Saved = Partial<Record<"apiUrl" | "portalUrl", string>>;
+type Saved = Partial<Record<"apiUrl" | "portalUrl" | "dbPath", string>>;
 
 export function loadSaved(): Saved {
   try {

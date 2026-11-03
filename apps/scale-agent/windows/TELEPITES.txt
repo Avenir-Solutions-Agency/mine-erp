@@ -1,0 +1,17 @@
+Mérleg-híd a mérlegházi Windows gépre
+====================================
+
+1. Csomagold ki a zipet ide: C:\mine-erp\
+2. Kattints duplán erre: C:\mine-erp\scale-agent\windows\telepites.cmd
+   A Windows rákérdez ("Engedélyezi, hogy ez az alkalmazás módosításokat
+   hajtson végre?"): Igen.
+
+Ennyi. A híd azonnal elindul, és a Windows minden indításakor magától fut,
+bejelentkezés nélkül is, ablak nélkül a háttérben. Ha leáll, újraindul.
+Folyamatosan elküldi az ERP-nek a PORTAL AI méréseit (a portal.db-ből, csak
+olvasva) és - ha van PORTAL AI kulcs - az élő súlyt. A PORTAL AI-ba soha nem ír.
+
+Napló (percenként egy sor): C:\mine-erp\scale-agent\windows\hid.log
+Kikapcsolás: dupla kattintás az eltavolitas.cmd-re.
+Beállítások (címek, kulcsok, kg/tonna): a windows\start.cmd tetején;
+módosítás után indítsd újra a gépet, vagy futtasd újra a telepites.cmd-t.

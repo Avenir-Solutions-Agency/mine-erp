@@ -35,8 +35,9 @@ import { AuthGuard, Access, read, write } from "./auth.ts";
 import { ENV, type Env } from "./env.ts";
 import { ApiError } from "./http.ts";
 
-/** A reading older than this means the agent or the indicator is gone. */
-const OFFLINE_MS = 2000;
+/** A reading older than this means the agent or the indicator is gone; the PORTAL AI bridge
+ * sends a heartbeat every 5 s while the bridge is empty (apps/scale-agent pacing). */
+const OFFLINE_MS = 7000;
 const KEEP_MS = 10_000;
 
 /**

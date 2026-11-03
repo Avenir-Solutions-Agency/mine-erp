@@ -50,6 +50,7 @@ import {
   type MasterField,
 } from "@/prototype/screens/scale-master-data";
 import { EkaerActions, EkaerStatus } from "@/prototype/screens/scale-ekaer";
+import { PortalWeighings } from "@/prototype/screens/scale-portal";
 
 // Mérleg: the ERP's own weighbridge screen (decided 2026-10-29). The weight always comes from
 // the scale agent through the API; nobody types a weight here.
@@ -142,6 +143,7 @@ const VIEWS: [string, string][] = [
   ["weigh", "Mérlegelés"],
   ["customers", "Vevők"],
   ["products", "Termékek"],
+  ["portal", "PORTAL AI mérések"],
 ];
 const CUSTOMER_FIELDS: MasterField[] = [
   { key: "name", label: "Név", required: true },
@@ -248,6 +250,13 @@ export function ScaleScreen() {
               rows={products}
               onChanged={reload}
             />
+          ) : view === "portal" ? (
+            <>
+              <div className="mb-3.5 max-w-md">
+                <LiveWeight live={live} />
+              </div>
+              <PortalWeighings />
+            </>
           ) : (
             <>
               <Grid cols={3} className="mb-3.5">

@@ -490,3 +490,41 @@ export const UserPatch = z.object({
   active: z.boolean().optional(),
 });
 export type UserPatch = z.infer<typeof UserPatch>;
+
+/**
+ * One weighing read from the PORTAL AI scale program's own database (portal.db, read only) by
+ * the Windows agent. Weights in integer kg, times in UTC ISO; the agent converts both.
+ */
+export const PortalWeighingInput = z.object({
+  portalId: z.number().int().positive(),
+  ticketNumber: z.string().max(64).nullable(),
+  direction: z.enum(["inbound", "outbound"]).nullable(),
+  status: z.enum(["open", "completed", "void"]),
+  licensePlate: z.string().max(32).nullable(),
+  trailerPlate: z.string().max(32).nullable(),
+  customerName: z.string().max(300).nullable(),
+  customerTaxNumber: z.string().max(32).nullable(),
+  materialName: z.string().max(200).nullable(),
+  grossKg: z.number().int().min(0).max(200_000).nullable(),
+  tareKg: z.number().int().min(0).max(200_000).nullable(),
+  netKg: z.number().int().min(-200_000).max(200_000).nullable(),
+  firstWeightKg: z.number().int().min(0).max(200_000).nullable(),
+  firstMeasuredAt: z.iso.datetime({ offset: true }).nullable(),
+  completedAt: z.iso.datetime({ offset: true }).nullable(),
+  driverName: z.string().max(200).nullable(),
+  carrierName: z.string().max(300).nullable(),
+  ekaerNumber: z.string().max(32).nullable(),
+});
+export type PortalWeighingInput = z.infer<typeof PortalWeighingInput>;
+export const PortalSyncInput = z.object({
+  rows: z.array(PortalWeighingInput).max(500),
+});
+export const PortalSyncResult = z.object({
+  inserted: z.number().int(),
+  updated: z.number().int(),
+});
+export const PortalWeighingDto = PortalWeighingInput.extend({
+  id: z.uuid(),
+  syncedAt: z.string(),
+});
+export type PortalWeighingDto = z.infer<typeof PortalWeighingDto>;
