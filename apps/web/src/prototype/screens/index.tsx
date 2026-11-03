@@ -30,6 +30,7 @@ import { MachinesScreen } from "./machines";
 import { ReportsScreen } from "./reports";
 import { PayrollScreen } from "./payroll";
 import { PlanScreen } from "./plan";
+import { UsersScreen } from "./users";
 
 // One screen per demo view (V.*), in its final, patched form.
 const SCREENS: Record<RouteId, ComponentType> = {
@@ -60,6 +61,7 @@ const SCREENS: Record<RouteId, ComponentType> = {
   reports: ReportsScreen,
   payroll: PayrollScreen,
   plan: PlanScreen,
+  users: UsersScreen,
 };
 
 export function Screen({ route }: { route: RouteId }) {

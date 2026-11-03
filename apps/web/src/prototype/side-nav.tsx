@@ -4,18 +4,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { hu } from "@/i18n/hu";
 import { cn } from "@/lib/utils";
+import { useMenuAccess } from "@/prototype/access";
 import { NAV } from "@/prototype/nav";
 import { useDemoCounts } from "@/prototype/store";
 
 export function SideNav() {
   const pathname = usePathname();
   const counts = useDemoCounts();
+  const access = useMenuAccess();
+  // Only the menus this user has; a group with none left disappears.
+  const nav = NAV.map((g) => ({
+    group: g.group,
+    items: g.items.filter((i) => access[i.id]),
+  })).filter((g) => g.items.length > 0);
   return (
     <nav
       aria-label={hu.nav.label}
       className="flex gap-0.5 md:flex-col md:gap-0"
     >
-      {NAV.map(({ group, items }) => (
+      {nav.map(({ group, items }) => (
         <div key={group} className="contents">
           <div className="hidden px-2 pt-3 pb-1 text-label tracking-widest text-muted-foreground uppercase md:block">
             {hu.nav.groups[group]}

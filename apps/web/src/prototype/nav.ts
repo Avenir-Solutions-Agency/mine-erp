@@ -1,6 +1,11 @@
+import type { MenuId } from "@mine-erp/contracts";
 import { hu } from "@/i18n/hu";
 
 export type RouteId = keyof typeof hu.nav.routes;
+// Compile-time check: every menu the API knows has a route here, and the other way round.
+type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+const sameIds: Same<RouteId, MenuId> = true;
+void sameIds;
 export type GroupId = keyof typeof hu.nav.groups;
 /** Badge counters; formulas live with the store (docs/demo-inventory part 4, "Navigation, counts"). */
 export type CounterKey =
@@ -53,6 +58,7 @@ export const NAV: readonly { group: GroupId; items: readonly NavItem[] }[] = [
   },
   { group: "finance", items: [{ id: "reports" }, { id: "payroll" }] },
   { group: "project", items: [{ id: "plan" }] },
+  { group: "admin", items: [{ id: "users", enabled: true }] },
 ];
 
 export const ROUTE_IDS: readonly RouteId[] = NAV.flatMap((g) =>
