@@ -9,7 +9,7 @@ import {
 } from "@nestjs/common";
 import { type PolicyDto, PolicyPatch } from "@mine-erp/contracts";
 import { type Db, eq, eventLog, policy } from "@mine-erp/db";
-import { type Actor, AuthGuard, CurrentActor } from "./auth.ts";
+import { type Actor, AuthGuard, CurrentActor, Access, read, write } from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { DB } from "./invoices.repository.ts";
 
@@ -17,7 +17,7 @@ const EKAER_AUTO = "ekaer.auto";
 
 /**
  * Office switches (T-020). Off unless someone turned them on; every change is logged with the
- * person. shortcut: any signed-in office user may change them; a role check comes with roles.
+ * person. Changing them needs write access to the Fuvarok és EKÁER menu.
  */
 @Injectable()
 export class Policies {
@@ -65,11 +65,13 @@ export class PolicyController {
   constructor(private readonly policies: Policies) {}
 
   @Get()
+  @Access(read("transport"))
   async get() {
     return { data: await this.policies.get() };
   }
 
   @Patch()
+  @Access(write("transport"))
   async set(@Body() body: unknown, @CurrentActor() actor: Actor) {
     const input = PolicyPatch.safeParse(body);
     if (!input.success)

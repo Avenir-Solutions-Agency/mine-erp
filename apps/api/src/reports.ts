@@ -13,7 +13,7 @@ import {
   validRange,
 } from "@mine-erp/domain/report";
 import ExcelJS from "exceljs";
-import { AuthGuard } from "./auth.ts";
+import { AuthGuard, Access, read } from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { Shipments } from "./shipments.ts";
 
@@ -127,6 +127,7 @@ export class ReportsController {
   constructor(private readonly reports: Reports) {}
 
   @Get("shipments")
+  @Access(read("transport"))
   async shipments(@Query("from") from: string, @Query("to") to: string) {
     return {
       data: await this.reports.shipmentReport(String(from), String(to)),
@@ -134,6 +135,7 @@ export class ReportsController {
   }
 
   @Get("shipments.xlsx")
+  @Access(read("transport"))
   async workbook(@Query("from") from: string, @Query("to") to: string) {
     const file = await this.reports.shipmentWorkbook(String(from), String(to));
     return new StreamableFile(file, {

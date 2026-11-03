@@ -32,7 +32,7 @@ import {
   formatRegistryNumber,
   registrationProblems,
 } from "@mine-erp/domain/shipment";
-import { type Actor, AuthGuard, CurrentActor } from "./auth.ts";
+import { type Actor, AuthGuard, CurrentActor, Access, read, write } from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { renderDeliveryNoteHtml } from "./delivery-note.ts";
 import { ENV, type Env } from "./env.ts";
@@ -330,11 +330,13 @@ export class ShipmentsController {
   constructor(private readonly shipments: Shipments) {}
 
   @Get("shipments")
+  @Access(read("transport", "dn"))
   async list() {
     return { data: await this.shipments.list() };
   }
 
   @Get("shipments/:id/delivery-note")
+  @Access(read("transport", "dn"))
   async deliveryNote(@Param("id", new ParseUUIDPipe()) id: string) {
     const { number, pdf } = await this.shipments.deliveryNote(id);
     return new StreamableFile(pdf, {
@@ -344,6 +346,7 @@ export class ShipmentsController {
   }
 
   @Post("weighings/:id/register")
+  @Access(write("scale"))
   async register(
     @Param("id", new ParseUUIDPipe()) id: string,
     @CurrentActor() actor: Actor,
