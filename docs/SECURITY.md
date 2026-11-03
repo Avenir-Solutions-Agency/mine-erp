@@ -29,6 +29,7 @@ The client is the data controller; we are the processor (annex 4).
 - Provider: Supabase Auth (project in an EU region). 2FA (TOTP MFA) is mandatory for office users: the API rejects office sessions below `aal2`; mobile uses PIN or QR card with short-lived tokens.
 - Roles (phase 1): system operator, EKÁER admin, office user, scale operator, driver, read-only manager, agent (service account).
 - Every API entry point checks the session and the role; authorization is decided in the API layer, never only in the UI.
+- Implemented so far (T-038): menu-level access per user (`app_user.access`, read or write per side-menu entry) instead of fixed roles; every route declares its menu with `@Access`, and a user without an `app_user` row or with `active = false` gets 403.
 - Always human approval: EKÁER modify/delete/correction, an EKÁER submission that fails the rules, and policy changes.
 
 ## 04 Secrets
