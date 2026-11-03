@@ -9,23 +9,23 @@ export default function PrototypeLayout({ children }: LayoutProps<"/">) {
   return (
     <DemoProvider>
       <AccessProvider>
-      <div className="flex min-h-full flex-1 flex-col md:flex-row">
-        <aside className="flex shrink-0 overflow-x-auto border-b border-border bg-card px-4 py-2.5 md:sticky md:top-0 md:h-svh md:w-58 md:flex-col md:gap-1 md:overflow-y-auto md:border-r md:border-b-0 md:px-3 md:py-4.5">
-          <div className="hidden px-2 pb-3.5 font-heading text-2xl leading-tight font-bold tracking-wide md:block">
-            {hu.brand.name}
-            <small className="mt-1 block font-sans text-label font-normal tracking-wider text-muted-foreground uppercase">
-              {hu.brand.env}
-            </small>
-          </div>
-          <SideNav />
-        </aside>
-        <main className="min-w-0 flex-1 px-4 pt-5.5 pb-15 md:px-7">
-          <AccessGate>
-            <DemoReady>{children}</DemoReady>
-          </AccessGate>
-        </main>
-        <Toaster />
-      </div>
+        <div className="flex min-h-full flex-1 flex-col md:flex-row">
+          <aside className="flex shrink-0 overflow-x-auto border-b border-border bg-card px-4 py-2.5 md:sticky md:top-0 md:h-svh md:w-58 md:flex-col md:gap-1 md:overflow-y-auto md:border-r md:border-b-0 md:px-3 md:py-4.5">
+            <div className="hidden px-2 pb-3.5 font-heading text-2xl leading-tight font-bold tracking-wide md:block">
+              {hu.brand.name}
+              <small className="mt-1 block font-sans text-label font-normal tracking-wider text-muted-foreground uppercase">
+                {hu.brand.env}
+              </small>
+            </div>
+            <SideNav />
+          </aside>
+          <main className="min-w-0 flex-1 px-4 pt-5.5 pb-15 md:px-7">
+            <AccessGate>
+              <DemoReady>{children}</DemoReady>
+            </AccessGate>
+          </main>
+          <Toaster />
+        </div>
       </AccessProvider>
     </DemoProvider>
   );

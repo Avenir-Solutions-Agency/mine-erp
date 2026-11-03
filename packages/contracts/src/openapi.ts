@@ -365,7 +365,8 @@ export const ROUTES: Route[] = [
   {
     method: "get",
     path: "/portal-weighings",
-    summary: "PORTAL AI weighings, open ones first, then the latest 300 (menu scale: read)",
+    summary:
+      "PORTAL AI weighings, open ones first, then the latest 300 (menu scale: read)",
     auth: "user",
     body: null,
     reply: z.array(PortalWeighingDto),
@@ -398,7 +399,8 @@ export const ROUTES: Route[] = [
   {
     method: "patch",
     path: "/users/:id",
-    summary: "Change a user's name, menu access or active flag; logged (menu users: write)",
+    summary:
+      "Change a user's name, menu access or active flag; logged (menu users: write)",
     auth: "user",
     body: UserPatch,
     reply: UserDto,

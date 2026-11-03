@@ -18,7 +18,11 @@ export const PACING = {
   loadedKg: 1000,
 };
 
-export const startPace = (): Pace => ({ lastKg: null, lastSentAt: 0, fastUntil: 0 });
+export const startPace = (): Pace => ({
+  lastKg: null,
+  lastSentAt: 0,
+  fastUntil: 0,
+});
 
 /** Whether to send this reading now, and the state for the next one. */
 export function pace(p: Pace, kg: number, now: number, cfg = PACING) {

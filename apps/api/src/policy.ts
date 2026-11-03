@@ -9,7 +9,14 @@ import {
 } from "@nestjs/common";
 import { type PolicyDto, PolicyPatch } from "@mine-erp/contracts";
 import { type Db, eq, eventLog, policy } from "@mine-erp/db";
-import { type Actor, AuthGuard, CurrentActor, Access, read, write } from "./auth.ts";
+import {
+  type Actor,
+  AuthGuard,
+  CurrentActor,
+  Access,
+  read,
+  write,
+} from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { DB } from "./invoices.repository.ts";
 

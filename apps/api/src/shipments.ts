@@ -32,7 +32,14 @@ import {
   formatRegistryNumber,
   registrationProblems,
 } from "@mine-erp/domain/shipment";
-import { type Actor, AuthGuard, CurrentActor, Access, read, write } from "./auth.ts";
+import {
+  type Actor,
+  AuthGuard,
+  CurrentActor,
+  Access,
+  read,
+  write,
+} from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { renderDeliveryNoteHtml } from "./delivery-note.ts";
 import { ENV, type Env } from "./env.ts";

@@ -9,7 +9,14 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { FirstWeighingInput, VoidWeighingInput } from "@mine-erp/contracts";
-import { type Actor, AuthGuard, CurrentActor, Access, read, write } from "./auth.ts";
+import {
+  type Actor,
+  AuthGuard,
+  CurrentActor,
+  Access,
+  read,
+  write,
+} from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { WeighingsService } from "./weighings.service.ts";
 

@@ -13,7 +13,15 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { AssignCarrierInput } from "@mine-erp/contracts";
-import { type Actor, AuthGuard, CurrentActor, RateLimit, Access, read, write } from "./auth.ts";
+import {
+  type Actor,
+  AuthGuard,
+  CurrentActor,
+  RateLimit,
+  Access,
+  read,
+  write,
+} from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { InvoicesService } from "./invoices.service.ts";
 

@@ -18,7 +18,14 @@ import {
 } from "@mine-erp/contracts";
 import { asc, customer, type Db, eq, eventLog, product } from "@mine-erp/db";
 import type { z } from "zod";
-import { type Actor, AuthGuard, CurrentActor, Access, read, write } from "./auth.ts";
+import {
+  type Actor,
+  AuthGuard,
+  CurrentActor,
+  Access,
+  read,
+  write,
+} from "./auth.ts";
 import { ApiError, isUniqueViolation } from "./http.ts";
 import { DB } from "./invoices.repository.ts";
 

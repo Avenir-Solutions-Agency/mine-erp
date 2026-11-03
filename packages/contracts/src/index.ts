@@ -445,10 +445,34 @@ export const PolicyPatch = PolicyDto.partial();
 
 /** Side-menu entries a user can be given access to; the web nav uses the same ids. */
 export const MENU_IDS = [
-  "dash", "today", "ai", "inbox", "quotes", "contracts", "orders", "portal",
-  "dispatch", "transport", "scale", "driverapp", "telem", "dn", "tig", "billing",
-  "integr", "stock", "store", "qr", "operapp", "mechapp", "waste", "machines",
-  "reports", "payroll", "plan", "users",
+  "dash",
+  "today",
+  "ai",
+  "inbox",
+  "quotes",
+  "contracts",
+  "orders",
+  "portal",
+  "dispatch",
+  "transport",
+  "scale",
+  "driverapp",
+  "telem",
+  "dn",
+  "tig",
+  "billing",
+  "integr",
+  "stock",
+  "store",
+  "qr",
+  "operapp",
+  "mechapp",
+  "waste",
+  "machines",
+  "reports",
+  "payroll",
+  "plan",
+  "users",
 ] as const;
 export const MenuId = z.enum(MENU_IDS);
 export type MenuId = z.infer<typeof MenuId>;
