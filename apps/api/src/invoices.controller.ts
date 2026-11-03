@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { AssignCarrierInput } from "@mine-erp/contracts";
-import { type Actor, AuthGuard, CurrentActor, RateLimit } from "./auth.ts";
+import { type Actor, AuthGuard, CurrentActor, RateLimit, Access, read, write } from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { InvoicesService } from "./invoices.service.ts";
 
@@ -25,11 +25,13 @@ export class InvoicesController {
   constructor(private readonly invoices: InvoicesService) {}
 
   @Get("invoices")
+  @Access(read("billing"))
   async list() {
     return { data: await this.invoices.list() };
   }
 
   @Post("invoices")
+  @Access(write("billing"))
   @UseInterceptors(
     FileInterceptor("file", {
       limits: { fileSize: 10 * 1024 * 1024, files: 1 },
@@ -45,11 +47,13 @@ export class InvoicesController {
   }
 
   @Get("invoices/:id/file")
+  @Access(read("billing"))
   async file(@Param("id", new ParseUUIDPipe()) id: string) {
     return { data: { url: await this.invoices.fileUrl(id) } };
   }
 
   @Patch("invoices/:id/carrier")
+  @Access(write("billing"))
   async assign(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() body: unknown,
@@ -64,11 +68,13 @@ export class InvoicesController {
   }
 
   @Delete("invoices")
+  @Access(write("billing"))
   async reset(@CurrentActor() actor: Actor) {
     return { data: await this.invoices.reset(actor) };
   }
 
   @Get("carriers")
+  @Access(read("billing", "scale"))
   async carriers() {
     return { data: await this.invoices.carriers() };
   }

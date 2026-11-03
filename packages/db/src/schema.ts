@@ -433,3 +433,20 @@ export const extraction = pgTable(
     ),
   ],
 );
+
+/**
+ * ERP users: one row per Supabase Auth user who may use the ERP. No row, or inactive, means no
+ * access. `access` maps a menu id to "read" or "write" (packages/contracts MenuAccess).
+ */
+export const appUser = pgTable("app_user", {
+  /** The Supabase Auth user id (auth.users.id). */
+  id: uuid("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  access: jsonb("access")
+    .$type<Record<string, "read" | "write">>()
+    .notNull()
+    .default({}),
+  active: boolean("active").notNull().default(true),
+  ...audit,
+});

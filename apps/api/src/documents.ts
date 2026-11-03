@@ -33,7 +33,7 @@ import {
   shipment,
   weighing,
 } from "@mine-erp/db";
-import { type Actor, AuthGuard, CurrentActor, RateLimit } from "./auth.ts";
+import { type Actor, AuthGuard, CurrentActor, RateLimit, Access, read, write } from "./auth.ts";
 import { EkaerReports, TEMPORAL } from "./ekaer-reports.ts";
 import { ENV, type Env } from "./env.ts";
 import { ApiError } from "./http.ts";
@@ -367,11 +367,13 @@ export class DocumentsController {
   constructor(private readonly documents: Documents) {}
 
   @Get("documents")
+  @Access(read("transport"))
   async list() {
     return { data: await this.documents.list() };
   }
 
   @Post("documents")
+  @Access(write("transport"))
   @UseInterceptors(
     FileInterceptor("file", {
       limits: { fileSize: 10 * 1024 * 1024, files: 1 },
@@ -387,6 +389,7 @@ export class DocumentsController {
   }
 
   @Post("documents/:id/register")
+  @Access(write("transport"))
   async register(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() body: unknown,
@@ -408,6 +411,7 @@ export class DocumentsController {
   }
 
   @Get("documents/:id/file")
+  @Access(read("transport"))
   async file(@Param("id", new ParseUUIDPipe()) id: string) {
     return { data: { url: await this.documents.fileUrl(id) } };
   }

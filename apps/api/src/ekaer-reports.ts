@@ -29,7 +29,7 @@ import {
 } from "@mine-erp/db";
 import { ekaerProblems } from "@mine-erp/domain/ekaer";
 import type { Client } from "@temporalio/client";
-import { type Actor, AuthGuard, CurrentActor } from "./auth.ts";
+import { type Actor, AuthGuard, CurrentActor, Access, write } from "./auth.ts";
 import { ApiError, isUniqueViolation } from "./http.ts";
 import { DB } from "./invoices.repository.ts";
 
@@ -316,6 +316,7 @@ export class EkaerReportsController {
   constructor(private readonly reports: EkaerReports) {}
 
   @Post(":id/ekaer")
+  @Access(write("scale", "transport"))
   async file(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() body: unknown,
@@ -341,6 +342,7 @@ export class EkaerReportsController {
   }
 
   @Post(":id/ekaer/delete")
+  @Access(write("scale", "transport"))
   async remove(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() body: unknown,
@@ -358,6 +360,7 @@ export class EkaerReportsController {
   }
 
   @Post(":id/ekaer/modify")
+  @Access(write("scale", "transport"))
   async modify(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() body: unknown,
@@ -375,6 +378,7 @@ export class EkaerReportsController {
   }
 
   @Post(":id/ekaer/finalize")
+  @Access(write("scale", "transport"))
   async finalize(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() body: unknown,
@@ -392,6 +396,7 @@ export class EkaerReportsController {
   }
 
   @Post(":id/ekaer/retry")
+  @Access(write("scale", "transport"))
   async retry(
     @Param("id", new ParseUUIDPipe()) id: string,
     @CurrentActor() actor: Actor,

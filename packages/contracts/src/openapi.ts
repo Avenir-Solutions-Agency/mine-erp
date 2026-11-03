@@ -29,6 +29,10 @@ import {
   ScaleReadingInput,
   VoidWeighingInput,
   WeighingDto,
+  MeDto,
+  UserCreate,
+  UserDto,
+  UserPatch,
 } from "./index.ts";
 
 type Auth = "none" | "user" | "agent";
@@ -345,6 +349,39 @@ export const ROUTES: Route[] = [
     auth: "user",
     body: PolicyPatch,
     reply: PolicyDto,
+  },
+  {
+    method: "get",
+    path: "/me",
+    summary: "The signed-in user's menu access",
+    auth: "user",
+    body: null,
+    reply: MeDto,
+  },
+  {
+    method: "get",
+    path: "/users",
+    summary: "ERP users and their menu access (menu users: read)",
+    auth: "user",
+    body: null,
+    reply: z.array(UserDto),
+  },
+  {
+    method: "post",
+    path: "/users",
+    summary:
+      "Create a Supabase Auth account with a starting password and its menu access (menu users: write)",
+    auth: "user",
+    body: UserCreate,
+    reply: UserDto,
+  },
+  {
+    method: "patch",
+    path: "/users/:id",
+    summary: "Change a user's name, menu access or active flag; logged (menu users: write)",
+    auth: "user",
+    body: UserPatch,
+    reply: UserDto,
   },
   {
     method: "get",

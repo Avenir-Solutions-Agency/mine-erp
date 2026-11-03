@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { FirstWeighingInput, VoidWeighingInput } from "@mine-erp/contracts";
-import { type Actor, AuthGuard, CurrentActor } from "./auth.ts";
+import { type Actor, AuthGuard, CurrentActor, Access, read, write } from "./auth.ts";
 import { ApiError } from "./http.ts";
 import { WeighingsService } from "./weighings.service.ts";
 
@@ -19,11 +19,13 @@ export class WeighingsController {
   constructor(private readonly weighings: WeighingsService) {}
 
   @Get()
+  @Access(read("scale"))
   async list() {
     return { data: await this.weighings.list() };
   }
 
   @Post()
+  @Access(write("scale"))
   async first(@Body() body: unknown, @CurrentActor() actor: Actor) {
     const input = FirstWeighingInput.safeParse(body);
     if (!input.success)
@@ -36,6 +38,7 @@ export class WeighingsController {
   }
 
   @Get(":id/ticket")
+  @Access(read("scale", "transport"))
   async ticket(@Param("id", new ParseUUIDPipe()) id: string) {
     const { number, pdf } = await this.weighings.ticket(id);
     return new StreamableFile(pdf, {
@@ -45,6 +48,7 @@ export class WeighingsController {
   }
 
   @Post(":id/second")
+  @Access(write("scale"))
   async second(
     @Param("id", new ParseUUIDPipe()) id: string,
     @CurrentActor() actor: Actor,
@@ -53,6 +57,7 @@ export class WeighingsController {
   }
 
   @Post(":id/void")
+  @Access(write("scale"))
   async void(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() body: unknown,

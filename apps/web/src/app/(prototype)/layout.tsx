@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toast";
 import { hu } from "@/i18n/hu";
+import { AccessGate, AccessProvider } from "@/prototype/access";
 import { SideNav } from "@/prototype/side-nav";
 import { DemoProvider, DemoReady } from "@/prototype/store";
 
@@ -7,6 +8,7 @@ import { DemoProvider, DemoReady } from "@/prototype/store";
 export default function PrototypeLayout({ children }: LayoutProps<"/">) {
   return (
     <DemoProvider>
+      <AccessProvider>
       <div className="flex min-h-full flex-1 flex-col md:flex-row">
         <aside className="flex shrink-0 overflow-x-auto border-b border-border bg-card px-4 py-2.5 md:sticky md:top-0 md:h-svh md:w-58 md:flex-col md:gap-1 md:overflow-y-auto md:border-r md:border-b-0 md:px-3 md:py-4.5">
           <div className="hidden px-2 pb-3.5 font-heading text-2xl leading-tight font-bold tracking-wide md:block">
@@ -18,10 +20,13 @@ export default function PrototypeLayout({ children }: LayoutProps<"/">) {
           <SideNav />
         </aside>
         <main className="min-w-0 flex-1 px-4 pt-5.5 pb-15 md:px-7">
-          <DemoReady>{children}</DemoReady>
+          <AccessGate>
+            <DemoReady>{children}</DemoReady>
+          </AccessGate>
         </main>
         <Toaster />
       </div>
+      </AccessProvider>
     </DemoProvider>
   );
 }

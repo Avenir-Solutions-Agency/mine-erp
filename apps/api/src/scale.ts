@@ -31,7 +31,7 @@ import {
   type Reading,
   stableWeight,
 } from "@mine-erp/domain/weighing";
-import { AuthGuard } from "./auth.ts";
+import { AuthGuard, Access, read, write } from "./auth.ts";
 import { ENV, type Env } from "./env.ts";
 import { ApiError } from "./http.ts";
 
@@ -201,6 +201,7 @@ export class ScaleController {
   }
 
   @Get("live")
+  @Access(read("scale"))
   @UseGuards(AuthGuard)
   live() {
     return {
@@ -213,6 +214,7 @@ export class ScaleController {
   }
 
   @Post("simulate")
+  @Access(write("scale"))
   @HttpCode(204)
   @UseGuards(AuthGuard)
   simulate(@Body() body: unknown) {
@@ -223,6 +225,7 @@ export class ScaleController {
   }
 
   @Post("source")
+  @Access(write("scale"))
   @HttpCode(204)
   @UseGuards(AuthGuard)
   setSource(@Body() body: unknown) {

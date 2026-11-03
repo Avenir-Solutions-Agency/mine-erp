@@ -442,3 +442,51 @@ export const PolicyDto = z.object({
 });
 export type PolicyDto = z.infer<typeof PolicyDto>;
 export const PolicyPatch = PolicyDto.partial();
+
+/** Side-menu entries a user can be given access to; the web nav uses the same ids. */
+export const MENU_IDS = [
+  "dash", "today", "ai", "inbox", "quotes", "contracts", "orders", "portal",
+  "dispatch", "transport", "scale", "driverapp", "telem", "dn", "tig", "billing",
+  "integr", "stock", "store", "qr", "operapp", "mechapp", "waste", "machines",
+  "reports", "payroll", "plan", "users",
+] as const;
+export const MenuId = z.enum(MENU_IDS);
+export type MenuId = z.infer<typeof MenuId>;
+/** "read" opens the menu; "write" also allows its changes. */
+export const AccessLevel = z.enum(["read", "write"]);
+export type AccessLevel = z.infer<typeof AccessLevel>;
+/** Menus not listed are hidden and refused by the API. */
+export const MenuAccess = z.partialRecord(MenuId, AccessLevel);
+export type MenuAccess = z.infer<typeof MenuAccess>;
+
+export const UserDto = z.object({
+  id: z.uuid(),
+  email: z.string(),
+  name: z.string(),
+  access: MenuAccess,
+  active: z.boolean(),
+});
+export type UserDto = z.infer<typeof UserDto>;
+
+/** The signed-in user's own menus (GET /me). */
+export const MeDto = z.object({
+  id: z.uuid(),
+  email: z.string().nullable(),
+  access: MenuAccess,
+});
+export type MeDto = z.infer<typeof MeDto>;
+
+export const UserCreate = z.object({
+  email: z.email().max(254),
+  name: z.string().trim().min(1).max(120),
+  // Supabase's own minimum is 6; office accounts get a stronger floor.
+  password: z.string().min(10).max(72),
+  access: MenuAccess,
+});
+export type UserCreate = z.infer<typeof UserCreate>;
+export const UserPatch = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  access: MenuAccess.optional(),
+  active: z.boolean().optional(),
+});
+export type UserPatch = z.infer<typeof UserPatch>;

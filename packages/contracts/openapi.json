@@ -4408,6 +4408,569 @@
         }
       }
     },
+    "/me": {
+      "get": {
+        "summary": "The signed-in user's menu access",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "email": {
+                          "type": ["string", "null"]
+                        },
+                        "access": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "enum": [
+                              "dash",
+                              "today",
+                              "ai",
+                              "inbox",
+                              "quotes",
+                              "contracts",
+                              "orders",
+                              "portal",
+                              "dispatch",
+                              "transport",
+                              "scale",
+                              "driverapp",
+                              "telem",
+                              "dn",
+                              "tig",
+                              "billing",
+                              "integr",
+                              "stock",
+                              "store",
+                              "qr",
+                              "operapp",
+                              "mechapp",
+                              "waste",
+                              "machines",
+                              "reports",
+                              "payroll",
+                              "plan",
+                              "users"
+                            ]
+                          },
+                          "additionalProperties": {
+                            "type": "string",
+                            "enum": ["read", "write"]
+                          }
+                        }
+                      },
+                      "required": ["id", "email", "access"],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Hungarian, safe to show"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "ERP users and their menu access (menu users: read)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "access": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "enum": [
+                                "dash",
+                                "today",
+                                "ai",
+                                "inbox",
+                                "quotes",
+                                "contracts",
+                                "orders",
+                                "portal",
+                                "dispatch",
+                                "transport",
+                                "scale",
+                                "driverapp",
+                                "telem",
+                                "dn",
+                                "tig",
+                                "billing",
+                                "integr",
+                                "stock",
+                                "store",
+                                "qr",
+                                "operapp",
+                                "mechapp",
+                                "waste",
+                                "machines",
+                                "reports",
+                                "payroll",
+                                "plan",
+                                "users"
+                              ]
+                            },
+                            "additionalProperties": {
+                              "type": "string",
+                              "enum": ["read", "write"]
+                            }
+                          },
+                          "active": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["id", "email", "name", "access", "active"],
+                        "additionalProperties": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Hungarian, safe to show"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a Supabase Auth account with a starting password and its menu access (menu users: write)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 72
+                  },
+                  "access": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "enum": [
+                        "dash",
+                        "today",
+                        "ai",
+                        "inbox",
+                        "quotes",
+                        "contracts",
+                        "orders",
+                        "portal",
+                        "dispatch",
+                        "transport",
+                        "scale",
+                        "driverapp",
+                        "telem",
+                        "dn",
+                        "tig",
+                        "billing",
+                        "integr",
+                        "stock",
+                        "store",
+                        "qr",
+                        "operapp",
+                        "mechapp",
+                        "waste",
+                        "machines",
+                        "reports",
+                        "payroll",
+                        "plan",
+                        "users"
+                      ]
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "enum": ["read", "write"]
+                    }
+                  }
+                },
+                "required": ["email", "name", "password", "access"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "access": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "enum": [
+                              "dash",
+                              "today",
+                              "ai",
+                              "inbox",
+                              "quotes",
+                              "contracts",
+                              "orders",
+                              "portal",
+                              "dispatch",
+                              "transport",
+                              "scale",
+                              "driverapp",
+                              "telem",
+                              "dn",
+                              "tig",
+                              "billing",
+                              "integr",
+                              "stock",
+                              "store",
+                              "qr",
+                              "operapp",
+                              "mechapp",
+                              "waste",
+                              "machines",
+                              "reports",
+                              "payroll",
+                              "plan",
+                              "users"
+                            ]
+                          },
+                          "additionalProperties": {
+                            "type": "string",
+                            "enum": ["read", "write"]
+                          }
+                        },
+                        "active": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["id", "email", "name", "access", "active"],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Hungarian, safe to show"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "patch": {
+        "summary": "Change a user's name, menu access or active flag; logged (menu users: write)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "access": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "enum": [
+                        "dash",
+                        "today",
+                        "ai",
+                        "inbox",
+                        "quotes",
+                        "contracts",
+                        "orders",
+                        "portal",
+                        "dispatch",
+                        "transport",
+                        "scale",
+                        "driverapp",
+                        "telem",
+                        "dn",
+                        "tig",
+                        "billing",
+                        "integr",
+                        "stock",
+                        "store",
+                        "qr",
+                        "operapp",
+                        "mechapp",
+                        "waste",
+                        "machines",
+                        "reports",
+                        "payroll",
+                        "plan",
+                        "users"
+                      ]
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "enum": ["read", "write"]
+                    }
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "access": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "enum": [
+                              "dash",
+                              "today",
+                              "ai",
+                              "inbox",
+                              "quotes",
+                              "contracts",
+                              "orders",
+                              "portal",
+                              "dispatch",
+                              "transport",
+                              "scale",
+                              "driverapp",
+                              "telem",
+                              "dn",
+                              "tig",
+                              "billing",
+                              "integr",
+                              "stock",
+                              "store",
+                              "qr",
+                              "operapp",
+                              "mechapp",
+                              "waste",
+                              "machines",
+                              "reports",
+                              "payroll",
+                              "plan",
+                              "users"
+                            ]
+                          },
+                          "additionalProperties": {
+                            "type": "string",
+                            "enum": ["read", "write"]
+                          }
+                        },
+                        "active": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": ["id", "email", "name", "access", "active"],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": ["code", "message"],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Hungarian, safe to show"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/customers": {
       "get": {
         "summary": "Customers",

@@ -18,7 +18,7 @@ import {
 } from "@mine-erp/contracts";
 import { asc, customer, type Db, eq, eventLog, product } from "@mine-erp/db";
 import type { z } from "zod";
-import { type Actor, AuthGuard, CurrentActor } from "./auth.ts";
+import { type Actor, AuthGuard, CurrentActor, Access, read, write } from "./auth.ts";
 import { ApiError, isUniqueViolation } from "./http.ts";
 import { DB } from "./invoices.repository.ts";
 
@@ -171,11 +171,13 @@ export class MasterDataController {
   constructor(private readonly data: MasterData) {}
 
   @Get("customers")
+  @Access(read("scale", "transport"))
   async customers() {
     return { data: await this.data.customers() };
   }
 
   @Post("customers")
+  @Access(write("scale"))
   async createCustomer(@Body() body: unknown, @CurrentActor() actor: Actor) {
     return {
       data: await this.data.save(
@@ -188,6 +190,7 @@ export class MasterDataController {
   }
 
   @Patch("customers/:id")
+  @Access(write("scale"))
   async updateCustomer(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() body: unknown,
@@ -204,11 +207,13 @@ export class MasterDataController {
   }
 
   @Get("products")
+  @Access(read("scale", "transport"))
   async products() {
     return { data: await this.data.products() };
   }
 
   @Post("products")
+  @Access(write("scale"))
   async createProduct(@Body() body: unknown, @CurrentActor() actor: Actor) {
     return {
       data: productDto(
@@ -223,6 +228,7 @@ export class MasterDataController {
   }
 
   @Patch("products/:id")
+  @Access(write("scale"))
   async updateProduct(
     @Param("id", new ParseUUIDPipe()) id: string,
     @Body() body: unknown,
